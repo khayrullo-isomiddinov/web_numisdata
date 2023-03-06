@@ -14,7 +14,7 @@ acc
 *_DES
 config
 # images
-library.less
+vars.less
 page.css
 logo_head*
 default.jpg
