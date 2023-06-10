@@ -184,6 +184,13 @@ page.parse_mint_data = function(data) {
 		? JSON.parse(row.relations_types)
 		: null
 
+	row.change_to_uri = (row.change_to_uri)
+		? JSON.parse(row.change_to_uri)
+		: null
+
+	row.related_data = (row.related_data)
+		? JSON.parse(row.related_data)
+		: null
 
 	return row
 }//end parse_mint_data

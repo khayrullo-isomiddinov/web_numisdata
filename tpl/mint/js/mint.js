@@ -201,7 +201,10 @@ var mint = {
 						'authorship_data',
 						'authorship_names',
 						'authorship_surnames',
-						'authorship_roles'
+						'authorship_roles',
+						'change_to_uri',
+						'related',
+						'related_data'
 					],
 					sql_filter				: "section_id = " + parseInt(section_id),
 					count					: false,
@@ -848,6 +851,7 @@ var mint = {
 					parent			: comments_wrap
 				})
 			}
+
 		// numismatic_comments
 			// if (row_object.numismatic_comments && row_object.numismatic_comments.length>0) {
 			// 	const numismatic_comments = row_object.numismatic_comments
@@ -863,6 +867,59 @@ var mint = {
 			if (block_text_length > 220) {
 				// createExpandableBlock(comments_wrap, line);
 				page.create_expandable_block(comments_wrap, line)
+			}
+
+		// relations
+			// change to
+			if (row_object.change_to_uri && row_object.change_to_uri.length>0) {
+
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "authorship",
+					text_content	: tstring.change_to || "Change to",
+					parent			: line
+				})
+
+
+				for (let i = 0; i < row_object.change_to_uri.length; i++) {
+					const el		= row_object.change_to_uri[i]
+					const label		= el.title || "URI"
+					const uri_text	= '<a class="icon_link info_value" href="' + el.iri + '" target="_blank"> ' + el.title  + '</a>'
+
+					common.create_dom_element({
+						element_type	: "span",
+						inner_html		: uri_text,
+						parent			: line
+					})
+				}
+			}
+			// related
+			if (row_object.related_data && row_object.related_data.length>0) {
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "authorship",
+					text_content	: tstring.related_to || "Related to",
+					parent			: line
+				})
+
+				const ar_labels = row_object.related.split('<br>')
+
+				for (let i = 0; i < row_object.related_data.length; i++) {
+
+					const mint_id	= row_object.related_data[i]
+					const label		= ar_labels[i] || ""
+
+					const link = common.create_dom_element({
+						element_type	: "a",
+						class_name		: "icon_link info_value",
+						href			: page_globals.__WEB_ROOT_WEB__ + '/mint/' + mint_id,
+						text_content	: label,
+						target			: '_blank',
+						parent			: line
+					})
+				}
 			}
 
 		// bibliography_data
