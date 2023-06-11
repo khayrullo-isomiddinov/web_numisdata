@@ -48,7 +48,7 @@ page.render_map_legend = function(){
 
 /**
 * RENDER_EXPORT_DATA_BUTTONS
-* @return promise : DOM node
+* @return DocumentFragment
 */
 page.render_export_data_buttons = function() {
 
@@ -114,16 +114,25 @@ page.render_export_data_buttons = function() {
 
 				return data_object
 			})
-		}
+		}//end get_data function
 
 	// event data_request_done is triggered when new search is done
 		event_manager.subscribe('data_request_done', manage_data_request_done)
 		function manage_data_request_done(options) {
 			// console.warn("data_request_done options:",options);
-			request_body		= options.request_body
-			result				= options.result
-			export_data_parser	= options.export_data_parser || null
-			filter 				= options.filter
+
+			// fill vars values
+				request_body		= options.request_body
+				result				= options.result
+				export_data_parser	= options.export_data_parser || null
+				filter 				= options.filter
+
+			//export_nomisma_rdf check
+				if (result && result.nomisma_rdf) {
+					button_export_nomisma_rdf_container.classList.remove('hide')
+				}else{
+					button_export_nomisma_rdf_container.classList.add('hide')
+				}
 		}
 
 
@@ -322,10 +331,77 @@ page.render_export_data_buttons = function() {
 			})
 		})
 
+	// button_export_nomisma_rdf
+		const button_export_nomisma_rdf_container = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "export_container hide", // default is hidden. Activated on manage_data_request_done event check
+			parent			: fragment
+		})
+		const button_export_nomisma_rdf = common.create_dom_element({
+			element_type	: "input",
+			type			: "button",
+			value			: tstring.export_nomisma_rdf || 'Nomisma RDF',
+			class_name		: "btn primary button_download rdf",
+			parent			: button_export_nomisma_rdf_container
+		})
+		button_export_nomisma_rdf.addEventListener("click", function(e){
+			e.stopPropagation()
+
+			const button = this
+
+			// spinner on
+				button.classList.add("unactive")
+				const spinner = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "spinner small",
+					parent			: button_export_nomisma_rdf_container
+				})
+
+			// row
+				const nomisma_rdf = result && result.nomisma_rdf && result.nomisma_rdf.length>4
+					? result.nomisma_rdf
+					: null
+					if (!nomisma_rdf) {
+						alert("Error. Invalid RDF data");
+						return
+					}
+
+			// file_name
+				const file_name	= 'mib_export_data_nomisma.rdf'
+
+			// Blob data
+				const blob_data = new Blob([nomisma_rdf], {
+					type	: 'text/plain',
+					name	: file_name
+				});
+
+			// create a temporal a node and trigger click
+				const href		= URL.createObjectURL(blob_data)
+				const link_obj	= common.create_dom_element({
+					element_type	: "a",
+					href			: href,
+					download		: file_name
+				})
+				link_obj.click()
+
+			// destroy temporal node
+				link_obj.remove()
+
+			// spinner of
+				spinner.remove()
+				button.classList.remove("unactive")
+		})
+
+
 	return fragment
 };//end render_export_data_buttons
 
 
+
+/**
+* CREATE_SUGGESTIONS_BUTTON
+* @return DocumentFragment
+*/
 page.create_suggestions_button = function(){
 
 	let currentUrl = "";

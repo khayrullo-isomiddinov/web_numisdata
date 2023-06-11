@@ -880,42 +880,42 @@ var coin_row = {
 				}
 
 		// bibliography -- desactivada. por revisar el formato !!! ---
-				if (row.bibliography_data && row.bibliography_data.length>0) {
+			if (row.bibliography_data && row.bibliography_data.length>0) {
 
-					// const group = common.create_dom_element({
-					// 	element_type	: "div",
-					// 	class_name		: "group block_wrapper",
-					// 	parent			: info_container
-					// })
+				// const group = common.create_dom_element({
+				// 	element_type	: "div",
+				// 	class_name		: "group block_wrapper",
+				// 	parent			: info_container
+				// })
 
-					common.create_dom_element({
-						element_type	: "label",
-						class_name		: "left-labels",
-						text_content	: tstring.bibliography || "bibliography",
-						parent			: info_container
-					})
+				common.create_dom_element({
+					element_type	: "label",
+					class_name		: "left-labels",
+					text_content	: tstring.bibliography || "bibliography",
+					parent			: info_container
+				})
 
-					const bibliography_group = common.create_dom_element({
+				const bibliography_group = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "vertical-group",
+					parent			: info_container
+				})
+
+				const ref_biblio		= row.bibliography_data
+				const ref_biblio_length	= ref_biblio.length
+				for (let i = 0; i < ref_biblio_length; i++) {
+
+					// build full ref biblio node
+					const biblio_row_node = biblio_row_fields.render_row_bibliography(ref_biblio[i])
+
+					const biblio_row_wrapper = common.create_dom_element({
 						element_type	: "div",
-						class_name		: "vertical-group",
-						parent			: info_container
+						class_name		: "rigth-values sub-vertical-group",
+						parent			: bibliography_group
 					})
-
-					const ref_biblio		= row.bibliography_data
-					const ref_biblio_length	= ref_biblio.length
-					for (let i = 0; i < ref_biblio_length; i++) {
-
-						// build full ref biblio node
-						const biblio_row_node = biblio_row_fields.render_row_bibliography(ref_biblio[i])
-
-						const biblio_row_wrapper = common.create_dom_element({
-							element_type	: "div",
-							class_name		: "rigth-values sub-vertical-group",
-							parent			: bibliography_group
-						})
-						biblio_row_wrapper.appendChild(biblio_row_node)
-					}
+					biblio_row_wrapper.appendChild(biblio_row_node)
 				}
+			}
 
 		// row_wrapper
 			const row_wrapper = common.create_dom_element({
