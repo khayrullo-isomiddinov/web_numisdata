@@ -748,6 +748,17 @@ page.parse_catalog_data = function(data) {
 			row.full_coins_reference_axis = row.full_coins_reference_axis
 				? JSON.parse(row.full_coins_reference_axis)
 				: null
+
+			// mint relations
+			// row.ref_mint_related = row.ref_mint_related
+			// 	? JSON.parse(row.ref_mint_related)
+			// 	: null
+			row.ref_mint_related_data = row.ref_mint_related_data
+				? JSON.parse(row.ref_mint_related_data)
+				: null
+			row.ref_mint_change_to_uri = row.ref_mint_change_to_uri
+				? JSON.parse(row.ref_mint_change_to_uri)
+				: null
 				
 			new_data.push(row)
 		}

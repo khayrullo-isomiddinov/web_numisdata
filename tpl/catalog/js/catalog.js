@@ -1669,18 +1669,20 @@ var catalog = {
 							console.warn("mint don't have public parent:",ar_mints[i]);
 							continue
 						}
-						// check if the parent is inside the ar_aprents, if not push inside else nothing
+						// check if the parent is inside the ar_parents, if not push inside else nothing
 						const unique_parent = ar_parent.find(item => item.section_id==parent)
 						if(typeof unique_parent==='undefined'){
 							ar_parent.push(mint_parent)
 						}
 					}
+
 					self.parents = ar_parent
 					// create the nodes with the unique parents: ar_parents
 					for (let i = 0; i < ar_parent.length; i++) {
 						// render_mints
 						self.get_children(ar_rows, ar_parent[i], fragment)
 					}
+
 
 					// sort rows
 						// let collator = new Intl.Collator('es',{ sensitivity: 'base', ignorePunctuation:true});
@@ -1741,7 +1743,6 @@ var catalog = {
 				if(finded){
 					continue
 				}
-
 				self.get_child(ar_rows, children[i], catalog_row_wrapper)
 			}
 		}
@@ -1771,6 +1772,11 @@ var catalog = {
 					}
 
 				}, false);
+			}
+
+			if(row_object.term_table==='mints'){
+				const mint_related_node = self.get_mint_relations(row_object)
+				row_node.appendChild( mint_related_node )
 			}
 		}
 	},
@@ -1849,8 +1855,78 @@ var catalog = {
 				resolve(data)
 			})
 		})
-	}//end get_catalog_range_years
+	},//end get_catalog_range_years
 
+
+	get_mint_relations : function(mint){
+
+		const fragment = new DocumentFragment()
+
+
+		const mint_relations = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "mint_relations",
+					parent			: fragment
+				})
+
+
+		// relations
+			// change to
+			if (mint.ref_mint_change_to_uri && mint.ref_mint_change_to_uri.length>0) {
+
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "relation_label",
+					text_content	: tstring.change_to || "Change to",
+					parent			: mint_relations
+				})
+
+
+				for (let i = 0; i < mint.ref_mint_change_to_uri.length; i++) {
+					const el		= mint.ref_mint_change_to_uri[i]
+					const label		= el.title || "URI"
+					const uri_text	= '<a class="icon_link info_value" href="' + el.iri + '" target="_blank"> ' + el.title  + '</a>'
+
+					common.create_dom_element({
+						element_type	: "span",
+						inner_html		: uri_text,
+						parent			: mint_relations
+					})
+				}
+			}
+			// related
+			if (mint.ref_mint_related_data && mint.ref_mint_related_data.length>0) {
+
+
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "relation_label",
+					text_content	: tstring.related_to || "Related to",
+					parent			: mint_relations
+				})
+
+				const ar_labels = mint.ref_mint_related.split('<br>')
+
+				for (let i = 0; i < mint.ref_mint_related_data.length; i++) {
+
+					const mint_id	= mint.ref_mint_related_data[i]
+					const label		= ar_labels[i] || ""
+
+					const link = common.create_dom_element({
+						element_type	: "a",
+						class_name		: "icon_link info_value",
+						href			: page_globals.__WEB_ROOT_WEB__ + '/mint/' + mint_id,
+						text_content	: label,
+						target			: '_blank',
+						parent			: mint_relations
+					})
+				}
+			}
+
+		return fragment
+	},//end get_mint_relations
 
 
 }//end catalog
