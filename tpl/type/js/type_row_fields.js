@@ -46,9 +46,9 @@ export const type_row_fields = {
 				parent			: golden_separator
 			})
 			cite.addEventListener('click', async function(){
-				const main_catalog_data = await page.load_main_catalog()
-				const cite_data = main_catalog_data.result[0];
-				const publication_data = cite_data.publication_data[0];
+				const main_catalog_data	= await page.load_main_catalog()
+				const cite_data			= main_catalog_data.result[0];
+				const publication_data	= cite_data.publication_data[0];
 
 				cite_data.autors = {
 					authorship_data		: item.authorship_data || null,
@@ -377,15 +377,15 @@ export const type_row_fields = {
 				&& item.denomination_data[0].color) {
 				color = item.denomination_data[0].color
 			}
-			const catalog_data = item.catalog
+			const catalog_data = item.catalog || {}
 			const calculable = catalog_data.full_coins_reference_calculable
 				? catalog_data.full_coins_reference_calculable
 				: []
 			const diameter = catalog_data.full_coins_reference_diameter_max
 				? catalog_data.full_coins_reference_diameter_max.filter((v, i) => v && calculable[i])
 				: []
-			const weight = catalog_data.full_coins_reference_weight.filter((v, i) => v && calculable[i])
-				? catalog_data.full_coins_reference_weight
+			const weight = catalog_data.full_coins_reference_weight
+				? catalog_data.full_coins_reference_weight.filter((v, i) => v && calculable[i])
 				: []
 			const axis = catalog_data.full_coins_reference_axis
 				? catalog_data.full_coins_reference_axis.filter((v) => v)
