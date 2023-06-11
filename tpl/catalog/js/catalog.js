@@ -1912,7 +1912,7 @@ var catalog = {
 				for (let i = 0; i < mint.ref_mint_related_data.length; i++) {
 
 					const mint_id	= mint.ref_mint_related_data[i]
-					const label		= ar_labels[i] || ""
+					const label		= ' ' + ar_labels[i] || ""
 
 					const link = common.create_dom_element({
 						element_type	: "a",
