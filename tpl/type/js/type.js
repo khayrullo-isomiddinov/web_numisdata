@@ -181,7 +181,7 @@ var type =  {
 
 		// catalog call
 			const ar_fields = ["section_id","term","term_data","term_table","term_section_tipo","parents",
-							   'ref_mint_number', 'full_coins_reference_calculable', 'full_coins_reference_diameter_max',
+							   'ref_mint_number', 'full_coins_reference_calculable', 'full_coins_reference_discard', 'full_coins_reference_diameter_max',
 							   'full_coins_reference_weight', 'full_coins_reference_axis']
 			ar_calls.push({
 				id		: "catalog",
