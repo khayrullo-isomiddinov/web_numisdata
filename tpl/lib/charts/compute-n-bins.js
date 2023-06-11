@@ -46,10 +46,10 @@ compute_n_bins.doane = function (values) {
 	if (n < 2) {
 		throw new Error("Doane's rule needs at least 2 datapoints")
 	}
-	const sigma = Math.sqrt(6*(n-2)/((n+1)*(n+3)))
-	const std = d3.deviation(values)
-	const mean = d3.mean(values)
-	const sum = d3.sum(values)
+	const sigma	= Math.sqrt(6*(n-2)/((n+1)*(n+3)))
+	const std	= d3.deviation(values)
+	const mean	= d3.mean(values)
+	const sum	= d3.sum(values)
 	// The adjusted Fisher-Pearson skewness coefficient
 	// https://www.itl.nist.gov/div898/software/dataplot/refman2/auxillar/skewness.htm
 	const skew = (Math.sqrt(n*(n+1))/(n-2))*((sum-n*mean)/(n*Math.pow(std, 3)))

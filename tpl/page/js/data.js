@@ -742,6 +742,9 @@ page.parse_catalog_data = function(data) {
 			row.full_coins_reference_calculable = row.full_coins_reference_calculable
 				? JSON.parse(row.full_coins_reference_calculable)
 				: null
+			row.full_coins_reference_discard = row.full_coins_reference_discard
+				? JSON.parse(row.full_coins_reference_discard)
+				: null
 			row.full_coins_reference_axis = row.full_coins_reference_axis
 				? JSON.parse(row.full_coins_reference_axis)
 				: null

@@ -500,25 +500,27 @@ export const analysis =  {
 						const tmp_data		= {}
 
 						const calculable	= ele.full_coins_reference_calculable
+						const discard		= ele.full_coins_reference_discard // discard use true, false and null, null is interpreted as true.
 						const diameter_max	= ele.full_coins_reference_diameter_max
 						const diameter_min	= ele.full_coins_reference_diameter_min
 						const weight		= ele.full_coins_reference_weight
 						const axis			= ele.full_coins_reference_axis
 
+
 						if (diameter_max && diameter_max.length) {
-							const tmp_diameter_max = diameter_max.filter((v, i) => v && calculable[i])
+							const tmp_diameter_max = diameter_max.filter((v, i) => v && calculable[i] && discard[i]!==false)
 							if (tmp_diameter_max.length) {
 								tmp_data.diameter_max = tmp_diameter_max
 							}
 						}
 						if (diameter_min && diameter_min.length) {
-							const tmp_diameter_min = diameter_min.filter((v, i) => v && calculable[i])
+							const tmp_diameter_min = diameter_min.filter((v, i) => v && calculable[i] && discard[i]!==false)
 							if (tmp_diameter_min.length) {
 								tmp_data.diameter_min = tmp_diameter_min
 							}
 						}
 						if (weight && weight.length) {
-							const tmp_weight = weight.filter((v, i) => v && calculable[i])
+							const tmp_weight = weight.filter((v, i) => v && calculable[i] && discard[i]!==false)
 							if (tmp_weight.length) {
 								tmp_data.weight = tmp_weight
 							}
