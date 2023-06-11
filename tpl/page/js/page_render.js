@@ -128,7 +128,8 @@ page.render_export_data_buttons = function() {
 				filter 				= options.filter
 
 			//export_nomisma_rdf check
-				if (result && result.nomisma_rdf) {
+				const exists_nomisma_rdf = result && (result.nomisma_rdf || result[0]?.nomisma_rdf)
+				if (exists_nomisma_rdf) {
 					button_export_nomisma_rdf_container.classList.remove('hide')
 				}else{
 					button_export_nomisma_rdf_container.classList.add('hide')
@@ -358,9 +359,10 @@ page.render_export_data_buttons = function() {
 				})
 
 			// row
-				const nomisma_rdf = result && result.nomisma_rdf && result.nomisma_rdf.length>4
-					? result.nomisma_rdf
-					: null
+				console.log('result:', result);
+				const nomisma_rdf = Array.isArray(result)
+					? result[0].nomisma_rdf
+					: (result.nomisma_rdf || null)
 					if (!nomisma_rdf) {
 						alert("Error. Invalid RDF data");
 						return
