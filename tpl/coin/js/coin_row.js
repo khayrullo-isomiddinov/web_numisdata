@@ -27,11 +27,11 @@ var coin_row = {
 			if (dedalo_logged===true) {
 
 				const link = common.create_dom_element({
-					element_type 	: "a",
-					class_name 		: "section_id go_to_dedalo",
-					text_content 	: row.section_id,
-					href 			: '/dedalo/lib/dedalo/main/?t=numisdata4&id=' + row.section_id,
-					parent 			: fragment
+					element_type	: "a",
+					class_name		: "section_id go_to_dedalo",
+					text_content	: row.section_id,
+					href			: '/dedalo/core/page/?tipo=numisdata4&id=' + row.section_id,
+					parent			: fragment
 				})
 				link.setAttribute('target', '_blank');
 			}

@@ -48,11 +48,11 @@ var biblio_row_fields = {
 		if (dedalo_logged===true) {
 
 			const link = common.create_dom_element({
-				element_type 	: "a",
-				class_name 		: "section_id go_to_dedalo",
-				text_content 	: biblio_object.section_id + " " + this.get_typology(),
-				href 			: '/dedalo/lib/dedalo/main/?t=rsc205&id=' + biblio_object.section_id,
-				parent 			: line
+				element_type	: "a",
+				class_name		: "section_id go_to_dedalo",
+				text_content	: biblio_object.section_id + " " + this.get_typology(),
+				href			: '/dedalo/core/page/?tipo=rsc205&id=' + biblio_object.section_id,
+				parent			: line
 			})
 			link.setAttribute('target', '_blank');
 		}

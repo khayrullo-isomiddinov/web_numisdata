@@ -686,7 +686,7 @@ var mint = {
 					element_type	: "a",
 					class_name		: "section_id go_to_dedalo",
 					text_content	: row_object.section_id,
-					href			: '/dedalo/lib/dedalo/main/?t=numisdata6&id=' + row_object.section_id,
+					href			: '/dedalo/core/page/?tipo=numisdata6&id=' + row_object.section_id,
 					parent			: line
 				})
 				link.setAttribute('target', '_blank');
@@ -772,7 +772,7 @@ var mint = {
 					text_content	: tstring.click_to_copy || 'Click to copy',
 					parent 			: popUpContainer
 				})
-				
+
 			})
 
 		// name & place

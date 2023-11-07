@@ -544,7 +544,7 @@ export const type_row_fields = {
 			element_type	: "a",
 			class_name		: "section_id go_to_dedalo",
 			inner_html		: item.section_id + " <small>(" + section_tipo +")</small>",
-			href			: '/dedalo/lib/dedalo/main/?t=' + section_tipo + '&id=' + item.section_id
+			href			: '/dedalo/core/page/?tipo=' + section_tipo + '&id=' + item.section_id
 		})
 		dedalo_link.setAttribute('target', '_blank');
 
@@ -2742,7 +2742,7 @@ export const type_row_fields = {
 				})
 			}
 
-			if (item[data_ref][0].iri.length>0){
+			if (item[data_ref][0].iri && item[data_ref][0].iri.length>0){
 				const uris	= page.split_data(item[data_ref][0].iri, ' | ')
 				for (let i=0; i<uris.length;i++){
 
