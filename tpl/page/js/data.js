@@ -560,7 +560,7 @@ page.parse_catalog_data = function(data) {
 				row.ref_type_symbol_reverse = row.ref_type_symbol_reverse
 					? self.parse_legend_svg(row.ref_type_symbol_reverse)
 					: null
-			
+
 			if (IsJson(row.term_data)){
 				row.term_data = JSON.parse(row.term_data)
 			}
@@ -573,7 +573,7 @@ page.parse_catalog_data = function(data) {
 				}
 				return true
 			}
-			
+
 			row.term_section_id	= row.term_data ? row.term_data[0] : null
 			row.children		= row.children ? JSON.parse(row.children) : null
 			row.parent			= row.parent
@@ -692,7 +692,7 @@ page.parse_catalog_data = function(data) {
 					: null
 				*/
 				//
-	
+
 			row.term_section_label = row.term_section_label
 				? JSON.parse(row.term_section_label)
 				: null
@@ -712,7 +712,7 @@ page.parse_catalog_data = function(data) {
 			row.p_territory = row.p_territory
 				? JSON.parse(row.p_territory)
 				: null
-			
+
 			row.parents = row.parents
 				? (
 					IsJson(row.parents)
@@ -720,7 +720,7 @@ page.parse_catalog_data = function(data) {
 						: row.parents
 				)
 				: null
-			
+
 			row.parents_text = row.parents_text
 				? JSON.parse(row.parents_text)
 				: null
@@ -759,7 +759,7 @@ page.parse_catalog_data = function(data) {
 			row.ref_mint_change_to_uri = row.ref_mint_change_to_uri
 				? JSON.parse(row.ref_mint_change_to_uri)
 				: null
-				
+
 			new_data.push(row)
 		}
 
