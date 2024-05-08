@@ -706,7 +706,7 @@ var map = {
 			const map_row = self.master_map_global_data[i]
 
 			let found_coins = []
-			switch(map_row.ref_table) {
+			switch(map_row.table) {
 				case 'mints':
 					found_coins = coin_rows.filter(function(el){
 						// return '["'+map_row.ref_section_id+'"]'==el.mint_data
@@ -924,13 +924,13 @@ var map = {
 		let item_type
 
 		// title line
-			if (global_data_item.ref_table) {
+			if (global_data_item.table) {
 				const title_line = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "line-tittle-wrap",
 					parent			: wrapper
 				})
-				switch(global_data_item.ref_table){
+				switch(global_data_item.table){
 					case 'mints'	: item_type = 'mint';		break;
 					case 'hoards'	: item_type = 'hoard';		break;
 					case 'findspots': item_type = 'findspot';	break;

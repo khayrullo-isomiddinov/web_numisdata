@@ -957,6 +957,14 @@ page.parse_map_global_data = function(ar_rows) {
 				continue;
 			}
 
+			// ref_table
+			// map new column name 'ref_table' => 'table'
+			// 08-05-2024 Note that column 'table' has been renamed to 'ref_table'
+			// to prevent name collisions and selection issues
+				if (row.ref_table) {
+					row.table = row.ref_table
+				}
+
 			row.georef_geojson = row.georef_geojson
 				? JSON.parse(row.georef_geojson)
 				: null
@@ -979,7 +987,7 @@ page.parse_map_global_data = function(ar_rows) {
 						case 'findspots': name = 'findspot';	break;
 					}
 					return name
-				})(row.ref_table);
+				})(row.table);
 
 				const coins_list_total = row.coins_list ? row.coins_list.length : 0;
 				const types_list_total = row.types_list ? row.types_list.length : 0;
@@ -997,7 +1005,7 @@ page.parse_map_global_data = function(ar_rows) {
 					// useful properties
 					ref_section_id		: row.ref_section_id,
 					ref_section_tipo	: row.ref_section_tipo,
-					table				: row.ref_table,
+					table				: row.table,
 					name				: row.name,
 					term_id				: row.section_id
 				}
