@@ -288,6 +288,9 @@
 	};//end event_manager
 
 	/*global tstring, page_globals, SHOW_DEBUG, row_fields, common, page, forms, document, DocumentFragment, tstring, console */
+	/*eslint no-undef: "error"*/
+	/*jshint esversion: 6 */
+
 
 
 
