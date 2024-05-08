@@ -979,7 +979,7 @@ page.parse_map_global_data = function(ar_rows) {
 						case 'findspots': name = 'findspot';	break;
 					}
 					return name
-				})(row.table);
+				})(row.ref_table);
 
 				const coins_list_total = row.coins_list ? row.coins_list.length : 0;
 				const types_list_total = row.types_list ? row.types_list.length : 0;
@@ -994,17 +994,17 @@ page.parse_map_global_data = function(ar_rows) {
 					coins_total			: coins_list_total,
 					types_total			: types_list_total,
 					description			: description,
-					// usefull properties
+					// useful properties
 					ref_section_id		: row.ref_section_id,
 					ref_section_tipo	: row.ref_section_tipo,
-					table				: row.table,
+					table				: row.ref_table,
 					name				: row.name,
 					term_id				: row.section_id
 				}
 
 				const marker_icon = page.maps_config.markers[name];
 
-				// nomalized item format to use it in leaflet and popup
+				// normalized item format to use it in leaflet and popup
 				const item = {
 					lat			: null,
 					lon			: null,

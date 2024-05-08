@@ -351,7 +351,7 @@ function map_factory() {
 							},
 							style : function() {
 								// see: https://leafletjs.com/SlavaUkraini/reference.html#path-stroke
-								return element.marker_icon.path || null
+								return element.marker_icon?.path || null
 								// return {
 								// 	weight		: 3, // Stroke width in pixels
 								// 	opacity		: 1, // Stroke opacity

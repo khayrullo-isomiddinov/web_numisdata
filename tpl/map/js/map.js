@@ -184,7 +184,9 @@ var map = {
 		// events
 			event_manager.subscribe('map_selected_marker', map_selected_marker)
 			function map_selected_marker(options){
-				// console.log("///-> map_selected_marker options:",options);
+				if(SHOW_DEBUG===true) {
+					console.log("///-> map_selected_marker options:",options);
+				}
 
 				// options
 					const selected_element = typeof options.item.group[0]!=="undefined"
@@ -704,7 +706,7 @@ var map = {
 			const map_row = self.master_map_global_data[i]
 
 			let found_coins = []
-			switch(map_row.table) {
+			switch(map_row.ref_table) {
 				case 'mints':
 					found_coins = coin_rows.filter(function(el){
 						// return '["'+map_row.ref_section_id+'"]'==el.mint_data
@@ -922,13 +924,13 @@ var map = {
 		let item_type
 
 		// title line
-			if (global_data_item.table) {
+			if (global_data_item.ref_table) {
 				const title_line = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "line-tittle-wrap",
 					parent			: wrapper
 				})
-				switch(global_data_item.table){
+				switch(global_data_item.ref_table){
 					case 'mints'	: item_type = 'mint';		break;
 					case 'hoards'	: item_type = 'hoard';		break;
 					case 'findspots': item_type = 'findspot';	break;
