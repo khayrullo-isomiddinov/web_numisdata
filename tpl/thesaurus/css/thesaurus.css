@@ -3,6 +3,21 @@
 * Global less vars
 * (file included from vars.less)
 */
+.button_icon_simple {
+  background-repeat: no-repeat;
+  background-position: center center;
+  width: 1em;
+  height: 1em;
+  cursor: pointer;
+  background-size: contain;
+  opacity: 0.7;
+}
+.button_icon_simple:active {
+  opacity: 0.5;
+}
+.button_icon_simple:hover {
+  opacity: 1;
+}
 #rows_list {
   min-height: 14em;
   position: relative;
@@ -58,8 +73,8 @@
   padding: 0.15em;
   padding-left: 0.35em;
   padding-right: 0.35em;
-  vertical-align: text-top;
-  height: 1.8em;
+  vertical-align: middle;
+  min-height: 2rem;
   line-height: 100%;
   color: white;
   padding-top: 0.26em;
@@ -79,13 +94,15 @@
 }
 .tree_wrapper .tree_node img.illustration {
   background-color: #ffffff;
-  cursor: pointer;
   display: inline-block;
   height: 2rem;
   margin-left: 0.333rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
   transition: transform 0.3s ease-out;
   vertical-align: middle;
   border-radius: 4px;
+  cursor: pointer;
 }
 @media screen and (max-width: 625px) {
   .tree_wrapper .tree_node img.illustration {
@@ -93,8 +110,14 @@
   }
 }
 .tree_wrapper .tree_node img.illustration.big {
-  transform: scale(10);
-  z-index: 9999;
+  transform: scale(11);
+  position: relative;
+  z-index: 99999;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  padding-top: 0.25rem;
+}
+.tree_wrapper .tree_node img.illustration.big.thumb_image {
+  padding-top: 0px;
 }
 .tree_wrapper .tree_node > .nd {
   font-size: 0.8em;
@@ -106,6 +129,7 @@
   background-size: 76%;
   background-position: center center;
   width: 1em;
+  margin-left: 0.5rem;
   cursor: pointer;
 }
 .tree_wrapper .tree_node > .btn_scope_note:active {
@@ -145,6 +169,7 @@
 .tree_wrapper .tree_node > .scope_note {
   background-color: #b7996d;
   padding: 0.75em;
+  margin-top: 0.5rem;
   line-height: 1.4em;
   color: #ffffff;
   border-radius: 3px;
@@ -161,6 +186,7 @@
 }
 .tree_wrapper > .tree_node {
   margin-left: 0;
+  display: block;
 }
 .tree_wrapper > .tree_node > .term {
   font-weight: 600 !important;

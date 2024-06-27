@@ -709,6 +709,10 @@ var thesaurus =  {
 					}
 					break;
 
+				case 'epigraphy':
+					// Nothing to do here
+					break;
+
 				default:
 					// nothing to do
 					break;
