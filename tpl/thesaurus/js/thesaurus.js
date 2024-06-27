@@ -1228,7 +1228,7 @@ var thesaurus =  {
 			const q_selected	= options.q_selected || null
 			const limit			= options.limit
 
-			// data . Simplifies data format (allways on data_clean)
+			// data . Simplifies data format (always on data_clean)
 			const data = self.data_clean.map(item => {
 				const element = {
 					term		: item.term,
@@ -1252,6 +1252,10 @@ var thesaurus =  {
 
 					// q try
 						if (q && q.length>0) {
+
+							if(!q_column || !row[q_column]){
+								return false
+							}
 
 							// remove accents from text
 							const text_normalized = row[q_column].normalize("NFD").replace(/[\u0300-\u036f]/g, "")

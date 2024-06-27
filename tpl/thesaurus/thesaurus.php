@@ -197,5 +197,3 @@
 					$thesaurus_options->root_term = $root_term;
 				break;
 		}
-
-

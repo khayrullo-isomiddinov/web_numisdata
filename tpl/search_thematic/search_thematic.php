@@ -1,7 +1,7 @@
 <?php
 
 // controller
-	
+
 	// inludes
 		include(__WEB_TEMPLATE_PATH__ .'/lib/web_ts_term/class.web_ts_term.php');
 		include(__WEB_TEMPLATE_PATH__ .'/lib/web_indexation_node/class.web_indexation_node.php');
@@ -11,7 +11,7 @@
 		// tooltips lib jquery tooltipster
 			page::$js_ar_url[]  = __WEB_TEMPLATE_WEB__ . '/assets/lib/tipsy/jquery.tipsy.js';
 			page::$css_ar_url[] = __WEB_TEMPLATE_WEB__ . '/assets/lib/tipsy/tipsy.css';
-			
+
 			page::$js_ar_url[]  = __WEB_TEMPLATE_WEB__ . '/tpl_common/js/tpl_common.js';
 		// web_ts_term
 			page::$js_ar_url[]  = __WEB_TEMPLATE_WEB__ . '/lib/web_ts_term/js/web_ts_term.js';
@@ -21,17 +21,17 @@
 
 
 
-	
+
 	// template vars
 		$title 			= $this->get_element_from_template_map('title', $template_map->{$mode});
 		$abstract  		= $this->get_element_from_template_map('abstract', $template_map->{$mode});
 		$body  			= $this->get_element_from_template_map('body', $template_map->{$mode});
-		$ar_image  		= $this->get_element_from_template_map('image', $template_map->{$mode});	
+		$ar_image  		= $this->get_element_from_template_map('image', $template_map->{$mode});
 			#dump($ar_image, ' ar_image ++ '.to_string()); die();
 
 
 	// numero de registros por página
-		$nregpp = 1; 
+		$nregpp = 1;
 		if(isset($_SESSION['nregpp'])) $nregpp = $_SESSION['nregpp'];
 		if(isset($_REQUEST['nregpp'])) $nregpp = $_REQUEST['nregpp'];
 
@@ -48,7 +48,7 @@
 
 			case (!empty($q) && strlen($q)>=2):
 				#
-				# SEARCH		
+				# SEARCH
 				$options = new stdClass();
 					$options->dedalo_get	= 'thesaurus_search';
 					$options->table			= 'ts_northern_palaeohispanic,ts_south_palaeohispanic,ts_southern_palaeohispanic,ts_greek,ts_latin,ts_punic,ts_symbols'; // ts_countermarks
@@ -58,27 +58,25 @@
 					$options->rows_per_page	= (int)$nregpp;
 					$options->tree_root		= 'first_parent';#'last_parent'; # first_parent | last_parent
 					$options->publication_filter_sql = 'AND `illustration` IS NULL';
-					
-					
+
 				$response = json_web_data::get_data($options);
-					#dump($response, ' response ++ '.to_string()); die();
 
 				$search_data  = $response->search_data;
 				$ar_ts_terms  = $response->ar_ts_terms;
 				$ar_highlight = $response->ar_highlight;
 
-				# paginations usefull vars
-				$viewed_records = count($search_data->result);
+				# pagination useful vars
+				$viewed_records = is_array($search_data->result) ? count($search_data->result) : 0;
 				$total_records  = isset($search_data->total) ? $search_data->total : $viewed_records;
 				$page_number 	= $options->page_number;
 				$rows_per_page 	= $options->rows_per_page;
 
-				$rows_data_ejemplos = false;					
-			
+				$rows_data_ejemplos = false;
+
 				$searching = true;
-				break;			
-			
-			default:				
+				break;
+
+			default:
 				// root level terms query
 					$options = new stdClass();
 						$options->dedalo_get 	= 'thesaurus_root_list';
@@ -93,7 +91,7 @@
 						'id' 		=> 'thesaurus_root_list',
 						'options' 	=> $options
 					];
-			
+
 
 				// combi
 					$options = new stdClass();
