@@ -1207,6 +1207,12 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 				item.children = current_ar_children
 			}
 
+		// dd_relations
+			if (item.dd_relations) {
+				item.dd_relations = JSON.parse(item.dd_relations)
+			}
+
+
 		data.push(item)
 	}
 

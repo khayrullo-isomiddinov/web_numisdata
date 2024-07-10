@@ -102,7 +102,7 @@ var thesaurus =  {
 		// tree. load tree data and render tree nodes
 			self.load_tree_data({})
 			.then(function(response){
-				// console.log("/// load_tree_data response:",response);
+				console.log("/// set_up load_tree_data response:", response);
 
 				// result check
 					if (!response.result) {
@@ -171,8 +171,8 @@ var thesaurus =  {
 			// 	'space',
 			// 	'time',
 			// 	'tld',
-			// 	'mib_bibliography'
-			// 	// 'relations'
+			// 	'mib_bibliography',
+			// 	'dd_relations'
 			// ]
 
 		// options
@@ -377,7 +377,155 @@ var thesaurus =  {
 				parent			: tree_node
 			})
 
-		// links based on WEB_AREA value (mints_hierarchy, symbols, iconography, countermarks)
+		// scroll
+			// self.scrolled = false
+			// if (to_hilite && self.scrolled===false) {
+			// 	// console.log("to_hilite:",row.term, row.term_id);
+			// 	common.when_in_dom(tree_node, function(){
+			// 		tree_node.scrollIntoView()
+			// 	})
+			// 	self.scrolled = true
+			// }
+
+		// nd (no descriptor)
+			if (row.nd && row.nd.length>0) {
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "nd",
+					inner_html		: "[" + row.nd.join(", ") + "]",
+					parent			: tree_node
+				})
+			}
+
+		// illustration (svg)
+			if (row.illustration && row.illustration.length>0) {
+				const image = common.create_dom_element({
+					element_type	: "img",
+					class_name		: "illustration",
+					src				: page_globals.__WEB_BASE_URL__ + row.illustration,
+					parent			: tree_node
+				})
+				const outsideClickListener = (event) => {
+					const target = event.target;
+					if (target===image) {
+						image.classList.toggle('big')
+					}else{
+						image.classList.remove('big')
+					}
+				}
+				// document event click
+				document.addEventListener('click', outsideClickListener)
+			}
+
+		// buttons
+			// button scope_note
+				if (row.scope_note && row.scope_note.length>0) {
+					const btn_scope_note = common.create_dom_element({
+						element_type	: "span",
+						class_name		: "btn_scope_note",
+						parent			: tree_node
+					})
+					btn_scope_note.addEventListener("mousedown", function(){
+						if (this.classList.contains("open")) {
+							scope_note.classList.add("hide")
+							this.classList.remove("open")
+						}else{
+							scope_note.classList.remove("hide")
+							this.classList.add("open")
+						}
+					})
+				}
+
+			// button relations
+				let btn_relations
+				if (row.relations && row.relations.length>0) {
+					btn_relations = common.create_dom_element({
+						element_type	: "span",
+						class_name		: "btn_relations",
+						// inner_html	: "Relations",
+						parent			: tree_node
+					})
+					btn_relations.addEventListener("mousedown", function(){
+						if (this.classList.contains("open")) {
+							relations_container.classList.add("hide")
+							this.classList.remove("open")
+						}else{
+							relations_container.classList.remove("hide")
+							this.classList.add("open")
+						}
+					})
+				}
+
+			// button indexation
+				let btn_indexation
+				if (row.indexation && row.indexation.length>0) {
+					btn_indexation = common.create_dom_element({
+						element_type	: "span",
+						class_name		: "btn_indexation",
+						// inner_html	: "indexation",
+						parent			: tree_node
+					})
+					btn_indexation.addEventListener("mousedown", function(){
+						if (this.classList.contains("open")) {
+							indexation_container.classList.add("hide")
+							this.classList.remove("open")
+						}else{
+							indexation_container.classList.remove("hide")
+							this.classList.add("open")
+						}
+					})
+				}
+
+			// button children (arrow open)
+				if (row.children && row.children.length>0) {
+
+					const open_style = row.state==="opened" ? " open" : ""
+					const arrow = common.create_dom_element({
+						element_type	: "span",
+						class_name		: "arrow" + open_style,
+						parent			: tree_node
+					})
+					arrow.addEventListener("mousedown", function(e){
+						e.stopPropagation()
+
+						// state  set based on current classList contains open/hide
+							let new_state
+							if (this.classList.contains("open")) {
+								branch.classList.add("hide")
+								this.classList.remove("open")
+								// new_state
+								new_state = "closed"
+							}else{
+								branch.classList.remove("hide")
+								this.classList.add("open")
+								// new_state
+								new_state = "opened"
+							}
+
+						// state update (sessionStorage)
+							const current_state = self.tree_state[row.term_id]
+							if (current_state!==new_state) {
+								// current_state.state = new_state
+								self.tree_state[row.term_id] = new_state
+								// update sessionStorage tree_state var
+								sessionStorage.setItem('tree_state_' + WEB_AREA, JSON.stringify(self.tree_state));
+							}
+					})
+				}
+
+			// buttons_additional
+				const buttons_additional = common.create_dom_element({
+					element_type	: 'span',
+					class_name		: 'buttons_additional',
+					parent			: tree_node
+				})
+				const container_additional = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'container_additional hide',
+					parent			: tree_node
+				})
+
+			// links based on WEB_AREA value (mints_hierarchy, symbols, iconography, countermarks)
 			switch (WEB_AREA) {
 				case 'mints_hierarchy':
 					// link to mint
@@ -396,6 +544,251 @@ var thesaurus =  {
 						})
 					}
 					break;
+
+				case 'epigraphy': {
+					// epigraphy
+
+						// legends
+						const build_legends = async () => {
+							const ar_legends = row.dd_relations && row.dd_relations.length >0
+								? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41')
+								: []
+							// debug
+							// if (row.term_id=='scell1_101') {
+							// 	console.log('row:', row);
+							// }
+							const is_latin = row.term_id.includes('sclat1')
+							if (ar_legends.length || is_latin===true) {
+
+								const load_legends_data = (ar_legends) => {
+
+									// filter
+										const legends_filter = []
+										const ar_legends_length = ar_legends.length
+										for (let i = 0; i < ar_legends_length; i++) {
+											const item = ar_legends[i]
+											legends_filter.push(
+												`ref_type_legend_obverse_data LIKE '%"${item.section_id}"%' OR ref_type_design_reverse_data LIKE '%"${item.section_id}"%'`
+											)
+										}
+										// latin case. Additional search in plain text for Unicode letters
+										if (is_latin===true && ar_legends.length===0) {
+											legends_filter.push(
+												`ref_type_legend_obverse_text LIKE '%${row.term}%' OR ref_type_legend_reverse_text LIKE '%${row.term}%'`
+											)
+										}
+										const sql_filter = legends_filter.join(' OR ')
+
+									return data_manager.request({
+										body : {
+											code		: page_globals.API_WEB_USER_CODE,
+											lang		: page_globals.WEB_CURRENT_LANG_CODE,
+											db_name		: page_globals.WEB_DB,
+											dedalo_get	: 'records',
+											table		: 'catalog',
+											ar_fields	: '*',
+											count		: false,
+											limit		: 10,
+											sql_filter	: sql_filter
+										}
+									})
+								}//end load_legends_data
+								load_legends_data(ar_legends)
+								.then(function(api_response){
+									if (!api_response.result || api_response.result.length===0) {
+										return
+									}
+
+									const load_legends = (e) => {
+										e.stopPropagation()
+
+										// close container
+											if (container_additional.legends_container) {
+												container_additional.legends_container.remove()
+												container_additional.legends_container = undefined
+												return
+											}
+
+										// data
+											const data = link_legends.data
+											if (!data) {
+												return
+											}
+
+										// legends_container
+											const legends_container = container_additional.legends_container
+												? container_additional.legends_container
+												: (()=>{
+													const legends_container = common.create_dom_element({
+														element_type	: 'div',
+														class_name		: 'epi_container legends_container',
+														parent			: container_additional
+													})
+													container_additional.legends_container = legends_container
+													return legends_container
+												  })();
+
+											// clean container
+												// while (legends_container.firstChild) {
+												// 	legends_container.removeChild(legends_container.firstChild);
+												// }
+
+											// render types
+												const data_length = data.length
+												for (let i = 0; i < data_length; i++) {
+													const row = data[i]
+													row.add_denomination = true // Allow display denomination like 'Bronze'
+													const node = catalog_row_fields.draw_item(row)
+													legends_container.appendChild(node)
+												}
+									}//end load_legends
+
+									// link legends node
+									const link_legends = common.create_dom_element({
+										element_type	: 'a',
+										class_name		: 'epi_link legends_link',
+										inner_html		: (tstring.legends || 'Legends'),
+										parent			: buttons_additional
+									})
+									link_legends.addEventListener('click', load_legends)
+									if(SHOW_DEBUG===true) {
+										link_legends.title = 'term_id:' + row.term_id + '\nar_legends: ' + JSON.stringify(ar_legends)
+									}
+
+									// fix parsed data
+									link_legends.data = page.parse_catalog_data(api_response.result)
+
+									// active link (opacity transition)
+									setTimeout(function(){
+										link_legends.classList.add('active')
+										container_additional.classList.remove('hide')
+									}, 1)
+								})
+							}//end if (ar_legends.length)
+						}//end build_legends
+
+						// countermarks
+						const build_countermarks = () => {
+							const ar_relations = row.dd_relations && row.dd_relations.length >0
+								? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata4')
+								: []
+							if (ar_relations.length) {
+								ar_relations.push({section_id:247}) // test data
+								const load_relations_data = (ar_relations) => {
+
+									// filter
+										const relations_filter = []
+										const ar_relations_length = ar_relations.length
+										for (let i = 0; i < ar_relations_length; i++) {
+											const item = ar_relations[i]
+											relations_filter.push(
+												`countermark_obverse_data like '%"${item.section_id}"%' OR countermark_reverse_data like '%"${item.section_id}"%'`
+											)
+										}
+										const sql_filter = relations_filter.join(' OR ')
+
+									return data_manager.request({
+										body : {
+											code			: page_globals.API_WEB_USER_CODE,
+											lang			: page_globals.WEB_CURRENT_LANG_CODE,
+											db_name			: page_globals.WEB_DB,
+											dedalo_get		: 'records',
+											table			: 'coins',
+											ar_fields		: '*',
+											count			: false,
+											sql_filter		: sql_filter,
+											resolve_portals_custom	: {
+												'bibliography_data' : 'bibliographic_references'
+											}
+										}
+									})
+								}//end load_relations_data
+								load_relations_data(ar_relations)
+								.then(function(api_response){
+									console.log('api_response:', api_response);
+									if (!api_response.result || api_response.result.length===0) {
+										return
+									}
+
+									const render_countermarks = (e) => {
+										e.stopPropagation()
+
+										// close container
+											if (container_additional.countermarks_container) {
+												container_additional.countermarks_container.remove()
+												container_additional.countermarks_container = undefined
+												return
+											}
+
+										// data
+											const data = link_countermarks.data
+											if (!data) {
+												return
+											}
+
+										// countermarks_container
+											const countermarks_container = container_additional.countermarks_container
+												? container_additional.countermarks_container
+												: (()=>{
+													const countermarks_container = common.create_dom_element({
+														element_type	: 'div',
+														class_name		: 'epi_container coins_list countermarks_container',
+														parent			: container_additional
+													})
+													container_additional.countermarks_container = countermarks_container
+													return countermarks_container
+												  })();
+
+											// clean container
+												// while (countermarks_container.firstChild) {
+												// 	countermarks_container.removeChild(countermarks_container.firstChild);
+												// }
+
+											// render types
+												const data_length = data.length
+												for (let i = 0; i < data_length; i++) {
+													const row = data[i]
+													const coin_node	= type_row_fields_min.type_row_fields.draw_coin(row)
+													countermarks_container.appendChild(coin_node)
+												}
+									}//end render_countermarks
+
+									// link countermarks node
+									const link_countermarks = common.create_dom_element({
+										element_type	: 'a',
+										class_name		: 'epi_link countermarks_link',
+										inner_html		: tstring.countermarks || 'Countermarks',
+										parent			: buttons_additional
+									})
+									link_countermarks.addEventListener('click', render_countermarks)
+
+									// fix parsed data
+									link_countermarks.data = page.parse_coin_data(api_response.result)
+
+									// active link (opacity transition)
+									setTimeout(function(){
+										link_countermarks.classList.add('active')
+									}, 1)
+								})
+							}//end if (ar_relations.length)
+						}//end build_countermarks
+
+					// set node only when it is in DOM (to save browser resources)
+						const observer = new IntersectionObserver(function(entries) {
+							const entry = entries[1] || entries[0]
+							if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
+								observer.disconnect();
+								build_legends()
+								setTimeout(function(){
+									// build_countermarks()
+								}, 5)
+							}
+						}, { threshold: [0] });
+						setTimeout(function(){
+							observer.observe(term);
+						}, 10)
+					break;
+				}
 
 				case 'symbols':
 					// catalog
@@ -632,7 +1025,7 @@ var thesaurus =  {
 								if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
 									observer.disconnect();
 
-									// delegates chek task to worker. When finish, show link button if target result exists
+									// delegates check task to worker. When finish, show link button if target result exists
 										const current_worker = new Worker(__WEB_TEMPLATE_WEB__ + '/thesaurus/js/worker.js');
 										const body = {
 											code		: page_globals.API_WEB_USER_CODE,
@@ -709,268 +1102,130 @@ var thesaurus =  {
 					}
 					break;
 
-				case 'epigraphy':
-					// Nothing to do here
-					break;
-
 				default:
 					// nothing to do
 					break;
 			}
 
-		// scroll
-			// self.scrolled = false
-			// if (to_hilite && self.scrolled===false) {
-			// 	// console.log("to_hilite:",row.term, row.term_id);
-			// 	common.when_in_dom(tree_node, function(){
-			// 		tree_node.scrollIntoView()
-			// 	})
-			// 	self.scrolled = true
-			// }
 
-		// nd (no descriptor)
-			if (row.nd && row.nd.length>0) {
-				common.create_dom_element({
-					element_type	: "span",
-					class_name		: "nd",
-					inner_html		: "[" + row.nd.join(", ") + "]",
-					parent			: tree_node
-				})
-			}
-
-		// illustration (svg)
-			if (row.illustration && row.illustration.length>0) {
-				const image = common.create_dom_element({
-					element_type	: "img",
-					class_name		: "illustration",
-					src				: page_globals.__WEB_BASE_URL__ + row.illustration,
-					parent			: tree_node
-				})
-				const outsideClickListener = (event) => {
-					const target = event.target;
-					if (target===image) {
-						image.classList.toggle('big')
-					}else{
-						image.classList.remove('big')
-					}
-				}
-				// document event click
-				document.addEventListener('click', outsideClickListener)
-			}
-
-		// buttons
-			// button scope_note
+		// wrappers
+			// scope note wrapper
+				let scope_note
 				if (row.scope_note && row.scope_note.length>0) {
-					const btn_scope_note = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "btn_scope_note",
-						parent			: tree_node
-					})
-					btn_scope_note.addEventListener("mousedown", function(){
-						if (this.classList.contains("open")) {
-							scope_note.classList.add("hide")
-							this.classList.remove("open")
-						}else{
-							scope_note.classList.remove("hide")
-							this.classList.add("open")
-						}
-					})
+
+					const hide_style = row.state==="opened" ? "" : " hide"
+
+					// scope_note
+						const scope_note_text = row.scope_note.replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/g,'');
+						scope_note = common.create_dom_element({
+							element_type	: "div",
+							class_name		: "scope_note hide",
+							inner_html		: scope_note_text,
+							parent			: tree_node
+						})
 				}
 
-			// button relations
-				let btn_relations
+			// relations wrapper
+				let relations_container
 				if (row.relations && row.relations.length>0) {
-					btn_relations = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "btn_relations",
-						// inner_html	: "Relations",
-						parent			: tree_node
-					})
-					btn_relations.addEventListener("mousedown", function(){
-						if (this.classList.contains("open")) {
-							relations_container.classList.add("hide")
-							this.classList.remove("open")
-						}else{
+
+					// relations_container
+						relations_container = common.create_dom_element({
+							element_type	: "div",
+							class_name		: "relations_container hide",
+							parent			: tree_node
+						})
+
+						// Callback function to execute when mutations are observed
+						const callback = function(mutationsList, observer) {
+							// Use traditional 'for loops' for IE 11
+							for(let mutation of mutationsList) {
+								if (mutation.type==='attributes' && mutation.attributeName==='class') {
+										// console.log('The ' + mutation.attributeName + ' attribute was modified.');
+										// console.log("mutationsList:",mutationsList);
+										// console.log("mutationsList.target:",mutationsList[0].target);
+									if (!mutationsList[0].target.classList.contains("hide")) {
+
+										// draw nodes
+										self.render_relation_nodes(row, relations_container, self, false)
+
+										// Stop observing
+										observer.disconnect();
+									}
+								}
+							}
+						};
+
+						// Create an observer instance linked to the callback function
+						const observer = new MutationObserver(callback);
+
+						// Start observing the target node for configured mutations
+						observer.observe(relations_container, { attributes: true, childList: false, subtree: false });
+
+						// console.log("self.hilite_relations_limit:",self.hilite_relations_limit, self.hilite_relations_showed);
+
+						if (row.hilite===true && self.hilite_relations_showed<self.hilite_relations_limit) {
+							// relations_container.classList.remove("hide")
+							// btn_relations.click()
 							relations_container.classList.remove("hide")
-							this.classList.add("open")
+							btn_relations.classList.add("open")
+
+							// increment hilite_relations_showed until reach self.hilite_relations_limit
+							self.hilite_relations_showed++
 						}
-					})
 				}
 
-			// button indexation
-				let btn_indexation
+			// indexation wrapper
+				let indexation_container
 				if (row.indexation && row.indexation.length>0) {
-					btn_indexation = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "btn_indexation",
-						// inner_html	: "indexation",
-						parent			: tree_node
-					})
-					btn_indexation.addEventListener("mousedown", function(){
-						if (this.classList.contains("open")) {
-							indexation_container.classList.add("hide")
-							this.classList.remove("open")
-						}else{
+
+					// indexation_container
+						indexation_container = common.create_dom_element({
+							element_type	: "div",
+							class_name		: "indexation_container hide",
+							parent			: tree_node
+						})
+
+						// Callback function to execute when mutations are observed
+						const callback = function(mutationsList, observer) {
+							// Use traditional 'for loops' for IE 11
+							for(let mutation of mutationsList) {
+								if (mutation.type==='attributes' && mutation.attributeName==='class') {
+										// console.log('The ' + mutation.attributeName + ' attribute was modified.');
+										// console.log("mutationsList:",mutationsList);
+										// console.log("mutationsList.target:",mutationsList[0].target);
+									if (!mutationsList[0].target.classList.contains("hide")) {
+
+										// draw nodes
+										self.render_indexation_nodes(row, indexation_container, self)
+
+										// Stop observing
+										observer.disconnect();
+									}
+								}
+							}
+						};
+
+						// Create an observer instance linked to the callback function
+						const observer = new MutationObserver(callback);
+
+						// Start observing the target node for configured mutations
+						observer.observe(indexation_container, { attributes: true, childList: false, subtree: false });
+
+						// console.log("self.hilite_indexation_limit:",self.hilite_indexation_limit, self.hilite_indexation_showed);
+
+						if (row.hilite===true && self.hilite_indexation_showed<self.hilite_indexation_limit) {
+							// indexation_container.classList.remove("hide")
+							// btn_indexation.click()
 							indexation_container.classList.remove("hide")
-							this.classList.add("open")
+							btn_indexation.classList.add("open")
+
+							// increment hilite_indexation_showed until reach self.hilite_indexation_limit
+							self.hilite_indexation_showed++
 						}
-					})
 				}
 
-			// button children
-				if (row.children && row.children.length>0) {
-
-					const open_style = row.state==="opened" ? " open" : ""
-					const arrow = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "arrow" + open_style,
-						parent			: tree_node
-					})
-					arrow.addEventListener("mousedown", function(e){
-						e.stopPropagation()
-
-						// state  set based on current classList contains open/hide
-							let new_state
-							if (this.classList.contains("open")) {
-								branch.classList.add("hide")
-								this.classList.remove("open")
-								// new_state
-								new_state = "closed"
-							}else{
-								branch.classList.remove("hide")
-								this.classList.add("open")
-								// new_state
-								new_state = "opened"
-							}
-
-						// state update (sessionStorage)
-							const current_state = self.tree_state[row.term_id]
-							if (current_state!==new_state) {
-								// current_state.state = new_state
-								self.tree_state[row.term_id] = new_state
-								// update sessionStorage tree_state var
-								sessionStorage.setItem('tree_state_' + WEB_AREA, JSON.stringify(self.tree_state));
-							}
-					})
-				}
-
-		// scope note wrapper
-			let scope_note
-			if (row.scope_note && row.scope_note.length>0) {
-
-				const hide_style = row.state==="opened" ? "" : " hide"
-
-				// scope_note
-					const scope_note_text = row.scope_note.replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/g,'');
-					scope_note = common.create_dom_element({
-						element_type	: "div",
-						class_name		: "scope_note hide",
-						inner_html		: scope_note_text,
-						parent			: tree_node
-					})
-			}
-
-		// relations wrapper
-			let relations_container
-			if (row.relations && row.relations.length>0) {
-
-				// relations_container
-					relations_container = common.create_dom_element({
-						element_type	: "div",
-						class_name		: "relations_container hide",
-						parent			: tree_node
-					})
-
-					// Callback function to execute when mutations are observed
-					const callback = function(mutationsList, observer) {
-						// Use traditional 'for loops' for IE 11
-						for(let mutation of mutationsList) {
-							if (mutation.type==='attributes' && mutation.attributeName==='class') {
-									// console.log('The ' + mutation.attributeName + ' attribute was modified.');
-									// console.log("mutationsList:",mutationsList);
-									// console.log("mutationsList.target:",mutationsList[0].target);
-								if (!mutationsList[0].target.classList.contains("hide")) {
-
-									// draw nodes
-									self.render_relation_nodes(row, relations_container, self, false)
-
-									// Stop observing
-									observer.disconnect();
-								}
-							}
-						}
-					};
-
-					// Create an observer instance linked to the callback function
-					const observer = new MutationObserver(callback);
-
-					// Start observing the target node for configured mutations
-					observer.observe(relations_container, { attributes: true, childList: false, subtree: false });
-
-					// console.log("self.hilite_relations_limit:",self.hilite_relations_limit, self.hilite_relations_showed);
-
-					if (row.hilite===true && self.hilite_relations_showed<self.hilite_relations_limit) {
-						// relations_container.classList.remove("hide")
-						// btn_relations.click()
-						relations_container.classList.remove("hide")
-						btn_relations.classList.add("open")
-
-						// increment hilite_relations_showed until reach self.hilite_relations_limit
-						self.hilite_relations_showed++
-					}
-			}
-
-		// indexation wrapper
-			let indexation_container
-			if (row.indexation && row.indexation.length>0) {
-
-				// indexation_container
-					indexation_container = common.create_dom_element({
-						element_type	: "div",
-						class_name		: "indexation_container hide",
-						parent			: tree_node
-					})
-
-					// Callback function to execute when mutations are observed
-					const callback = function(mutationsList, observer) {
-						// Use traditional 'for loops' for IE 11
-						for(let mutation of mutationsList) {
-							if (mutation.type==='attributes' && mutation.attributeName==='class') {
-									// console.log('The ' + mutation.attributeName + ' attribute was modified.');
-									// console.log("mutationsList:",mutationsList);
-									// console.log("mutationsList.target:",mutationsList[0].target);
-								if (!mutationsList[0].target.classList.contains("hide")) {
-
-									// draw nodes
-									self.render_indexation_nodes(row, indexation_container, self)
-
-									// Stop observing
-									observer.disconnect();
-								}
-							}
-						}
-					};
-
-					// Create an observer instance linked to the callback function
-					const observer = new MutationObserver(callback);
-
-					// Start observing the target node for configured mutations
-					observer.observe(indexation_container, { attributes: true, childList: false, subtree: false });
-
-					// console.log("self.hilite_indexation_limit:",self.hilite_indexation_limit, self.hilite_indexation_showed);
-
-					if (row.hilite===true && self.hilite_indexation_showed<self.hilite_indexation_limit) {
-						// indexation_container.classList.remove("hide")
-						// btn_indexation.click()
-						indexation_container.classList.remove("hide")
-						btn_indexation.classList.add("open")
-
-						// increment hilite_indexation_showed until reach self.hilite_indexation_limit
-						self.hilite_indexation_showed++
-					}
-			}
-
-		// children wrapper
+			// children wrapper
 			let branch
 			if (row.children && row.children.length>0) {
 
@@ -1382,7 +1637,7 @@ var thesaurus =  {
 				// load_tree_data
 					self.load_tree_data({})
 					.then(function(response){
-						// console.log("/// load_tree_data response:",response);
+						console.log("/// form_submit load_tree_data response:", response);
 						// console.log("to_hilite:",to_hilite);
 
 						// const ar_rows = response.result

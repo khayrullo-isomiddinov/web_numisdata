@@ -249,8 +249,13 @@
 		border-top: 1px solid #ddd;
 	}
 
+/*
 
-// types contanier
+	(!) Removed 09-07-2024 by Paco.
+	It is replaced by the 'catalog_type.less' file which encapsulates the CSS of the type,
+	so that it can be re-used in other sections such as Epigraphy.
+
+// types container
 	.row_node {
 		border-top: 1px solid #ddd;
 
@@ -271,10 +276,6 @@
 			margin: 0;
 		}
 	}
-
-	// span {
-	// 	margin-right: 1em;
-	// }
 
 	.ref_type_averages_weight, .ref_type_averages_diameter{
 		    margin-right: 0.5em;
@@ -306,7 +307,6 @@
 			background-position: center;
 		}
 	}
-
 	.ts_period_value{
 		font-weight: 600;
 	}
@@ -337,8 +337,6 @@
 		grid-row-start: 2;
 		display: inline-flex;
 		text-align: center;
-		/* justify-items: center; */
-		/* align-items: center; */
 		justify-content: center;
 	}
 	.ref_type_design_obverse{
@@ -353,9 +351,7 @@
 			vertical-align: middle;
 		}
 	}
-	// span {
- //    	margin-right: 1em;
-	// }
+
 	.legend_obverse{
 		grid-column-start: 1;
 		grid-row-start: 3;
@@ -373,7 +369,6 @@
 			color: unset;
 			font-weight: unset;
 		}
-
 	}
 
 	.ref_type_design_reverse{
@@ -465,6 +460,8 @@
 	// 		width: calc( attr(data-print_w) / 2);
 	// 	}
 	// }
+*/
+@import '../../catalog/css/catalog_type.less';
 
 
 
@@ -531,8 +528,7 @@
 	}
 
 
-// movile
-
+// mobile
 @media (max-width: @movil_max_width) {
 
 	// children container

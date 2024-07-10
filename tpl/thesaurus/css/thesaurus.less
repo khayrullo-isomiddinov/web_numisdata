@@ -1,15 +1,7 @@
 // Variables
-	@assets_path: '../../assets';
-	@fonts_path: '@{assets_path}/fonts';
-	@path_page: '../../page'; ;
 
 // Usage library
-	@import '@{path_page}/css/vars.less';
-
-
-
-
-
+	@import '../../page/css/vars.less';
 
 
 // result
@@ -17,8 +9,6 @@
 		// position: relative;
 		// min-height: 50vh;
 	}
-
-
 
 // rows_list
 	#rows_list {
@@ -46,8 +36,6 @@
 			border: 1px solid orange;
 		}
 	}
-
-
 
 // tree_wrapper
 	.tree_wrapper {
@@ -153,7 +141,7 @@
 			}
 
 			>.btn_scope_note {
-				background-image: url('@{assets_path}/images/icon_info.svg');
+				background-image: url('../../assets/images/icon_info.svg');
 				background-repeat: no-repeat;
 				background-size: 76%;
 				background-position: center center;
@@ -171,7 +159,7 @@
 			}
 
 			>.btn_relations {
-				background-image: url('@{assets_path}/images/icon_eye_color.svg');
+				background-image: url('../../assets/images/icon_eye_color.svg');
 				background-repeat: no-repeat;
 				background-size: 80%;
 				background-position: center;
@@ -188,7 +176,7 @@
 			}
 
 			>.arrow {
-				background-image: url('@{assets_path}/images/arrow-right.svg');
+				background-image: url('../../assets/images/arrow-right.svg');
 				background-repeat: no-repeat;
 				background-size: contain;
 				background-position: center;
@@ -245,13 +233,9 @@
 		}
 	}
 
-
-
 	canvas {
 		display: none;
 	}
-
-
 
 // form
 	.truncate {
@@ -260,6 +244,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+
 	.line_value {
 		>span.value_label {
 			.truncate;
@@ -268,15 +253,12 @@
 		}
 	}
 
-
-
-
 	// .form-group.submit {
 	// 	position: relative;
 
 	// 	&:after {
 	// 		content: " ";
-	// 		background-image: url('@{assets_path}/images/icon_search.svg');
+	// 		background-image: url('../../assets/images/icon_search.svg');
 	// 		background-repeat: no-repeat;
 	// 		height: 1.5em;
 	// 		width: 1.5em;
@@ -289,8 +271,29 @@
 	// }
 
 
+// buttons_additional
+.buttons_additional {
 
+	// epi_link
+	.epi_link {
+		margin-left: 0.5rem;
+		opacity: 0;
 
+		&.active {
+			transition: opacity 0.3s;
+			opacity: 1;
+		}
+	}
+}
 
+//container_additional
+.container_additional {
 
+	// epi_container (legends_container, countermarks_container)
+	.epi_container {
+		font-size: 1.166rem;
+	}
+}
 
+// import
+	@import '../../catalog/css/catalog_type.less';

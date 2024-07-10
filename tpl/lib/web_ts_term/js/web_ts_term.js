@@ -14,7 +14,7 @@ var web_ts_term = new function() {
 
 
 	$( document ).ready(function() {
-	
+
 		var ar_childrens_loaded = JSON.parse(localStorage.getItem('ar_loaded_web_ts_term'));
 		//console.log(ar_childrens_loaded);
 
@@ -25,14 +25,14 @@ var web_ts_term = new function() {
 			ar_childrens_loaded = web_ts_term_to_open
 			//console.log( ar_childrens_loaded )
 		}
-		
+
 		for (var prop in ar_childrens_loaded) {
 			//console.log("obj." + prop + " = " + ar_childrens_loaded[prop]);
 
 			if (ar_childrens_loaded[prop]=='loaded') {
 				// Case value is 'loaded'
 				var button_obj = document.querySelector('div.icon_show_childrens[data-term_id="'+prop+'"]')
-					//console.log( prop );		
+					//console.log( prop );
 				if (button_obj) {
 					web_ts_term.toggle_childrens(button_obj, false)
 				}
@@ -52,24 +52,24 @@ var web_ts_term = new function() {
 	* @param dom object button_obj
 	*/
 	this.toggle_childrens = function( button_obj, async ) {
-	
-		//var ar_highlight = window.ar_highlight ? JSON.parse(window.ar_highlight) : [];		
+
+		//var ar_highlight = window.ar_highlight ? JSON.parse(window.ar_highlight) : [];
 		//console.log(ar_highlight);
 
 		//var trigger = page_globals.__WEB_TEMPLATE_WEB__ + "/lib/web_ts_term/trigger.web_ts_term.php"
-		
+
 		var tree_mode = typeof(window.tree_mode)!="undefined" ? window.tree_mode : false
 			//console.log("tree_mode: ",tree_mode);
-		
+
 		var term_id  = button_obj.dataset.term_id
-		var	mydata   = { 
+		var	mydata   = {
 					mode 			: 'toggle_childrens',
 					term_id 		: button_obj.dataset.term_id,
 					ar_childrens  	: JSON.parse(button_obj.dataset.ar_childrens),
 					tree_mode 		: tree_mode
 					}; //console.log("mydata",mydata,this.url_trigger);
-	
-		if (async!==false) { async = true };		
+
+		if (async!==false) { async = true };
 
 		// if visible is set remove it, otherwise add it
 		button_obj.classList.toggle("arrow_dow");
@@ -79,10 +79,10 @@ var web_ts_term = new function() {
 		if (!wrapper) {return alert('Error')};
 
 		if (wrapper.style.display=='none' && web_ts_term.ar_childrens_loaded[term_id]=='closed') {
-			wrapper.style.display = 'block';		//console.log("Load is not necessary 1");	
+			wrapper.style.display = 'block';		//console.log("Load is not necessary 1");
 
 			web_ts_term.ar_childrens_loaded[term_id] = 'loaded'
-			localStorage.setItem('ar_loaded_web_ts_term', JSON.stringify(web_ts_term.ar_childrens_loaded))	
+			localStorage.setItem('ar_loaded_web_ts_term', JSON.stringify(web_ts_term.ar_childrens_loaded))
 			return false;
 		}
 
@@ -92,7 +92,7 @@ var web_ts_term = new function() {
 				// Delete element on close and update local storage
 				//delete web_ts_term.ar_childrens_loaded[term_id]
 				web_ts_term.ar_childrens_loaded[term_id] = 'closed'
-				localStorage.setItem('ar_loaded_web_ts_term', JSON.stringify(web_ts_term.ar_childrens_loaded))	
+				localStorage.setItem('ar_loaded_web_ts_term', JSON.stringify(web_ts_term.ar_childrens_loaded))
 			return false;
 		}else{
 
@@ -100,7 +100,7 @@ var web_ts_term = new function() {
 
 		/*
 		if (web_ts_term.ar_childrens_loaded[term_id]) {
-			wrapper.style.display = 'block';		console.log("Load is not necessary 2");		
+			wrapper.style.display = 'block';		console.log("Load is not necessary 2");
 			return false;
 		}
 		*/
@@ -115,7 +115,7 @@ var web_ts_term = new function() {
 				'url'	: this.url_trigger,
 				'data'  : mydata,
 				'type'	: "POST",
-				'async' : async    
+				'async' : async
 			})
 			// DONE
 			.done(function(data_response) {
@@ -126,18 +126,18 @@ var web_ts_term = new function() {
 					wrapper.innerHTML = "[toggle_childrens] Request failed: \n" + data_response;
 					if(SHOW_DEBUG===true) {
 						console.log(data_response);
-					}					
+					}
 				}else{
-					
+
 					wrapper.innerHTML = data_response
 
 					// Add element on open and update local storage
-					web_ts_term.ar_childrens_loaded[term_id] = 'loaded'//term_id				
+					web_ts_term.ar_childrens_loaded[term_id] = 'loaded'//term_id
 					localStorage.setItem('ar_loaded_web_ts_term', JSON.stringify(web_ts_term.ar_childrens_loaded))
 					//console.log(web_ts_term.ar_childrens_loaded);
 					//console.log(JSON.stringify(web_ts_term.ar_childrens_loaded));
-					
-					// AR_HIGHLIGHT terms 
+
+					// AR_HIGHLIGHT terms
 					//web_ts_term.highlight_terms()
 					/*
 					var len = ar_highlight.length
@@ -146,17 +146,17 @@ var web_ts_term = new function() {
 							var current_term_id = ar_highlight[i]
 
 							// WEB_TS_TERM
-							if (document.getElementById('web_ts_term_'+current_term_id)) {								
+							if (document.getElementById('web_ts_term_'+current_term_id)) {
 								document.getElementById('web_ts_term_'+current_term_id).classList.add("highlight_term")
 							}
 
 							// WEB_INDEXATION_NODE
 							// console.log(current_term_id);
 							// console.log( document.getElementById('button_toggle_indexation_'+current_term_id) );
-							if (document.getElementById('button_toggle_indexation_'+current_term_id)) {								
+							if (document.getElementById('button_toggle_indexation_'+current_term_id)) {
 								web_ts_term.toggle_indexation( document.getElementById('button_toggle_indexation_'+current_term_id) )
 							}
-						}						
+						}
 					}
 					*/
 					// activate_tooltips
@@ -164,7 +164,7 @@ var web_ts_term = new function() {
 
 				}
 			})
-			.fail( function(jqXHR, textStatus) {				
+			.fail( function(jqXHR, textStatus) {
 				console.log("Error: " + jqXHR.statusText+ " (" + textStatus + ")" );
 				wrapper.innerHTML = "Sorry. Failed load"
 			})
@@ -181,10 +181,10 @@ var web_ts_term = new function() {
 
 	/**
 	* HIGHLIGHT_TERMS
-	* @return 
+	* @return
 	*/
 	this.highlight_terms = function() {
-		var ar_highlight = window.ar_highlight ? JSON.parse(window.ar_highlight) : [];		
+		var ar_highlight = window.ar_highlight ? JSON.parse(window.ar_highlight) : [];
 		//console.log(ar_highlight);
 
 		var len = ar_highlight.length
@@ -193,14 +193,14 @@ var web_ts_term = new function() {
 				var current_term_id = ar_highlight[i]
 
 				// WEB_TS_TERM
-				if (document.getElementById('web_ts_term_'+current_term_id)) {								
+				if (document.getElementById('web_ts_term_'+current_term_id)) {
 					document.getElementById('web_ts_term_'+current_term_id).classList.add("highlight_term")
 				}
 
 				// WEB_INDEXATION_NODE
 				// console.log(current_term_id);
 				// console.log( document.getElementById('button_toggle_indexation_'+current_term_id) );
-				if (document.getElementById('button_toggle_indexation_'+current_term_id)) {								
+				if (document.getElementById('button_toggle_indexation_'+current_term_id)) {
 					web_ts_term.toggle_indexation( document.getElementById('button_toggle_indexation_'+current_term_id) )
 				}
 			}
@@ -219,13 +219,14 @@ var web_ts_term = new function() {
 		const term_id 		= button_obj.dataset.term_id
 		const ar_legends 	= JSON.parse(button_obj.dataset.ar_legends)
 		const ar_cmk 		= JSON.parse(button_obj.dataset.ar_cmk)
-		
-		const mydata  = {
-				mode 		 	: 'toggle_indexation',
-				term_id 		: term_id,
-				ar_legends  	: ar_legends,
-				ar_cmk  		: ar_cmk
-			}; console.log(mydata);
+
+		const ajax_data = {
+			mode		: 'toggle_indexation',
+			term_id		: term_id,
+			ar_legends	: ar_legends,
+			ar_cmk		: ar_cmk
+		};
+		console.log('toggle_indexation data: ', ajax_data);
 
 		// index_wrapper
 		var wrapper  = document.getElementById('index_wrapper_'+term_id)
@@ -233,14 +234,9 @@ var web_ts_term = new function() {
 		wrapper.classList.toggle("hidden");
 
 		if (wrapper.classList.contains("hidden")) {
-			wrapper.parentNode.classList.remove("open")		
+			wrapper.parentNode.classList.remove("open")
 			return false;
 		}
-
-		// if (web_ts_term.ar_index_loaded[term_id]) {
-		// 	wrapper.style.display = 'table';
-		// 	return false; //TEMPORAL DEACTIVATED !!!!!!!!!!!!!!!!!!!!!!!!!
-		// }
 
 		wrapper.classList.add("loading");
 		wrapper.parentNode.classList.add("open")
@@ -249,12 +245,13 @@ var web_ts_term = new function() {
 		// AJAX CALL
 		$.ajax({
 			url     : this.url_trigger,
-			data    : mydata,
-			type    : "POST",     
+			data    : ajax_data,
+			type    : "POST",
 		})
 		// DONE
 		.done(function(data_response) {
-				// console.log("data_response:",data_response); return
+			console.log("toggle_indexation data_response:", data_response);
+
 			// parse result
 				const ar_indexation_node = JSON.parse(data_response)
 				if(ar_indexation_node.result === false) return
@@ -268,16 +265,16 @@ var web_ts_term = new function() {
 				// get the types
 					const types 	= ar_indexation_node.result.find(item => item.id === 'type')
 					const coins 	= ar_indexation_node.result.find(item => item.id === 'coins')
-				
+
 				//types
 					const rows_types 		= (types) ? types.result : []
 					const rows_types_len 	= rows_types.length
 					for (var i = 0; i < rows_types_len; i++) {
-					
+
 						const item = rows_types[i]
 						const title = []
 						const type_id = page_globals.OWN_CATALOG_ACRONYM  + " " + item.section_id + "/"+ item.number
-						
+
 						title.push(type_id)
 						if(item.denomination){
 							title.push(item.denomination)
@@ -285,8 +282,8 @@ var web_ts_term = new function() {
 
 						if(item.material){
 							title.push(item.material)
-						}			
-						
+						}
+
 						const ar_beats = []
 						if (item.averages_weight && item.averages_weight.length>0) {
 							const averages_weight = (item.total_weight_items)
@@ -295,7 +292,7 @@ var web_ts_term = new function() {
 
 							ar_beats.push( averages_weight )
 						}
-		
+
 						if (item.averages_diameter && item.averages_diameter.length>0) {
 
 							const averages_diameter = (item.total_diameter_items)
@@ -306,11 +303,11 @@ var web_ts_term = new function() {
 						}
 						const size_text = ar_beats.join("; ")
 
-						title.push(size_text)	
+						title.push(size_text)
 
 						const type_text = title.join(" | ")
 
-						//type_wrapper
+						// type_wrapper
 							const type_wrapper = common.create_dom_element({
 								element_type	: "span",
 								class_name		: "type_wrapper",
@@ -321,15 +318,14 @@ var web_ts_term = new function() {
 								window.open('./type/'+item.section_id, '_blank');
 							})
 
-
-						// mint 
+						// mint
 							const mint = common.create_dom_element({
 								element_type	: "div",
 								class_name		: "value_label type_mint",
 								inner_html		: item.mint,
 								parent			: type_wrapper
 							})
-						// type 
+						// type
 							const type = common.create_dom_element({
 								element_type	: "div",
 								class_name		: "value_label type",
@@ -349,14 +345,14 @@ var web_ts_term = new function() {
 							const img_obv = common.create_dom_element({
 								element_type 	: "img",
 								class_name 		: "image image_obverse",
-								src				: page.remote_image(item.ref_coins_image_obverse),
+								src				: common.local_to_remote_path(item.ref_coins_image_obverse),
 								parent			: img_wrapper
 							})
 						// imag  reverse
 							const img_rev = common.create_dom_element({
 								element_type 	: "img",
 								class_name 		: "image image_reverse",
-								src				: page.remote_image(item.ref_coins_image_reverse),
+								src				: common.local_to_remote_path(item.ref_coins_image_reverse),
 								parent			: img_wrapper
 							})
 					}
@@ -366,7 +362,7 @@ var web_ts_term = new function() {
 					const rows_coins_len 	= rows_coins.length
 
 					for (var i = 0; i < rows_coins_len; i++) {
-					
+
 						const item = rows_coins[i]
 
 						//type_wrapper
@@ -404,8 +400,8 @@ var web_ts_term = new function() {
 								parent			: img_wrapper
 							})
 
-						
-						// collection 
+
+						// collection
 							const mint = common.create_dom_element({
 								element_type	: "div",
 								class_name		: "value_label type_collection",
@@ -467,7 +463,7 @@ var web_ts_term = new function() {
 							}
 							const size_text = ar_beats.join("; ")
 
-						// size_text 
+						// size_text
 							common.create_dom_element({
 								element_type 	: "span",
 								class_name 		: name,
@@ -477,7 +473,7 @@ var web_ts_term = new function() {
 
 							type_wrapper.appendChild(line)
 
-						
+
 					}
 
 			// activate_tooltips
@@ -489,14 +485,14 @@ var web_ts_term = new function() {
 			// 	wrapper.innerHTML = "[toggle_indexation] Request failed: \n" + data_response;
 			// 	console.log(data_response);
 			// }else{
-			// 	
+			//
 			// 	wrapper.innerHTML = data_response
-			// 
+			//
  			// 	// Set as loaded
  			// 	web_ts_term.ar_index_loaded[term_id] = true
 			// }
 		})
-		.fail( function(jqXHR, textStatus) {			
+		.fail( function(jqXHR, textStatus) {
 			console.log("Error: " + jqXHR.statusText+ " (" + textStatus + ")" );
 			wrapper.innerHTML = "Sorry. Failed load"
 		})
@@ -512,7 +508,7 @@ var web_ts_term = new function() {
 	*/
 	this.reset_tree = function() {
 
-		localStorage.removeItem('ar_loaded_web_ts_term');		
+		localStorage.removeItem('ar_loaded_web_ts_term');
 	}
 
 

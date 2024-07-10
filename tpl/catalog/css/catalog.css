@@ -131,30 +131,247 @@
   padding-top: 1em;
   border-top: 1px solid #ddd;
 }
-.row_node {
+/*
+
+	(!) Removed 09-07-2024 by Paco.
+	It is replaced by the 'catalog_type.less' file which encapsulates the CSS of the type,
+	so that it can be re-used in other sections such as Epigraphy.
+
+// types container
+	.row_node {
+		border-top: 1px solid #ddd;
+
+		&:first-child {
+			border-top: none;
+		}
+	}
+
+	.term {
+		// font-variant-caps: normal;
+		// font-weight: bold;
+		// text-transform: uppercase;
+		font-weight: 500;
+		color: #b7996d; //GOLDEN COLOR
+
+		.keyword {
+			font-weight: 300;
+			margin: 0;
+		}
+	}
+
+	.ref_type_averages_weight, .ref_type_averages_diameter{
+		    margin-right: 0.5em;
+		    font-size: 16px;
+	}
+	.ref_type_total_weight_items, .ref_type_total_diameter_items{
+		font-size: 16px;
+	}
+
+	.mint{
+		display: inline-block;
+		font-size: 1.4em;
+		font-weight: 600;
+		font-variant-caps: small-caps;
+		cursor: pointer;
+		letter-spacing: 0.05em;
+	}
+	.link_mint {
+		margin-left: 1em;
+
+		&:before {
+			content: " ";
+			width: 0.75em;
+			height: 0.75em;
+			display: inline-block;
+			background-image: url("@{assets_path}/images/icon_link_color.svg");
+			background-repeat: no-repeat;
+			background-size: contain;
+			background-position: center;
+		}
+	}
+	.ts_period_value{
+		font-weight: 600;
+	}
+
+	.ts_numismatic_group_value{
+		font-weight: 600;
+	}
+
+
+
+	.descriptions{
+		display: grid;
+		grid-template-columns: 50% 50%;
+		grid-template-rows: auto auto auto;
+		row-gap: 0.75em;
+		font-size: 15px;
+		line-height: 1.4em;
+	}
+
+	.ref_type_equivalents{
+		font-size: 0.6em;
+		grid-column-start: 1;
+		grid-row-start: 2;
+	}
+	.collection_auction{
+		font-size: 0.6em;
+		grid-column-start: 2;
+		grid-row-start: 2;
+		display: inline-flex;
+		text-align: center;
+		justify-content: center;
+	}
+	.ref_type_design_obverse{
+		grid-column-start: 1;
+		grid-row-start: 1;
+	}
+	.ref_type_symbol_obverse{
+		grid-column-start: 1;
+		grid-row-start: 2;
+		img {
+			height: 1.2em;
+			vertical-align: middle;
+		}
+	}
+
+	.legend_obverse{
+		grid-column-start: 1;
+		grid-row-start: 3;
+		display: grid;
+		img{
+			// height: 1.2em;
+			// vertical-align: middle;
+		}
+		span{
+			margin-right: 0;
+			font-weight: 400;
+    		color: black;
+		}
+		.ref_type_legend_transcription_obverse{
+			color: unset;
+			font-weight: unset;
+		}
+	}
+
+	.ref_type_design_reverse{
+		grid-column-start: 2;
+		grid-row-start: 1;
+		img {
+			height: 1.2em;
+			vertical-align: middle;
+		}
+	}
+	.ref_type_symbol_reverse{
+		grid-column-start: 2;
+		grid-row-start: 2;
+		img {
+			height: 1.2em;
+			vertical-align: middle;
+		}
+	}
+	.legend_reverse{
+		grid-column-start: 2;
+		grid-row-start: 3;
+		display: grid;
+		img{
+			// height: 1.2em;
+			// vertical-align: middle;
+		}
+		span{
+			margin-right: 0;
+			font-weight: 400;
+    		color: black;
+		}
+		.ref_type_legend_transcription_reverse{
+			color: unset;
+			font-weight: unset;
+		}
+	}
+
+	.coins_images{
+		display: inline-grid;
+		grid-template-columns: 50% 50%;
+
+		align-items: center;
+		justify-content: center;
+		// width: attr(data-print_w);
+	}
+	.coins_images_container{
+		grid-column-start: 2;
+		grid-row-start: 1;
+		justify-items: center;
+		align-items: center;
+		justify-content: center;
+		display: grid;
+	}
+	.image_obverse{
+		max-width: 100%;
+		height: auto;
+		// width: attr(data-print_w);
+	}
+
+	.image_reverse{
+		max-width: 100%;
+		height: auto;
+		// width: attr(data-print_w);
+	}
+	.type_container{
+		display: inline-grid;
+		grid-template-columns: auto 40%;
+		grid-template-rows: auto auto;
+		margin-bottom: 0.5em;
+		margin-top: 0.5em;
+
+		@media screen and (max-width: @content_data_max_width_1280) {
+			grid-template-columns: auto 50%;
+		}
+	}
+	.types{
+		display: grid;
+		page-break-inside: avoid;
+	}
+
+	// @media print{
+	// 	.image_obverse{
+	// 		width: calc( attr(data-print_w) / 2);
+	// 	}
+	// 	.image_reverse{
+	// 		width: calc( attr(data-print_w) / 2);
+	// 	}
+	// 	.coins_images{
+	// 		width: calc( attr(data-print_w) / 2);
+	// 	}
+	// }
+*/
+.row_node.types {
   border-top: 1px solid #ddd;
+  display: grid;
+  page-break-inside: avoid;
 }
-.row_node:first-child {
+.row_node.types span {
+  margin-right: 1em;
+}
+.row_node.types:first-child {
   border-top: none;
 }
-.term {
+.row_node.types .term {
   font-weight: 500;
   color: #b7996d;
 }
-.term .keyword {
+.row_node.types .term .keyword {
   font-weight: 300;
   margin: 0;
 }
-.ref_type_averages_weight,
-.ref_type_averages_diameter {
+.row_node.types .ref_type_averages_weight,
+.row_node.types .ref_type_averages_diameter {
   margin-right: 0.5em;
   font-size: 16px;
 }
-.ref_type_total_weight_items,
-.ref_type_total_diameter_items {
+.row_node.types .ref_type_total_weight_items,
+.row_node.types .ref_type_total_diameter_items {
   font-size: 16px;
 }
-.mint {
+.row_node.types .mint {
   display: inline-block;
   font-size: 1.4em;
   font-weight: 600;
@@ -162,10 +379,10 @@
   cursor: pointer;
   letter-spacing: 0.05em;
 }
-.link_mint {
+.row_node.types .link_mint {
   margin-left: 1em;
 }
-.link_mint:before {
+.row_node.types .link_mint:before {
   content: " ";
   width: 0.75em;
   height: 0.75em;
@@ -175,13 +392,13 @@
   background-size: contain;
   background-position: center;
 }
-.ts_period_value {
+.row_node.types .ts_period_value {
   font-weight: 600;
 }
-.ts_numismatic_group_value {
+.row_node.types .ts_numismatic_group_value {
   font-weight: 600;
 }
-.descriptions {
+.row_node.types .descriptions {
   display: grid;
   grid-template-columns: 50% 50%;
   grid-template-rows: auto auto auto;
@@ -189,12 +406,12 @@
   font-size: 15px;
   line-height: 1.4em;
 }
-.ref_type_equivalents {
+.row_node.types .ref_type_equivalents {
   font-size: 0.6em;
   grid-column-start: 1;
   grid-row-start: 2;
 }
-.collection_auction {
+.row_node.types .collection_auction {
   font-size: 0.6em;
   grid-column-start: 2;
   grid-row-start: 2;
@@ -204,69 +421,69 @@
   /* align-items: center; */
   justify-content: center;
 }
-.ref_type_design_obverse {
+.row_node.types .ref_type_design_obverse {
   grid-column-start: 1;
   grid-row-start: 1;
 }
-.ref_type_symbol_obverse {
+.row_node.types .ref_type_symbol_obverse {
   grid-column-start: 1;
   grid-row-start: 2;
 }
-.ref_type_symbol_obverse img {
+.row_node.types .ref_type_symbol_obverse img {
   height: 1.2em;
   vertical-align: middle;
 }
-.legend_obverse {
+.row_node.types .legend_obverse {
   grid-column-start: 1;
   grid-row-start: 3;
   display: grid;
 }
-.legend_obverse span {
+.row_node.types .legend_obverse span {
   margin-right: 0;
   font-weight: 400;
   color: black;
 }
-.legend_obverse .ref_type_legend_transcription_obverse {
+.row_node.types .legend_obverse .ref_type_legend_transcription_obverse {
   color: unset;
   font-weight: unset;
 }
-.ref_type_design_reverse {
+.row_node.types .ref_type_design_reverse {
   grid-column-start: 2;
   grid-row-start: 1;
 }
-.ref_type_design_reverse img {
+.row_node.types .ref_type_design_reverse img {
   height: 1.2em;
   vertical-align: middle;
 }
-.ref_type_symbol_reverse {
+.row_node.types .ref_type_symbol_reverse {
   grid-column-start: 2;
   grid-row-start: 2;
 }
-.ref_type_symbol_reverse img {
+.row_node.types .ref_type_symbol_reverse img {
   height: 1.2em;
   vertical-align: middle;
 }
-.legend_reverse {
+.row_node.types .legend_reverse {
   grid-column-start: 2;
   grid-row-start: 3;
   display: grid;
 }
-.legend_reverse span {
+.row_node.types .legend_reverse span {
   margin-right: 0;
   font-weight: 400;
   color: black;
 }
-.legend_reverse .ref_type_legend_transcription_reverse {
+.row_node.types .legend_reverse .ref_type_legend_transcription_reverse {
   color: unset;
   font-weight: unset;
 }
-.coins_images {
+.row_node.types .coins_images {
   display: inline-grid;
   grid-template-columns: 50% 50%;
   align-items: center;
   justify-content: center;
 }
-.coins_images_container {
+.row_node.types .coins_images_container {
   grid-column-start: 2;
   grid-row-start: 1;
   justify-items: center;
@@ -274,15 +491,15 @@
   justify-content: center;
   display: grid;
 }
-.image_obverse {
+.row_node.types .image_obverse {
   max-width: 100%;
   height: auto;
 }
-.image_reverse {
+.row_node.types .image_reverse {
   max-width: 100%;
   height: auto;
 }
-.type_container {
+.row_node.types .type_container {
   display: inline-grid;
   grid-template-columns: auto 40%;
   grid-template-rows: auto auto;
@@ -290,11 +507,11 @@
   margin-top: 0.5em;
 }
 @media screen and (max-width: 1280px) {
-  .type_container {
+  .row_node.types .type_container {
     grid-template-columns: auto 50%;
   }
 }
-.types {
+.row_node.types .types {
   display: grid;
   page-break-inside: avoid;
 }
