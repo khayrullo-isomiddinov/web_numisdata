@@ -367,15 +367,23 @@ var thesaurus =  {
 			tree_node.parent	= row.parent
 
 		// term
-			const term_value	= row.term //+ " <small>[" + row.term_id + "]</small>"
+			const ar_value = []
+			if (row.code && row.code.length>0) {
+				ar_value.push(row.code)
+			}
+			ar_value.push(row.term)
+			const term_value	= ar_value.join(' | ') // row.term //+ " <small>[" + row.term_id + "]</small>"
 			const to_hilite		= (row.hilite && row.hilite===true)
 			const term_css		= to_hilite===true ? " hilite" : ""
 			const term = common.create_dom_element({
-				element_type	: "span",
-				class_name		: "term" + term_css,
+				element_type	: 'span',
+				class_name		: 'term' + term_css,
 				inner_html		: term_value,
 				parent			: tree_node
 			})
+			if(SHOW_DEBUG===true) {
+				term.title = row.term_id
+			}
 
 		// scroll
 			// self.scrolled = false
