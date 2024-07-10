@@ -195,7 +195,9 @@ var footer =  {
 					const child_tipo	= children[i]
 					const child			= self.footer_data.find(el => el.term_id===child_tipo)
 					if (!child) {
-						console.log("Ignore not found children:", row, child_tipo, children);
+						if(SHOW_DEBUG===true) {
+							console.log("Ignore not found children:", row, child_tipo, children);
+						}
 						continue;
 					}
 
