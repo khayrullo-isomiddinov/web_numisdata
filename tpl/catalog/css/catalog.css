@@ -343,6 +343,9 @@
 	// 	}
 	// }
 */
+.row_node:first-child {
+  border-top: none;
+}
 .row_node.types {
   border-top: 1px solid #ddd;
   display: grid;
@@ -351,8 +354,8 @@
 .row_node.types span {
   margin-right: 1em;
 }
-.row_node.types:first-child {
-  border-top: none;
+.row_node.types span.no_bold {
+  margin-right: 0px;
 }
 .row_node.types .term {
   font-weight: 500;
@@ -370,30 +373,6 @@
 .row_node.types .ref_type_total_weight_items,
 .row_node.types .ref_type_total_diameter_items {
   font-size: 16px;
-}
-.row_node.types .mint {
-  display: inline-block;
-  font-size: 1.4em;
-  font-weight: 600;
-  font-variant-caps: small-caps;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-}
-.row_node.types .link_mint {
-  margin-left: 1em;
-}
-.row_node.types .link_mint:before {
-  content: " ";
-  width: 0.75em;
-  height: 0.75em;
-  display: inline-block;
-  background-image: url("../../assets/images/icon_link_color.svg");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-}
-.row_node.types .ts_period_value {
-  font-weight: 600;
 }
 .row_node.types .ts_numismatic_group_value {
   font-weight: 600;
@@ -514,6 +493,30 @@
 .row_node.types .types {
   display: grid;
   page-break-inside: avoid;
+}
+.row_node.mints .mint {
+  display: inline-block;
+  font-size: 1.4em;
+  font-weight: 600;
+  font-variant-caps: small-caps;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.row_node.mints .link_mint {
+  margin-left: 1em;
+}
+.row_node.mints .link_mint:before {
+  content: " ";
+  width: 0.75em;
+  height: 0.75em;
+  display: inline-block;
+  background-image: url("../../assets/images/icon_link_color.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+.row_node.ts_period .ts_period_value {
+  font-weight: 600;
 }
 .pagination.bottom {
   margin-top: 3em;

@@ -687,7 +687,6 @@ export const type_row_fields = {
 					})
 				}
 
-
 				common.create_dom_element({
 					element_type 	: "span",
 					class_name 		: "breadcrumb_symbol",
@@ -700,11 +699,18 @@ export const type_row_fields = {
 				? catalog.ref_mint_number+'/'
 				: ''
 
+			const type_string = page.compose_catalog_id({
+				archive		: page_globals.OWN_CATALOG_ACRONYM,
+				section_id	: catalog.term_section_id,
+				mint_number	: catalog.ref_mint_number,
+				type		: catalog.term
+			})
+
 			common.create_dom_element({
-				element_type 	: "span",
-				class_name 		: "breadcrumb",
-				text_content	: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + catalog.term,
-				parent 			: line
+				element_type	: 'span',
+				class_name		: 'breadcrumb',
+				inner_html		: type_string,
+				parent			: line
 			})
 		}
 
@@ -1036,20 +1042,18 @@ export const type_row_fields = {
 			name = "catalogue"
 			if (item[name] && item[name].length>0) {
 
-				// const catalogue_number = JSON.parse(item["catalogue_data"])[0]
-				// const type_section_id = item["section_id"]
+				const type_string = page.compose_catalog_id({
+					archive		: page_globals.OWN_CATALOG_ACRONYM,
+					section_id	: item.section_id,
+					mint_number	: item.mint_number,
+					type		: item.number
+				})
 
-				const mint_number = (item.mint_number)
-					? item.mint_number+'/'
-					: ''
-
-				const item_text = item[name] + " " +  mint_number + item["number"]
-
-				self.type = item_text
+				self.type = type_string
 				const node = common.create_dom_element({
-					element_type 	: "span",
-					class_name 		: "info_value " + name,
-					text_content 	: item_text
+					element_type	: "span",
+					class_name		: "info_value " + name,
+					inner_html		: type_string
 				})
 				ar_nodes.push(node)
 			}
@@ -1410,7 +1414,6 @@ export const type_row_fields = {
 
 		// images
 
-
 			// obverse
 			const images = common.create_dom_element({
 				element_type	: "div",
@@ -1543,7 +1546,7 @@ export const type_row_fields = {
 			}
 
 
-		//GET IMAGE PHOTOGRAPHER
+		// GET IMAGE PHOTOGRAPHER
 
 			// (!) COMMENTED : UNFEASIBLE FOR MAP . REMOVED 14-03-2022 UNTIL RESOLVE IT IN A VIABLE WAY
 				// const observer = new IntersectionObserver(async function(entries) {
@@ -1690,6 +1693,40 @@ export const type_row_fields = {
 				})
 			}
 
+		// additional_info
+			// Additional info is calculated only by thesaurus -> countermarks
+			if (data.additional_info && (data.additional_info.mint || data.additional_info.type)) {
+				const additional_info = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'additional_info',
+					parent			: wrapper
+				})
+				// mint
+					if (data.additional_info.mint) {
+						common.create_dom_element({
+							element_type	: 'span',
+							class_name		: 'additional_info_item mint',
+							inner_html		: data.additional_info.mint,
+							parent			: additional_info
+						})
+					}
+				// type
+					if (data.additional_info.type) {
+						const type_string = page.compose_catalog_id({
+							archive		: page.archive,
+							section_id	: data.type_section_id,
+							mint_number	: data.additional_info.mint_number,
+							type		: data.additional_info.type
+						})
+						common.create_dom_element({
+							element_type	: 'span',
+							class_name		: 'additional_info_item type',
+							inner_html		: type_string,
+							parent			: additional_info
+						})
+					}
+			}
+
 		// biblio
 			const references_container = common.create_dom_element({
 				element_type	: "div",
@@ -1716,13 +1753,13 @@ export const type_row_fields = {
 			})
 
 
-		//collection uri
+		// collection uri
 			if (data.uri && data.uri.length>0) {
 				for (let i = 0; i < data.uri.length; i++) {
 
-					const el = data.uri[i]
-					const label	= el.label || "URI"
-					const uri_text	= '<a class="icon_link info_value" href="' + el.value + '" target="_blank"> ' + el.label  + '</a>'
+					const el		= data.uri[i]
+					const label		= el.label || "URI"
+					const uri_text	= `<a class="icon_link info_value" href="${el.value}" target="_blank"> ${el.label} </a>`
 
 					common.create_dom_element({
 						element_type	: "span",

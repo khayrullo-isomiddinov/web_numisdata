@@ -1212,6 +1212,15 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 				item.dd_relations = JSON.parse(item.dd_relations)
 			}
 
+		// model
+			if (item.model) {
+				item.model = JSON.parse(item.model)
+				// get only first element of the array
+				if (Array.isArray(item.model) && item.model[0]) {
+					item.model = item.model[0]
+				}
+			}
+
 
 		data.push(item)
 	}

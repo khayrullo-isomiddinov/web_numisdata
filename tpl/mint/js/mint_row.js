@@ -183,11 +183,19 @@ var mint_row = {
 
 			const diameter = row.ref_type_averages_diameter
 
+			const type_string = page.compose_catalog_id({
+				archive		: page_globals.OWN_CATALOG_ACRONYM,
+				section_id	: row.term_section_id,
+				mint_number	: mint_number,
+				type		: c_name
+			})
+
 			const img_obverse = common.create_dom_element({
 				element_type	: "img",
 				src				: row.ref_coins_image_obverse_thumb,
-				title 			: row.section_id,
-				dataset 		: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+				title			: row.section_id,
+				// dataset		: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+				dataset			: { caption : type_string },
 				parent			: img_link_ob
 			})
 			img_obverse.style.width = (diameter + (diameter * 8/100)) + 'mm'
@@ -205,10 +213,11 @@ var mint_row = {
 
 			const img_reverse = common.create_dom_element({
 				element_type	: "img",
-				src 			: row.ref_coins_image_reverse_thumb,
-				title 			: row.section_id,
-				dataset 		: {caption: page_globals.OWN_CATALOG_ACRONYM +" " + mint_number + c_name  },
-				parent 			: img_link_re
+				src				: row.ref_coins_image_reverse_thumb,
+				title			: row.section_id,
+				// dataset		: {caption: page_globals.OWN_CATALOG_ACRONYM +" " + mint_number + c_name  },
+				dataset			: { caption : type_string },
+				parent			: img_link_re
 			})
 			img_reverse.style.width = (diameter + (diameter * 8/100)) + 'mm'
 			img_reverse.style.height = (diameter + (diameter * 8/100)) + 'mm'

@@ -640,14 +640,15 @@ page.render_legend = function(options) {
 
 /**
 * RENDER_TYPE_LABEL
-* @return
+* @param object row
+* @return string current_value
 */
 page.render_type_label = function(row) {
 
 	let current_value
 
 	const mint_number = (row.ref_mint_number)
-		? row.ref_mint_number+'/'
+		? row.ref_mint_number // +'/'
 		: ''
 	if (row.term_section_id && !row.children) {
 
@@ -664,21 +665,46 @@ page.render_type_label = function(row) {
 			})()
 
 		const section_id = row.term_section_id && row.term_section_id.section_id
-				? row.term_section_id.section_id
-				: row.term_section_id
+			? row.term_section_id.section_id
+			: row.term_section_id
+
+		const type_string = page.compose_catalog_id({
+			archive		: page_globals.OWN_CATALOG_ACRONYM,
+			section_id	: section_id,
+			mint_number	: mint_number,
+			type		: c_name
+		})
+
+		const title = page.compose_catalog_id({
+			archive		: page_globals.OWN_CATALOG_ACRONYM,
+			section_id	: section_id,
+			mint_number	: mint_number,
+			type		: ar.join(", ").trim()
+		})
 
 		const a_term = common.create_dom_element({
 			element_type	: "a",
 			class_name		: "a_term",
 			href			: page_globals.__WEB_ROOT_WEB__ + '/type/' + section_id,
 			target			: "_blank",
-			title			: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + (ar.join(", ").trim()),
-			inner_html		: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + keyword
+			// title		: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + (ar.join(", ").trim()),
+			title			: title,
+			// inner_html	: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + keyword
+			inner_html		: type_string + keyword
 		})
 		current_value = a_term.outerHTML
 	}else{
-		current_value = page_globals.OWN_CATALOG_ACRONYM +" " + mint_number + row.term
+
+		const type_string = page.compose_catalog_id({
+			archive		: page_globals.OWN_CATALOG_ACRONYM,
+			section_id	: row.term_section_id,
+			mint_number	: mint_number,
+			type		: row.term
+		})
+
+		current_value = type_string
 	}
+
 
 	return current_value
 };//end render_type_label

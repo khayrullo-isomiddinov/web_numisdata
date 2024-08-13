@@ -3,8 +3,10 @@
 // thesaurus
 
 	// row_fields js add
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/js/catalog'.JS_SUFFIX.'.js';
 		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/js/catalog_row_fields'.JS_SUFFIX.'.js';
 		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/type/js/type_row_fields'.JS_SUFFIX.'.js';
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/map/js/map'.JS_SUFFIX.'.js';
 		// css
 		// page::$css_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/css/catalog.css';
 		array_unshift(page::$css_ar_url,
@@ -94,9 +96,11 @@
 			'parent',
 			'related',
 			'scope_note',
+			'definition',
 			'space',
 			'time',
 			'tld',
+			'model',
 			'mib_bibliography',
 			'dd_relations'
 		];
@@ -167,7 +171,7 @@
 						'ts_latin',
 
 						// scsym1 - ts_symbols | Symbols | Símbolos
-						'ts_symbols',
+						// 'ts_symbols',
 
 						// sccmk1 - ts_countermarks | Countermaks | Contramarcas
 						// 'ts_countermarks'
@@ -192,7 +196,7 @@
 						'sclat1_1',
 
 						// scsym1 - ts_symbols | Symbols | Símbolos
-						'scsym1_1',
+						// 'scsym1_1',
 
 						// sccmk1 - ts_countermarks | Countermaks | Contramarcas
 						// 'sccmk1_1'

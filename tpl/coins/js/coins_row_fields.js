@@ -46,12 +46,9 @@ var coins_row_fields = {
 						parent			: type_wrapper
 					})
 
-
-					const current_type_data 	= row.type_data[i]
-					const current_type_number 	= row.type[i]
+					const current_type_data		= row.type_data[i]
+					const current_type_number	= row.type[i]
 					const current_catalogue		= row.catalogue_type_mint[i]
-
-
 
 					if(current_catalogue === page_globals.OWN_CATALOG_ACRONYM ){
 
@@ -61,7 +58,7 @@ var coins_row_fields = {
 
 						const mint_number = ar_mint_number.join(' | ')
 
-						const current_numismatic_number = mint_number+"/"+current_type_number
+						// const current_numismatic_number = mint_number+"/"+current_type_number
 
 						const mint_line = common.create_dom_element({
 							element_type	: "div",
@@ -72,7 +69,7 @@ var coins_row_fields = {
 						const mint_data	= row.mint_data[i]
 							 ?	row.mint_data[i]
 							 : 	[]
-						//mints mames
+						// mints names
 						const mint	= row.mint[i]
 							 ?	row.mint[i]
 							 : 	[]
@@ -95,34 +92,42 @@ var coins_row_fields = {
 
 							common.create_dom_element({
 								element_type	: "a",
-								inner_html  	: mint_name + mint_uri_text,
+								inner_html		: mint_name + mint_uri_text,
 								class_name		: "mint_label",
-								href 			: mint_uri,
-								target 			: "_blank",
-								parent 			: mint_line
+								href			: mint_uri,
+								target			: "_blank",
+								parent			: mint_line
 							})
 
 						}//end for mints
 
-						const type_uri	= page_globals.__WEB_ROOT_WEB__ + "/type/" + current_type_data
-						const type_uri_text	= "<a class=\"icon_link\" href=\""+type_uri+"\"></a> "
+						const type_uri = page_globals.__WEB_ROOT_WEB__ + "/type/" + current_type_data
+						// const type_uri_text	= "<a class=\"icon_link\" href=\""+type_uri+"\"></a> "
+
+						const type_string = page.compose_catalog_id({
+							archive		: page_globals.OWN_CATALOG_ACRONYM,
+							section_id	: row.type_section_id,
+							mint_number	: mint_number,
+							type		: current_type_number
+						})
 
 						common.create_dom_element({
 							element_type	: "a",
-							inner_html  	: current_catalogue +" "+ current_numismatic_number + type_uri_text,
 							class_name		: "type_label",
-							href 			: type_uri,
-							target 			: "_blank",
-							parent 			: type_row
+							// inner_html	: current_catalogue +" "+ current_numismatic_number + type_uri_text,
+							inner_html		: type_string + ` <a class="icon_link" href="${type_uri}"></a>`,
+							href			: type_uri,
+							target			: "_blank",
+							parent			: type_row
 						})
 
 					}else{
 
 						common.create_dom_element({
 							element_type	: "div",
-							inner_html  	: current_catalogue+" "+ current_type_number,
+							inner_html		: current_catalogue+" "+ current_type_number,
 							class_name		: "type_label",
-							parent 			: type_row
+							parent			: type_row
 						})
 					}//end if mib catalog
 

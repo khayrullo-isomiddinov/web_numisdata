@@ -55,7 +55,7 @@ var coin_row = {
 					authorship_roles	: row.authorship_roles || null,
 				}
 				cite_data.catalog = null
-				cite_data.title = '<em>'+ page_globals.OWN_CATALOG_ACRONYM +' '+row.section_id + '</em>'
+				cite_data.title = '<em>'+ page_globals.OWN_CATALOG_ACRONYM +' '+ row.section_id + '</em>'
 				cite_data.publication_data = publication_data
 				cite_data.uri_location 	= window.location
 
@@ -405,7 +405,7 @@ var coin_row = {
 				const text_creators = []
 				const data_length = data.length
 
-				for (var i = 0; i < data_length; i++) {
+				for (let i = 0; i < data_length; i++) {
 					const name		= ar_names[i]
 						? ar_names[i]
 						: ''
@@ -450,13 +450,20 @@ var coin_row = {
 				? type_section.number
 				: ''
 
-			const value_type = mint
-				? mint + ' ' +type_section.catalogue +' '+ mint_number+'/'+type_number
-				: +type_section.catalogue +' '+ type_number
+			// const value_type = mint
+			// 	? mint + ' ' +type_section.catalogue +' '+ mint_number+'/'+type_number
+			// 	: +type_section.catalogue +' '+ type_number
 
-			const type_uri	= page_globals.__WEB_ROOT_WEB__ + "/type/" + type_section.section_id
-			const type_uri_text	= "<a class=\"icon_link\" href=\""+type_uri+"\"></a> "
+			const type_string = page.compose_catalog_id({
+				archive		: page_globals.OWN_CATALOG_ACRONYM,
+				section_id	: type_section.section_id,
+				mint_number	: mint_number,
+				type		: type_number
+			})
 
+			const type_uri = page_globals.__WEB_ROOT_WEB__ + "/type/" + type_section.section_id
+
+			// left label ('Type')
 			const label_type_node = common.create_dom_element({
 				element_type	: "label",
 				class_name		: "left-labels",
@@ -467,7 +474,8 @@ var coin_row = {
 			const value_type_node = common.create_dom_element({
 				element_type	: "a",
 				class_name		: "rigth-values type_label",
-				inner_html		: value_type +' '+type_uri_text,
+				// inner_html	: value_type + " <a class=\"icon_link\" href=\""+type_uri+"\"></a> ",
+				inner_html		: mint + ' ' + type_string + ` <a class="icon_link" href="${type_uri}"></a>`,
 				href 			: type_uri,
 				target 			: "_blank",
 				parent			: info_container

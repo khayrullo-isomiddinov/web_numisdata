@@ -127,6 +127,9 @@ var page = {
 			}
 		},
 
+		// archive
+		archive : 'MIB',
+
 
 
 	/**
@@ -973,7 +976,45 @@ var page = {
 			})
 
 		return js_promise
-	}//end load_main_catalog
+	},//end load_main_catalog
+
+
+
+	/**
+	* COMPOSE_CATALOG_ID
+	* Composes the catalogue number in a standardised form
+	* @param options object
+	* {
+	*	archive: string (sample: 'MIB')
+	* 	section_id: string|int (sample: 2715)
+	* 	mint_number: string|int (sample: 40)
+	* 	type: string (sample: '104b')
+	* }
+	* @return string catalog_id
+	* 	sample 'MIB 40/104b'
+	*/
+	compose_catalog_id : function(options) {
+
+		// debug
+		if(SHOW_DEBUG===true) {
+			if (!options.section_id) {
+				console.warn('options:', options);
+				alert("section_id !!!");
+			}
+		}
+
+		// options
+			const {
+				archive = page_globals.OWN_CATALOG_ACRONYM, // like MIB
+				section_id,
+				mint_number, // like 40
+				type // like 104b
+			} = options
+
+		const catalog_id = `${archive} ${section_id} <span class="no_bold"> | ${mint_number}/${type}</span>`
+
+		return catalog_id
+	}//end compose_catalog_id
 
 
 

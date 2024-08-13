@@ -117,14 +117,15 @@ var thesaurus =  {
 						const found = response.result.find(el => el.term_id===term_id)
 						if (!found) {
 							console.error(`ERROR: Broken tree branch. Root term '${term_id}' not found! Check if it is published`);
-							common.create_dom_element({
-								element_type	: 'div',
-								class_name		: 'broken_branch no_results_found',
-								inner_html		: `Sorry. Broken branch <b>${term_id}</b>. Tree it is not available.`,
-								parent			: rows_list
-							})
-							spinner.remove()
-							return false
+							// common.create_dom_element({
+							// 	element_type	: 'div',
+							// 	class_name		: 'broken_branch no_results_found',
+							// 	inner_html		: `Sorry. Broken branch <b>${term_id}</b>. Tree it is not available.`,
+							// 	parent			: rows_list
+							// })
+							// spinner.remove()
+							// return false
+							continue
 						}
 					}
 
@@ -444,6 +445,24 @@ var thesaurus =  {
 					})
 				}
 
+			// button definition
+				if (row.definition && row.definition.length>0) {
+					const btn_definition = common.create_dom_element({
+						element_type	: "span",
+						class_name		: "btn_definition",
+						parent			: tree_node
+					})
+					btn_definition.addEventListener("mousedown", function(){
+						if (this.classList.contains("open")) {
+							definition.classList.add("hide")
+							this.classList.remove("open")
+						}else{
+							definition.classList.remove("hide")
+							this.classList.add("open")
+						}
+					})
+				}
+
 			// button relations
 				let btn_relations
 				if (row.relations && row.relations.length>0) {
@@ -527,11 +546,6 @@ var thesaurus =  {
 					class_name		: 'buttons_additional',
 					parent			: tree_node
 				})
-				const container_additional = common.create_dom_element({
-					element_type	: 'div',
-					class_name		: 'container_additional hide',
-					parent			: tree_node
-				})
 
 			// links based on WEB_AREA value (mints_hierarchy, symbols, iconography, countermarks)
 			switch (WEB_AREA) {
@@ -556,61 +570,65 @@ var thesaurus =  {
 				case 'epigraphy': {
 					// epigraphy
 
-						// legends
-						const build_legends = async () => {
-							const ar_legends = row.dd_relations && row.dd_relations.length >0
-								? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41')
-								: []
+					// is_grouper
+						const groupers = [
+							'scell2_1', // ts_greek
+							'scxpu2_1', // ts_punic
+							'scxibo2_1', // ts_northern_palaeohispanic
+							'scxibm2_1', // ts_southern_palaeohispanic
+							'sctxr2_1', // ts_south_palaeohispanic
+							'sclat2_1', // ts_latin
+							// 'scsym2_1', // ts_symbols
+							// 'sccmk2_1' // ts_countermarks
+						]
+						const is_grouper = row.model && groupers.includes(row.model) && row.children
+
+					// is_latin
+						const is_latin = row.term_id.includes('sclat1')
+
+					// legends
+						const build_legends = () => {
 							// debug
-							// if (row.term_id=='scell1_101') {
-							// 	console.log('row:', row);
-							// }
-							const is_latin = row.term_id.includes('sclat1')
+
+							// ar_legends. get term relations with legends (where these have been used)
+								const ar_legends = row.dd_relations && row.dd_relations.length >0
+									? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
+									: []
+
+							// groupers case
+								if (is_grouper) {
+									// get children data
+									const grouper_children = self.data.filter(el => row.children.includes(el.term_id))
+									// add every children legends to ar_legends array
+									const grouper_children_length = grouper_children.length
+									for (let i = 0; i < grouper_children_length; i++) {
+										const child = grouper_children[i]
+										const current_ar_legends = child.dd_relations && child.dd_relations.length >0
+											? child.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
+											: []
+										ar_legends.push(...current_ar_legends)
+									}
+								}
+
 							if (ar_legends.length || is_latin===true) {
 
-								const load_legends_data = (ar_legends) => {
+								// debug
+									if (row.term_id==='scxibo1_11') {
+										console.log('scxibo1_11 ar_legends:', ar_legends);
+									}
+									// console.log('ar_legends (numisdata41):', ar_legends);
 
-									// filter
-										const legends_filter = []
-										const ar_legends_length = ar_legends.length
-										for (let i = 0; i < ar_legends_length; i++) {
-											const item = ar_legends[i]
-											legends_filter.push(
-												`ref_type_legend_obverse_data LIKE '%"${item.section_id}"%' OR ref_type_design_reverse_data LIKE '%"${item.section_id}"%'`
-											)
-										}
-										// latin case. Additional search in plain text for Unicode letters
-										if (is_latin===true && ar_legends.length===0) {
-											legends_filter.push(
-												`ref_type_legend_obverse_text LIKE '%${row.term}%' OR ref_type_legend_reverse_text LIKE '%${row.term}%'`
-											)
-										}
-										const sql_filter = legends_filter.join(' OR ')
-
-									return data_manager.request({
-										body : {
-											code		: page_globals.API_WEB_USER_CODE,
-											lang		: page_globals.WEB_CURRENT_LANG_CODE,
-											db_name		: page_globals.WEB_DB,
-											dedalo_get	: 'records',
-											table		: 'catalog',
-											ar_fields	: '*',
-											count		: false,
-											limit		: 10,
-											sql_filter	: sql_filter
-										}
-									})
-								}//end load_legends_data
-								load_legends_data(ar_legends)
-								.then(function(api_response){
-									if (!api_response.result || api_response.result.length===0) {
+								thesaurus.load_legends_data(row, ar_legends)
+								.then(function(data){
+									if (!data || data.length===0) {
 										return
 									}
 
-									const load_legends = (e) => {
+									// render legends
+									const render_legends = async (e) => {
 										e.stopPropagation()
 
-										// close container
+										// close container if is already displayed
 											if (container_additional.legends_container) {
 												container_additional.legends_container.remove()
 												container_additional.legends_container = undefined
@@ -623,7 +641,7 @@ var thesaurus =  {
 												return
 											}
 
-										// legends_container
+										// legends_container: create a new one if not already exists
 											const legends_container = container_additional.legends_container
 												? container_additional.legends_container
 												: (()=>{
@@ -636,88 +654,233 @@ var thesaurus =  {
 													return legends_container
 												  })();
 
-											// clean container
-												// while (legends_container.firstChild) {
-												// 	legends_container.removeChild(legends_container.firstChild);
-												// }
+										// render types with same layout than catalog list
+											// const data_length = data.length
+											// for (let i = 0; i < data_length; i++) {
+											// 	const current_row = data[i]
+											// 	current_row.add_denomination = true // Allow display denomination like 'Bronze'
+											// 	const node = catalog_row_fields.draw_item(current_row)
+											// 	legends_container.appendChild(node)
+											// }
 
-											// render types
-												const data_length = data.length
-												for (let i = 0; i < data_length; i++) {
-													const row = data[i]
-													row.add_denomination = true // Allow display denomination like 'Bronze'
-													const node = catalog_row_fields.draw_item(row)
-													legends_container.appendChild(node)
+										// render all
+											catalog.draw_rows({
+												target	: legends_container,
+												ar_rows	: data
+											})
+											.then(function(result_node){
+												if (!result_node.hasChildNodes()) {
+													// Something wrong happens
+													common.create_dom_element({
+														element_type	: 'div',
+														class_name		: 'warning',
+														inner_html		: 'Invalid result! <br>' + catalog.errors.join('<br>'),
+														parent			: result_node
+													})
+													// ar_legends
+													common.create_dom_element({
+														element_type	: 'pre',
+														class_name		: 'json',
+														inner_html		: 'legends references: <br>' + JSON.stringify(ar_legends, null, 2),
+														parent			: result_node
+													})
+													// ar_legends
+													const data_preview = data.map((el) => {
+														return {
+															catalog_section_id	: el.section_id,
+															term_table			: el.term_table,
+															term_section_id		: el.term_section_id,
+															term_section_tipo	: el.term_section_tipo[0],
+															term				: el.term
+														}
+													})
+													common.create_dom_element({
+														element_type	: 'pre',
+														class_name		: 'json',
+														inner_html		: 'catalog data: <br>' + JSON.stringify(data_preview, null, 2),
+														parent			: result_node
+													})
+													console.log('catalog.errors:', catalog.errors);
 												}
-									}//end load_legends
+											})
+									}//end render_legends
 
 									// link legends node
 									const link_legends = common.create_dom_element({
 										element_type	: 'a',
 										class_name		: 'epi_link legends_link',
-										inner_html		: (tstring.legends || 'Legends'),
+										inner_html		: (tstring.legends || 'Legends') + ' <span class="data_length">'+data.length+'</span',
 										parent			: buttons_additional
 									})
-									link_legends.addEventListener('click', load_legends)
+									link_legends.addEventListener('click', render_legends)
 									if(SHOW_DEBUG===true) {
 										link_legends.title = 'term_id:' + row.term_id + '\nar_legends: ' + JSON.stringify(ar_legends)
 									}
 
 									// fix parsed data
-									link_legends.data = page.parse_catalog_data(api_response.result)
+									// link_legends.data = page.parse_catalog_data(api_response.result)
+									link_legends.data = data // is already parsed
 
-									// active link (opacity transition)
+									// active link (opacity transition fadeIn)
 									setTimeout(function(){
 										link_legends.classList.add('active')
+										// display hidden node container_additional
 										container_additional.classList.remove('hide')
 									}, 1)
 								})
 							}//end if (ar_legends.length)
 						}//end build_legends
 
-						// countermarks
-						const build_countermarks = () => {
-							const ar_relations = row.dd_relations && row.dd_relations.length >0
-								? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata4')
-								: []
-							if (ar_relations.length) {
-								ar_relations.push({section_id:247}) // test data
-								const load_relations_data = (ar_relations) => {
+					// delay milliseconds
+						// const is_latin_grouper = row.term_id.includes('sclat1') && row.model && row.model.includes('sclat2_2')
+						const delay = is_grouper
+							? 350
+							: 10
 
-									// filter
-										const relations_filter = []
-										const ar_relations_length = ar_relations.length
-										for (let i = 0; i < ar_relations_length; i++) {
-											const item = ar_relations[i]
-											relations_filter.push(
-												`countermark_obverse_data like '%"${item.section_id}"%' OR countermark_reverse_data like '%"${item.section_id}"%'`
-											)
-										}
-										const sql_filter = relations_filter.join(' OR ')
+					// set node only when it is in DOM (to save browser resources)
+						const observer = new IntersectionObserver(function(entries) {
+							const entry = entries[1] || entries[0]
+							if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
+								observer.disconnect();
+								build_legends()
+							}
+						}, { threshold: [0] });
+						setTimeout(function(){
+							observer.observe(term);
+						}, delay)
+					break;
+				}
 
-									return data_manager.request({
-										body : {
-											code			: page_globals.API_WEB_USER_CODE,
-											lang			: page_globals.WEB_CURRENT_LANG_CODE,
-											db_name			: page_globals.WEB_DB,
-											dedalo_get		: 'records',
-											table			: 'coins',
-											ar_fields		: '*',
-											count			: false,
-											sql_filter		: sql_filter,
-											resolve_portals_custom	: {
-												'bibliography_data' : 'bibliographic_references'
+				case 'countermarks': {
+					// countermarks
+
+					// coins OLD
+						/*
+						if (row.illustration && row.illustration.length>0) {
+							// countermark_obverse_data
+							// countermark_reverse_data
+
+							// set node only when it is in DOM (to save browser resources)
+								const observer = new IntersectionObserver(function(entries) {
+									const entry = entries[1] || entries[0]
+									if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
+										observer.disconnect();
+
+										// delegates check task to worker. When finish, show link button if target result exists
+											const current_worker = new Worker(__WEB_TEMPLATE_WEB__ + '/thesaurus/js/worker.js');
+											const body = {
+												code		: page_globals.API_WEB_USER_CODE,
+												lang		: page_globals.WEB_CURRENT_LANG_CODE,
+												db_name		: page_globals.WEB_DB,
+												dedalo_get	: 'records',
+												table		: 'coins',
+												ar_fields	: ['section_id'],
+												limit		: 1,
+												count		: false,
+												order		: 'lang ASC',
+												sql_filter	: `(countermark_obverse_data LIKE '%"${row.section_id}"%' OR countermark_reverse_data LIKE '%"${row.section_id}"%')`
 											}
-										}
-									})
-								}//end load_relations_data
-								load_relations_data(ar_relations)
-								.then(function(api_response){
-									console.log('api_response:', api_response);
-									if (!api_response.result || api_response.result.length===0) {
+											current_worker.postMessage({
+												url		: page_globals.JSON_TRIGGER_URL,
+												body	: body
+											});
+											current_worker.onmessage = function(e) {
+												current_worker.terminate()
+
+												const api_response = e.data
+												if (api_response.result && api_response.result.length>0) {
+													const link_countermarks = common.create_dom_element({
+														element_type	: "a",
+														class_name		: "icon_link",
+														parent			: term
+													})
+													link_countermarks.addEventListener("click", function(){
+
+														const filter = {
+														  "$or": [
+															{
+															  "$and": [
+																{
+																  "$and": [
+																	{
+																	  "id": "countermark_obverse_data",
+																	  "field": "countermark_obverse_data",
+																	  "q": ""+row.section_id+"",
+																	  "q_type": "q",
+																	  "op": "LIKE"
+																	}
+																  ]
+																}
+															  ]
+															},
+															{
+															  "$and": [
+																{
+																  "$and": [
+																	{
+																	  "id": "countermark_reverse_data",
+																	  "field": "countermark_reverse_data",
+																	  "q": ""+row.section_id+"",
+																	  "q_type": "q",
+																	  "op": "LIKE"
+																	}
+																  ]
+																}
+															  ]
+															}
+														  ]
+														};
+														const encoded_psqo = psqo_factory.encode_psqo(filter)
+														const url = 'coins/?psqo=' + encoded_psqo
+														// const windowFeatures = "popup";
+														window.open(url, "mint", null);
+													})
+												}
+											}
+									}
+								}, { threshold: [0] });
+								observer.observe(term);
+						}
+						*/
+
+					// groupers
+						const groupers = [
+							'sccmk2_1' // ts_countermarks
+						]
+						const is_grouper = row.model && groupers.includes(row.model) && row.children
+
+					// countermarks
+						const build_countermarks = () => {
+
+							// ar_relations
+								const ar_relations = row.dd_relations && row.dd_relations.length >0
+									? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata4') // coins = numisdata4
+									: []
+
+							// groupers case
+								if (is_grouper) {
+									// get children data
+									const grouper_children = self.data.filter(el => row.children.includes(el.term_id))
+									// add every children legends to ar_legends array
+									const grouper_children_length = grouper_children.length
+									for (let i = 0; i < grouper_children_length; i++) {
+										const child = grouper_children[i]
+										const current_ar_relations = child.dd_relations && child.dd_relations.length >0
+											? child.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
+											: []
+										ar_relations.push(...current_ar_relations)
+									}
+								}
+
+							if (ar_relations.length) {
+
+								thesaurus.load_relations_data(row, ar_relations)
+								.then(function(data){
+									if (!data || data.length===0) {
 										return
 									}
 
+									// render countermarks
 									const render_countermarks = (e) => {
 										e.stopPropagation()
 
@@ -747,35 +910,42 @@ var thesaurus =  {
 													return countermarks_container
 												  })();
 
-											// clean container
-												// while (countermarks_container.firstChild) {
-												// 	countermarks_container.removeChild(countermarks_container.firstChild);
-												// }
+										// render coins
+											const data_length = data.length
+											for (let i = 0; i < data_length; i++) {
+												const row = data[i]
+												const coin_node	= type_row_fields_min.type_row_fields.draw_coin(row)
+												countermarks_container.appendChild(coin_node)
+											}
 
-											// render types
-												const data_length = data.length
-												for (let i = 0; i < data_length; i++) {
-													const row = data[i]
-													const coin_node	= type_row_fields_min.type_row_fields.draw_coin(row)
-													countermarks_container.appendChild(coin_node)
-												}
+											// const node = map.render_types_rows({
+											// 	types_rows : data.types_rows,
+											// 	coins_rows : data.coins_rows,
+											// 	item_type : 'mint' // string (findspot|mint|hoard)
+											// })
+											// countermarks_container.appendChild(node)
+
 									}//end render_countermarks
 
 									// link countermarks node
 									const link_countermarks = common.create_dom_element({
 										element_type	: 'a',
 										class_name		: 'epi_link countermarks_link',
-										inner_html		: tstring.countermarks || 'Countermarks',
+										inner_html		: (tstring.coins || 'Coins') + ' <span class="data_length">'+data.length+'</span',
 										parent			: buttons_additional
 									})
 									link_countermarks.addEventListener('click', render_countermarks)
+									if(SHOW_DEBUG===true) {
+										link_countermarks.title = 'term_id:' + row.term_id + '\nar_legends: ' + JSON.stringify(ar_relations)
+									}
 
 									// fix parsed data
-									link_countermarks.data = page.parse_coin_data(api_response.result)
+									link_countermarks.data = data
 
 									// active link (opacity transition)
 									setTimeout(function(){
 										link_countermarks.classList.add('active')
+										container_additional.classList.remove('hide')
 									}, 1)
 								})
 							}//end if (ar_relations.length)
@@ -786,10 +956,7 @@ var thesaurus =  {
 							const entry = entries[1] || entries[0]
 							if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
 								observer.disconnect();
-								build_legends()
-								setTimeout(function(){
-									// build_countermarks()
-								}, 5)
+								build_countermarks()
 							}
 						}, { threshold: [0] });
 						setTimeout(function(){
@@ -810,7 +977,7 @@ var thesaurus =  {
 								if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
 									observer.disconnect();
 
-									// delegates chek task to worker. When finish, show link button if target result exists
+									// delegates check task to worker. When finish, show link button if target result exists
 										const current_worker = new Worker(__WEB_TEMPLATE_WEB__ + '/thesaurus/js/worker.js');
 										const body = {
 											code		: page_globals.API_WEB_USER_CODE,
@@ -1021,100 +1188,10 @@ var thesaurus =  {
 					// }
 					break;
 
-				case 'countermarks':
-					// coins
-					if (row.illustration && row.illustration.length>0) {
-						// countermark_obverse_data
-						// countermark_reverse_data
-
-						// set node only when it is in DOM (to save browser resources)
-							const observer = new IntersectionObserver(function(entries) {
-								const entry = entries[1] || entries[0]
-								if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
-									observer.disconnect();
-
-									// delegates check task to worker. When finish, show link button if target result exists
-										const current_worker = new Worker(__WEB_TEMPLATE_WEB__ + '/thesaurus/js/worker.js');
-										const body = {
-											code		: page_globals.API_WEB_USER_CODE,
-											lang		: page_globals.WEB_CURRENT_LANG_CODE,
-											db_name		: page_globals.WEB_DB,
-											dedalo_get	: 'records',
-											table		: 'coins',
-											ar_fields	: ['section_id'],
-											limit		: 1,
-											count		: false,
-											order		: 'lang ASC',
-											sql_filter	: `(countermark_obverse_data LIKE '%"${row.section_id}"%' OR countermark_reverse_data LIKE '%"${row.section_id}"%')`
-										}
-										current_worker.postMessage({
-											url		: page_globals.JSON_TRIGGER_URL,
-											body	: body
-										});
-										current_worker.onmessage = function(e) {
-											current_worker.terminate()
-
-											const api_response = e.data
-											if (api_response.result && api_response.result.length>0) {
-												const link_countermarks = common.create_dom_element({
-													element_type	: "a",
-													class_name		: "icon_link",
-													parent			: term
-												})
-												link_countermarks.addEventListener("click", function(){
-
-													const filter = {
-													  "$or": [
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "countermark_obverse_data",
-																  "field": "countermark_obverse_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														},
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "countermark_reverse_data",
-																  "field": "countermark_reverse_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														}
-													  ]
-													};
-													const encoded_psqo = psqo_factory.encode_psqo(filter)
-													const url = 'coins/?psqo=' + encoded_psqo
-													// const windowFeatures = "popup";
-													window.open(url, "mint", null);
-												})
-											}
-										}
-								}
-							}, { threshold: [0] });
-							observer.observe(term);
-					}
-					break;
-
 				default:
 					// nothing to do
 					break;
 			}
-
 
 		// wrappers
 			// scope note wrapper
@@ -1132,6 +1209,26 @@ var thesaurus =  {
 							parent			: tree_node
 						})
 				}
+
+			// scope note wrapper
+				let definition
+				if (row.definition && row.definition.length>0) {
+					// definition
+						const definition_text = row.definition.replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/g,'');
+						definition = common.create_dom_element({
+							element_type	: "div",
+							class_name		: "definition hide",
+							inner_html		: definition_text,
+							parent			: tree_node
+						})
+				}
+
+			// container_additional (contains legends and countermarks)
+				const container_additional = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'container_additional hide',
+					parent			: tree_node
+				})
 
 			// relations wrapper
 				let relations_container
@@ -1322,7 +1419,7 @@ var thesaurus =  {
 					element_type	: "input",
 					type 			: "submit",
 					id 				: "submit",
-					value 			: tstring["buscar"] || "Search",
+					value 			: tstring.search || "Search",
 					class_name 		: "btn btn-light btn-block primary",
 					parent 			: submit_group
 				})
@@ -1671,7 +1768,267 @@ var thesaurus =  {
 
 
 		return js_promise
-	}//end form_submit
+	},//end form_submit
+
+
+
+	/**
+	* LOAD_LEGENDS_DATA
+	* 	Catalog search of related legends
+	* @param object row
+	* 	Table row from API response result
+	* @param array ar_legends
+	* 	Related legends from
+	* @return object api_response
+	*/
+	load_legends_data : function(row, ar_legends) {
+
+		const self = this
+
+		// latin grouper case
+		// children of latin groupers are not calculated by related ar_legends, but from a catalog search
+		// this is more expensive, but needs to be done is this way at now
+			const is_latin_grouper = row.term_id.includes('sclat1') && row.model && row.model.includes('sclat2_2')
+			if (is_latin_grouper) {
+				return new Promise(function(resolve){
+
+					const ar_promise = []
+					const children = self.data_clean.filter(el => row.children && row.children.includes(el.term_id))
+					const children_length = children.length
+					for (let i = 0; i < children_length; i++) {
+
+						const child = children[i]
+
+						// get term relations with legends (where these have been used)
+						const ar_legends = child.dd_relations && child.dd_relations.length >0
+							? child.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
+							: []
+						// API call
+							const load_promise = thesaurus.load_legends_data(child, ar_legends)
+							ar_promise.push(load_promise)
+					}
+					Promise.all(ar_promise).then((values) => {
+						const data = values.flat()
+						resolve(data)
+					});
+				})
+			}
+
+		// filter
+			const legends_filter = []
+			const ar_legends_length = ar_legends.length
+			for (let i = 0; i < ar_legends_length; i++) {
+				const item = ar_legends[i]
+				// search catalog column ref_type_legend_obverse_data / ref_type_design_reverse_data the related legend section_id
+				legends_filter.push(
+					`ref_type_legend_obverse_data LIKE '%"${item.section_id}"%' OR ref_type_legend_reverse_data LIKE '%"${item.section_id}"%'`
+				)
+			}
+			// latin case. Additional search in plain text for Unicode letters
+			const is_latin = row.term_id.includes('sclat1')
+			if (is_latin===true &&
+				ar_legends.length===0 &&
+				!row.model.includes('sclat2_2') // exclude rows with model 'sclat2_2' grouper
+				) {
+				legends_filter.push(
+					`ref_type_legend_obverse_text LIKE '%${row.term}%' OR ref_type_legend_reverse_text LIKE '%${row.term}%'`
+				)
+			}
+			const sql_filter = `term_table = 'types' AND (` + legends_filter.join(' OR ') + ')'
+
+			// debug
+				if (row.term_id==='sclat1_96') {
+					console.log('sclat1_96 sql_filter:', sql_filter);
+				}
+
+		// search_rows
+			const js_promise = catalog.search_rows({
+				sql_filter		: sql_filter,
+				limit 			: 0,
+				process_result	: {
+					fn		: 'process_result::add_parents_and_children_recursive',
+					columns	: [{name : "parents"}]
+				}
+			})
+
+
+		return js_promise
+
+
+		// return data_manager.request({
+		// 	body : {
+		// 		code		: page_globals.API_WEB_USER_CODE,
+		// 		lang		: page_globals.WEB_CURRENT_LANG_CODE,
+		// 		db_name		: page_globals.WEB_DB,
+		// 		dedalo_get	: 'records',
+		// 		table		: 'catalog',
+		// 		ar_fields	: '*',
+		// 		count		: false,
+		// 		limit		: 0,
+		// 		sql_filter	: sql_filter,
+		// 		process_result	: {
+		// 			fn		: 'process_result::add_parents_and_children_recursive',
+		// 			columns	: [{name : "parents"}]
+		// 		}
+		// 	}
+		// })
+	},//end load_legends_data
+
+
+
+	/**
+	* LOAD_RELATIONS_DATA
+	* 	Coins search of related countermarks
+	* @param object row
+	* 	Table row from API response result
+	* @param array ar_relations
+	* 	Related countermarks from
+	* @return object api_response
+	*/
+	load_relations_data : async function(row, ar_relations) {
+
+		// filter
+			// const relations_filter = []
+			// const ar_relations_length = ar_relations.length
+			// for (let i = 0; i < ar_relations_length; i++) {
+			// 	const item = ar_relations[i]
+			// 	relations_filter.push(
+			// 		// `countermark_obverse_data LIKE '%"${item.section_id}"%' OR countermark_reverse_data LIKE '%"${item.section_id}"%'`
+			// 		`section_id = ${item.section_id}`
+			// 	)
+			// }
+			// const sql_filter = relations_filter.join(' OR ')
+		// filter optimized
+			const section_id_list = ar_relations.map(el => el.section_id).join(',')
+			const coins_sql_filter = `section_id IN (${section_id_list})`
+
+		const api_response = await data_manager.request({
+			body : {
+				code			: page_globals.API_WEB_USER_CODE,
+				lang			: page_globals.WEB_CURRENT_LANG_CODE,
+				db_name			: page_globals.WEB_DB,
+				dedalo_get		: 'records',
+				table			: 'coins',
+				ar_fields		: '*',
+				count			: false,
+				sql_filter		: coins_sql_filter,
+				resolve_portals_custom	: {
+					'bibliography_data'	: 'bibliographic_references'
+				}
+			}
+		})
+
+		if (!api_response.result) {
+			console.error('Invalid api_response result:', api_response);
+			return []
+		}
+
+		const data = page.parse_coin_data(api_response.result)
+
+		// parse MIB additional info about type and mint
+			const data_length = data.length
+			for (let i = 0; i < data_length; i++) {
+
+				const item = data[i]
+
+				const catalogue_type_mint = item.catalogue_type_mint || []
+				const mib_key = catalogue_type_mint.indexOf('MIB')
+				if (mib_key===-1) {
+					continue;
+				}
+
+				// additional_info
+				// Used in type_row_fields.draw_coin
+				item.additional_info = {
+					type		: item.type[mib_key],
+					mint		: item.mint_name,
+					mint_number	: item.mint_number[mib_key]
+				}
+			}
+
+
+		return data
+		/*
+			const ar_calls = []
+
+			// search types in catalog using types list
+				const ar_filter = ar_relations.map(function(item){
+					return `coin_references LIKE '%"${item.section_id}"%'`;
+				})
+				const sql_filter = 'term_table=\'types\' AND ('+ar_filter.join(' OR ')+')'
+
+				const catalog_ar_fields = ['*']
+
+				const catalog_request_options = {
+					dedalo_get	: 'records',
+					db_name		: page_globals.WEB_DB,
+					lang		: page_globals.WEB_CURRENT_LANG_CODE,
+					table		: 'catalog',
+					ar_fields	: catalog_ar_fields,
+					sql_filter	: sql_filter,
+					limit		: 0,
+					count		: false,
+					offset		: 0,
+					order		: "term ASC"
+				}
+				ar_calls.push({
+					id		: 'catalog_request',
+					options	: catalog_request_options
+				})
+
+			// search coins
+				const coins_request_options = {
+					dedalo_get	: 'records',
+					db_name		: page_globals.WEB_DB,
+					lang		: page_globals.WEB_CURRENT_LANG_CODE,
+					table		: 'coins',
+					ar_fields	: ['*'],
+					sql_filter	: coins_sql_filter,
+					limit		: 0,
+					count		: false,
+					offset		: 0,
+					order		: null,
+					resolve_portals_custom	: {
+						"bibliography_data" : "bibliographic_references"
+					}
+				}
+				ar_calls.push({
+					id		: 'coins_request',
+					options	: coins_request_options
+				})
+
+			// request
+				const api_response = await data_manager.request({
+					body : {
+						dedalo_get	: 'combi',
+						ar_calls	: ar_calls
+					}
+				})
+
+			if (!api_response.result) {
+				console.error('Invalid api_response result:', api_response);
+				return []
+			}
+
+			const catalog_response = api_response.result.find(function(el){
+				return el.id==='catalog_request'
+			})
+			const types_rows = page.parse_catalog_data(catalog_response.result)
+
+			const coins_response = api_response.result.find(function(el){
+				return el.id==='coins_request'
+			})
+			const coins_rows = page.parse_coin_data(coins_response.result)
+
+			const data = {
+				types_rows : types_rows,
+				coins_rows : coins_rows
+			}
+			console.log('data:', data);
+
+			return data
+			*/
+	}//end load_relations_data
 
 
 

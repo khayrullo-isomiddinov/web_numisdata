@@ -279,9 +279,30 @@
 		margin-left: 0.5rem;
 		opacity: 0;
 
+		&:active {
+			opacity: 0.5 !important;
+		}
+
 		&.active {
 			transition: opacity 0.3s;
 			opacity: 1;
+		}
+
+		&:hover {
+			.data_length {
+				display: inline-block;
+			}
+		}
+
+		.data_length {
+			font-size: 60%;
+			color: #9a9898;
+			vertical-align: middle;
+			display: none;
+
+			@media (max-width: @movil_max_width) {
+				display: inline-block;
+			}
 		}
 	}
 }
@@ -292,6 +313,24 @@
 	// epi_container (legends_container, countermarks_container)
 	.epi_container {
 		font-size: 1.166rem;
+
+		.children_contanier {
+			margin-left: 2rem;
+
+			// &:first-of-type {
+			// 	margin-left: 0px;
+			// }
+		}
+
+		.warning {
+			color: #FF9800;
+			padding-left: 2rem;
+			padding-bottom: 1rem;
+		}
+		.json {
+			line-height: 1.3rem;
+			padding-left: 2rem;
+		}
 	}
 }
 

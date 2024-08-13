@@ -115,7 +115,6 @@ var catalog_row_fields = {
 						parent			: type_container
 					})
 
-
 					// term
 						self.node_factory(item, "term", type_info, "span", null)
 
@@ -133,7 +132,6 @@ var catalog_row_fields = {
 						self.node_factory(item, "ref_type_total_weight_items", type_info, null, null)
 						self.node_factory(item, "ref_type_averages_diameter", type_info, null, null)
 						self.node_factory(item, "ref_type_total_diameter_items", type_info, null, null)
-
 
 					// obverse
 						const descriptions = common.create_dom_element({
@@ -185,9 +183,8 @@ var catalog_row_fields = {
 					self.node_factory(item, "ref_type_equivalents", type_container, null, null)
 
 					// images
-
 						const mint_number = (item.ref_mint_number)
-						? item.ref_mint_number+'/'
+						? item.ref_mint_number + '/'
 						: ''
 
 						const ar		= item.term.split(", ")
@@ -218,12 +215,19 @@ var catalog_row_fields = {
 								href			: item.ref_coins_image_obverse,
 								parent			: coins_images
 							})
+							const type_string = page.compose_catalog_id({
+								archive		: page_globals.OWN_CATALOG_ACRONYM,
+								section_id	: item.term_section_id,
+								mint_number	: mint_number,
+								type		: c_name
+							})
 							const img_obverse = common.create_dom_element({
 								element_type	: "img",
 								class_name		: "image_obverse",
 								src				: item.ref_coins_image_obverse_thumb,
 								title			: item.section_id,
-								dataset			: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+								// dataset		: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+								dataset			: {caption : type_string},
 								parent			: image_link_obverse
 							})
 							img_obverse.style.width = (diameter * 2 ) + 'mm'

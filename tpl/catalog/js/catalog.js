@@ -25,6 +25,9 @@ var catalog = {
 	rows_list_container		: null,
 	export_data_container	: null,
 
+	// errors
+	errors : [],
+
 
 
 	/**
@@ -1484,6 +1487,7 @@ var catalog = {
 
 		// sort vars
 			const filter			= options.filter || null
+			const sql_filter		= options.sql_filter || null
 			const ar_fields			= options.ar_fields || ["*"]
 			const order				= options.order || "norder ASC"
 			const lang				= page_globals.WEB_CURRENT_LANG_CODE
@@ -1555,8 +1559,7 @@ var catalog = {
 					// }
 
 			// parsed_filters
-				const sql_filter = self.form.parse_sql_filter(filter)
-				// const sql_filter = filter
+				const parsed_sql_filter = sql_filter || self.form.parse_sql_filter(filter)
 				// console.log("Final sql_filter:", sql_filter);
 
 			// debug
@@ -1571,7 +1574,7 @@ var catalog = {
 					table			: 'catalog',
 					ar_fields		: ar_fields,
 					lang			: lang,
-					sql_filter		: sql_filter,
+					sql_filter		: parsed_sql_filter,
 					limit			: limit,
 					group			: (group.length>0) ? group.join(",") : null,
 					count			: false,
@@ -1611,6 +1614,9 @@ var catalog = {
 
 		const self = this
 
+		// errors reset
+		self.errors = []
+
 		// options
 			const target	= options.target // self.rows_list_container
 			const ar_rows	= options.ar_rows || []
@@ -1640,7 +1646,7 @@ var catalog = {
 						parent			: container
 					})
 
-					// scrool to head again
+					// scroll to head again
 						window.scrollTo(0, 0);
 
 					resolve(container)
@@ -1650,7 +1656,7 @@ var catalog = {
 			// add_spinner
 				// page.add_spinner(container)
 
-			// const render_nodes = async () => {
+			// render_nodes function
 				const render_nodes = async function() {
 
 					const fragment = new DocumentFragment();
@@ -1667,6 +1673,7 @@ var catalog = {
 							: null
 						if(!mint_parent){
 							console.warn("mint don't have public parent:",ar_mints[i]);
+							self.errors.push("mint don't have public parent: " + ar_mints[i].term + ' (' + ar_mints[i].term_id +')')
 							continue
 						}
 						// check if the parent is inside the ar_parents, if not push inside else nothing
@@ -1683,7 +1690,6 @@ var catalog = {
 						self.get_children(ar_rows, ar_parent[i], fragment)
 					}
 
-
 					// sort rows
 						// let collator = new Intl.Collator('es',{ sensitivity: 'base', ignorePunctuation:true});
 						// ar_rows.sort( (a,b) => {
@@ -1695,7 +1701,7 @@ var catalog = {
 						// });
 
 					return fragment
-				}
+				}//end render_nodes
 
 			render_nodes()
 			.then(fragment => {

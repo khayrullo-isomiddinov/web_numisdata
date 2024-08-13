@@ -212,12 +212,44 @@ canvas {
   margin-left: 0.5rem;
   opacity: 0;
 }
+.buttons_additional .epi_link:active {
+  opacity: 0.5 !important;
+}
 .buttons_additional .epi_link.active {
   transition: opacity 0.3s;
   opacity: 1;
 }
+.buttons_additional .epi_link:hover .data_length {
+  display: inline-block;
+}
+.buttons_additional .epi_link .data_length {
+  font-size: 60%;
+  color: #9a9898;
+  vertical-align: middle;
+  display: none;
+}
+@media (max-width: 842px) {
+  .buttons_additional .epi_link .data_length {
+    display: inline-block;
+  }
+}
 .container_additional .epi_container {
   font-size: 1.166rem;
+}
+.container_additional .epi_container .children_contanier {
+  margin-left: 2rem;
+}
+.container_additional .epi_container .warning {
+  color: #FF9800;
+  padding-left: 2rem;
+  padding-bottom: 1rem;
+}
+.container_additional .epi_container .json {
+  line-height: 1.3rem;
+  padding-left: 2rem;
+}
+.row_node:first-child {
+  border-top: none;
 }
 .row_node.types {
   border-top: 1px solid #ddd;
@@ -227,8 +259,8 @@ canvas {
 .row_node.types span {
   margin-right: 1em;
 }
-.row_node.types:first-child {
-  border-top: none;
+.row_node.types span.no_bold {
+  margin-right: 0px;
 }
 .row_node.types .term {
   font-weight: 500;
@@ -246,30 +278,6 @@ canvas {
 .row_node.types .ref_type_total_weight_items,
 .row_node.types .ref_type_total_diameter_items {
   font-size: 16px;
-}
-.row_node.types .mint {
-  display: inline-block;
-  font-size: 1.4em;
-  font-weight: 600;
-  font-variant-caps: small-caps;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-}
-.row_node.types .link_mint {
-  margin-left: 1em;
-}
-.row_node.types .link_mint:before {
-  content: " ";
-  width: 0.75em;
-  height: 0.75em;
-  display: inline-block;
-  background-image: url("../../assets/images/icon_link_color.svg");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-}
-.row_node.types .ts_period_value {
-  font-weight: 600;
 }
 .row_node.types .ts_numismatic_group_value {
   font-weight: 600;
@@ -390,5 +398,29 @@ canvas {
 .row_node.types .types {
   display: grid;
   page-break-inside: avoid;
+}
+.row_node.mints .mint {
+  display: inline-block;
+  font-size: 1.4em;
+  font-weight: 600;
+  font-variant-caps: small-caps;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.row_node.mints .link_mint {
+  margin-left: 1em;
+}
+.row_node.mints .link_mint:before {
+  content: " ";
+  width: 0.75em;
+  height: 0.75em;
+  display: inline-block;
+  background-image: url("../../assets/images/icon_link_color.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+.row_node.ts_period .ts_period_value {
+  font-weight: 600;
 }
 /*# sourceMappingURL=thesaurus.css.map */

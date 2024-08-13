@@ -1,15 +1,17 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-		@page_path : "../../page";
+@assets_path: "../../assets";
+@fonts_path: "@{assets_path}/fonts";
 
-	// Usage library
-		@import "@{page_path}/css/vars.less";
+// Usage library
+@import "../../page/css/vars.less";
 
 
-#wrapper .inner {
-	padding: 0;
-}
+
+// #wrapper
+	#wrapper .inner {
+		padding: 0;
+	}
+
 
 
 // search result
@@ -34,7 +36,6 @@
 			}
 		}
 
-
 		.spinner_svg {
 			position: absolute;
 			top: 3em;
@@ -43,11 +44,13 @@
 	}
 
 
-.spinner {
-	position: fixed;
-	top: 40vh;
-	z-index: 999999;
-}
+
+// spinner
+	.spinner {
+		position: fixed;
+		top: 40vh;
+		z-index: 999999;
+	}
 
 
 
@@ -117,8 +120,6 @@
 				display: flex;
 				flex-wrap: wrap;
 
-
-
 				.title {
 					// margin: 0;
 
@@ -140,7 +141,6 @@
 						cursor: pointer;
 					}
 				}
-
 			}//end row_title
 
 		// row_body
@@ -185,8 +185,6 @@
 					padding-left: 0.5em;
 					padding-right: 0.5em;
 				}
-
-
 			}//end row_url
 
 
@@ -248,6 +246,8 @@
 		padding-top: 1em;
 		border-top: 1px solid #ddd;
 	}
+
+
 
 /*
 

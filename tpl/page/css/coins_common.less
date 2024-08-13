@@ -22,14 +22,40 @@
 	.sorted_coin {
 		width : 33.33%;
 		margin-bottom: 0.5em;
-		// margin-right: 0.5em;
 		font-size: 80%;
 		border-right: 1px solid rgb(227, 227, 227);
-		// background-color: #f6f6f6;
 		padding: 0.5em;
 		border-radius: 4px;
 
-		.uri-text a{
+		>.additional_info {
+			// margin-top: 0.5rem;
+
+			>.additional_info_item {
+
+				&.mint {
+					font-size: 1.2em;
+					font-weight: 600;
+					font-variant-caps: small-caps;
+				}
+
+				&.type {
+					margin-left: 1rem;
+					font-weight: 500;
+					color: #b7996d;
+				}
+
+			}
+		}
+
+		>.references {
+			margin-top: -0.5rem;
+
+			>.bibliographic_reference {
+
+			}
+		}
+
+		.uri-text a {
 			@media screen and (min-width: 1680px){
 				font-size:90%;
 			}
@@ -41,6 +67,13 @@
 			}
 			@media screen and (max-width: 590px){
 				font-size:3vw;
+			}
+		}
+
+		.countermarks_wrapper {
+
+			.svg {
+				height: 2rem;
 			}
 		}
 
