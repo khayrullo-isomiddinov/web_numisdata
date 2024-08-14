@@ -1402,8 +1402,10 @@ export const type_row_fields = {
 
 			const image = this
 			const hires = this.hires
-			setTimeout(function(){
-				image.src = hires
+			setTimeout(()=>{
+				requestAnimationFrame(()=>{
+					image.src = hires
+				})
 			}, 1000)
 		}
 
@@ -1461,6 +1463,40 @@ export const type_row_fields = {
 			})
 			image_reverse.hires = data.image_reverse
 			image_reverse.addEventListener("load", load_hires, false)
+
+		// additional_info
+			// Additional info is calculated only by thesaurus -> countermarks
+			if (data.additional_info && (data.additional_info.mint || data.additional_info.type)) {
+				const additional_info = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'additional_info',
+					parent			: wrapper
+				})
+				// mint
+					if (data.additional_info.mint) {
+						common.create_dom_element({
+							element_type	: 'span',
+							class_name		: 'additional_info_item mint',
+							inner_html		: data.additional_info.mint,
+							parent			: additional_info
+						})
+					}
+				// type
+					if (data.additional_info.type) {
+						const type_string = page.compose_catalog_id({
+							archive		: page.archive,
+							section_id	: data.type_section_id,
+							mint_number	: data.additional_info.mint_number,
+							type		: data.additional_info.type
+						})
+						common.create_dom_element({
+							element_type	: 'span',
+							class_name		: 'additional_info_item type',
+							inner_html		: type_string,
+							parent			: additional_info
+						})
+					}
+			}
 
 		// collection
 			if (data.collection && data.collection.length>0){
@@ -1545,8 +1581,7 @@ export const type_row_fields = {
 				return true
 			}
 
-
-		// GET IMAGE PHOTOGRAPHER
+		// photographer. Get image photographer
 
 			// (!) COMMENTED : UNFEASIBLE FOR MAP . REMOVED 14-03-2022 UNTIL RESOLVE IT IN A VIABLE WAY
 				// const observer = new IntersectionObserver(async function(entries) {
@@ -1682,6 +1717,7 @@ export const type_row_fields = {
 					parent			: countermarks
 				})
 			}
+
 		// countermark_reverse
 			if (data.countermark_reverse && data.countermark_reverse.length>0){
 
@@ -1693,41 +1729,7 @@ export const type_row_fields = {
 				})
 			}
 
-		// additional_info
-			// Additional info is calculated only by thesaurus -> countermarks
-			if (data.additional_info && (data.additional_info.mint || data.additional_info.type)) {
-				const additional_info = common.create_dom_element({
-					element_type	: 'div',
-					class_name		: 'additional_info',
-					parent			: wrapper
-				})
-				// mint
-					if (data.additional_info.mint) {
-						common.create_dom_element({
-							element_type	: 'span',
-							class_name		: 'additional_info_item mint',
-							inner_html		: data.additional_info.mint,
-							parent			: additional_info
-						})
-					}
-				// type
-					if (data.additional_info.type) {
-						const type_string = page.compose_catalog_id({
-							archive		: page.archive,
-							section_id	: data.type_section_id,
-							mint_number	: data.additional_info.mint_number,
-							type		: data.additional_info.type
-						})
-						common.create_dom_element({
-							element_type	: 'span',
-							class_name		: 'additional_info_item type',
-							inner_html		: type_string,
-							parent			: additional_info
-						})
-					}
-			}
-
-		// biblio
+		// bibliography
 			const references_container = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "references",
@@ -1751,7 +1753,6 @@ export const type_row_fields = {
 				inner_html		: uri_text,
 				parent			: wrapper
 			})
-
 
 		// collection uri
 			if (data.uri && data.uri.length>0) {
