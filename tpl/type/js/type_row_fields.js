@@ -1484,7 +1484,7 @@ export const type_row_fields = {
 				// type
 					if (data.additional_info.type) {
 						const type_string = page.compose_catalog_id({
-							archive		: page.archive,
+							archive		: page_globals.OWN_CATALOG_ACRONYM,
 							section_id	: data.type_section_id,
 							mint_number	: data.additional_info.mint_number,
 							type		: data.additional_info.type

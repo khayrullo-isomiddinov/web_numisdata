@@ -654,7 +654,6 @@ var thesaurus =  {
 												if (!data) {
 													return
 												}
-												console.log('data:', data);
 
 											// legends_container: create a new one if not already exists
 												const legends_container = container_additional.legends_container

@@ -127,9 +127,6 @@ var page = {
 			}
 		},
 
-		// archive
-		archive : 'MIB',
-
 
 
 	/**
