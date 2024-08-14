@@ -210,17 +210,9 @@ canvas {
 }
 .buttons_additional .epi_link {
   margin-left: 0.5rem;
-  opacity: 0;
 }
 .buttons_additional .epi_link:active {
   opacity: 0.5 !important;
-}
-.buttons_additional .epi_link.active {
-  transition: opacity 0.3s;
-  opacity: 1;
-}
-.buttons_additional .epi_link:hover .data_length {
-  display: inline-block;
 }
 .buttons_additional .epi_link .data_length {
   font-size: 60%;
@@ -249,7 +241,7 @@ canvas {
   padding-left: 2rem;
 }
 .row_node:first-child {
-  border-top: none;
+  border-top: none !important;
 }
 .row_node.types {
   border-top: 1px solid #ddd;

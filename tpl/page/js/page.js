@@ -1014,7 +1014,29 @@ var page = {
 		const catalog_id = `${archive} ${section_id} <span class="no_bold"> | ${mint_number}/${type}</span>`
 
 		return catalog_id
-	}//end compose_catalog_id
+	},//end compose_catalog_id
+
+
+
+	/**
+	* DD_REQUEST_IDLE_CALLBACK
+	* Queues a function to be called during a browser's idle periods.
+	* This enables to perform background and low priority work on the main event loop,
+	* without impacting latency-critical events such as animation and input response
+	* @param function callback
+	* @return void
+	*/
+	dd_request_idle_callback : function (callback) {
+
+		if (typeof window.requestIdleCallback === 'function') {
+			// Use requestIdleCallback to schedule work if available
+			requestIdleCallback(callback)
+		} else {
+			// window.requestAnimationFrame(callback)
+			// Fallback for browsers without requestIdleCallback support like Safari
+	        setTimeout(callback, 1);
+		}
+	}//end dd_request_idle_callback
 
 
 

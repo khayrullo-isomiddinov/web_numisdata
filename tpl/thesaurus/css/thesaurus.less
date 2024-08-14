@@ -277,21 +277,19 @@
 	// epi_link
 	.epi_link {
 		margin-left: 0.5rem;
-		opacity: 0;
+
+		&:hover {
+			// .data_length {
+			// 	display: inline-block;
+			// }
+		}
 
 		&:active {
 			opacity: 0.5 !important;
 		}
 
 		&.active {
-			transition: opacity 0.3s;
-			opacity: 1;
-		}
 
-		&:hover {
-			.data_length {
-				display: inline-block;
-			}
 		}
 
 		.data_length {

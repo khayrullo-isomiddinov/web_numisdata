@@ -40,9 +40,18 @@ var thesaurus =  {
 		// root_term (array)
 		root_term : [],
 
-
 		// term_id (from url get request)
 		term_id : null,
+
+		// utf_models. Used by epigraphy
+		utf_models : [
+			'scell2_3', // ts_greek Signo estándar UTF
+			'scxpu2_3',	 // ts_punic Signo estándar UTF
+			'scxibo2_3', // ts_northern_palaeohispanic Signo estándar UTF
+			'scxibm2_3', // ts_southern_palaeohispanic Signo estándar UTF
+			'sctxr2_3', // ts_south_palaeohispanic Signo estándar UTF
+			'sclat2_3', // ts_latinSigno estándar UTF
+		],
 
 
 
@@ -572,19 +581,19 @@ var thesaurus =  {
 
 					// is_grouper
 						const groupers = [
-							'scell2_1', // ts_greek
-							'scxpu2_1', // ts_punic
-							'scxibo2_1', // ts_northern_palaeohispanic
-							'scxibm2_1', // ts_southern_palaeohispanic
-							'sctxr2_1', // ts_south_palaeohispanic
-							'sclat2_1', // ts_latin
+							'scell2_2', // ts_greek
+							'scxpu2_2', // ts_punic
+							'scxibo2_2', // ts_northern_palaeohispanic
+							'scxibm2_2', // ts_southern_palaeohispanic
+							'sctxr2_2', // ts_south_palaeohispanic
+							'sclat2_2', // ts_latin
 							// 'scsym2_1', // ts_symbols
 							// 'sccmk2_1' // ts_countermarks
 						]
 						const is_grouper = row.model && groupers.includes(row.model) && row.children
 
 					// is_latin
-						const is_latin = row.term_id.includes('sclat1')
+						const is_latin = row.term_id.includes('sclat1') || thesaurus.utf_models.includes(row.model)
 
 					// legends
 						const build_legends = () => {
@@ -618,136 +627,142 @@ var thesaurus =  {
 									}
 									// console.log('ar_legends (numisdata41):', ar_legends);
 
-								thesaurus.load_legends_data(row, ar_legends)
-								.then(function(data){
-									if (!data || data.length===0) {
-										return
-									}
+								// load_and_render
+									const load_and_render = async () => {
 
-									// render legends
-									const render_legends = async (e) => {
-										e.stopPropagation()
+										// relations_data load
+										if (!link_legends.data) {
+											// fix parsed data
+											link_legends.data = await thesaurus.load_legends_data(row, ar_legends)
+										}
+										if (!link_legends.data || link_legends.data.length===0) {
+											return
+										}
 
-										// close container if is already displayed
-											if (container_additional.legends_container) {
-												container_additional.legends_container.remove()
-												container_additional.legends_container = undefined
-												return
-											}
+										// render legends
+										const render_legends = () => {
 
-										// data
-											const data = link_legends.data
-											if (!data) {
-												return
-											}
-
-										// legends_container: create a new one if not already exists
-											const legends_container = container_additional.legends_container
-												? container_additional.legends_container
-												: (()=>{
-													const legends_container = common.create_dom_element({
-														element_type	: 'div',
-														class_name		: 'epi_container legends_container',
-														parent			: container_additional
-													})
-													container_additional.legends_container = legends_container
-													return legends_container
-												  })();
-
-										// render types with same layout than catalog list
-											// const data_length = data.length
-											// for (let i = 0; i < data_length; i++) {
-											// 	const current_row = data[i]
-											// 	current_row.add_denomination = true // Allow display denomination like 'Bronze'
-											// 	const node = catalog_row_fields.draw_item(current_row)
-											// 	legends_container.appendChild(node)
-											// }
-
-										// render all
-											catalog.draw_rows({
-												target	: legends_container,
-												ar_rows	: data
-											})
-											.then(function(result_node){
-												if (!result_node.hasChildNodes()) {
-													// Something wrong happens
-													common.create_dom_element({
-														element_type	: 'div',
-														class_name		: 'warning',
-														inner_html		: 'Invalid result! <br>' + catalog.errors.join('<br>'),
-														parent			: result_node
-													})
-													// ar_legends
-													common.create_dom_element({
-														element_type	: 'pre',
-														class_name		: 'json',
-														inner_html		: 'legends references: <br>' + JSON.stringify(ar_legends, null, 2),
-														parent			: result_node
-													})
-													// ar_legends
-													const data_preview = data.map((el) => {
-														return {
-															catalog_section_id	: el.section_id,
-															term_table			: el.term_table,
-															term_section_id		: el.term_section_id,
-															term_section_tipo	: el.term_section_tipo[0],
-															term				: el.term
-														}
-													})
-													common.create_dom_element({
-														element_type	: 'pre',
-														class_name		: 'json',
-														inner_html		: 'catalog data: <br>' + JSON.stringify(data_preview, null, 2),
-														parent			: result_node
-													})
-													console.log('catalog.errors:', catalog.errors);
+											// close container if is already displayed
+												if (container_additional.legends_container) {
+													container_additional.legends_container.remove()
+													container_additional.legends_container = undefined
+													return
 												}
-											})
-									}//end render_legends
 
-									// link legends node
+											// data
+												const data = link_legends.data
+												if (!data) {
+													return
+												}
+												console.log('data:', data);
+
+											// legends_container: create a new one if not already exists
+												const legends_container = container_additional.legends_container
+													? container_additional.legends_container
+													: (()=>{
+														const legends_container = common.create_dom_element({
+															element_type	: 'div',
+															class_name		: 'epi_container legends_container',
+															parent			: container_additional
+														})
+														container_additional.legends_container = legends_container
+														return legends_container
+													  })();
+
+											// render types with same layout than catalog list
+												// const data_length = data.length
+												// for (let i = 0; i < data_length; i++) {
+												// 	const current_row = data[i]
+												// 	current_row.add_denomination = true // Allow display denomination like 'Bronze'
+												// 	const node = catalog_row_fields.draw_item(current_row)
+												// 	legends_container.appendChild(node)
+												// }
+
+											// render all
+												catalog.draw_rows({
+													target	: legends_container,
+													ar_rows	: data
+												})
+												.then(function(result_node){
+													if (!result_node.hasChildNodes()) {
+														// Something wrong happens
+														common.create_dom_element({
+															element_type	: 'div',
+															class_name		: 'warning',
+															inner_html		: 'Invalid result! <br>' + catalog.errors.join('<br>'),
+															parent			: result_node
+														})
+														// ar_legends
+														common.create_dom_element({
+															element_type	: 'pre',
+															class_name		: 'json',
+															inner_html		: 'legends references: <br>' + JSON.stringify(ar_legends, null, 2),
+															parent			: result_node
+														})
+														// ar_legends
+														const data_preview = data.map((el) => {
+															return {
+																catalog_section_id	: el.section_id,
+																term_table			: el.term_table,
+																term_section_id		: el.term_section_id,
+																term_section_tipo	: el.term_section_tipo[0],
+																term				: el.term
+															}
+														})
+														common.create_dom_element({
+															element_type	: 'pre',
+															class_name		: 'json',
+															inner_html		: 'catalog data: <br>' + JSON.stringify(data_preview, null, 2),
+															parent			: result_node
+														})
+														console.log('catalog.errors:', catalog.errors);
+													}
+												})
+										}//end render_legends
+
+										// active link (opacity transition fadeIn)
+											const fade_in = () => {
+												link_legends.classList.add('active')
+												// display hidden node container_additional
+												container_additional.classList.remove('hide')
+											}
+											requestAnimationFrame(fade_in)
+
+										render_legends()
+									}//end load_and_render
+
+								// link legends node
 									const link_legends = common.create_dom_element({
 										element_type	: 'a',
 										class_name		: 'epi_link legends_link',
-										inner_html		: (tstring.legends || 'Legends') + ' <span class="data_length">'+data.length+'</span',
+										inner_html		: (tstring.legends || 'Legends'),
 										parent			: buttons_additional
 									})
-									link_legends.addEventListener('click', render_legends)
+									link_legends.addEventListener('mousedown', load_and_render)
 									if(SHOW_DEBUG===true) {
 										link_legends.title = 'term_id:' + row.term_id + '\nar_legends: ' + JSON.stringify(ar_legends)
 									}
-
-									// fix parsed data
-									// link_legends.data = page.parse_catalog_data(api_response.result)
-									link_legends.data = data // is already parsed
-
-									// active link (opacity transition fadeIn)
-									setTimeout(function(){
-										link_legends.classList.add('active')
-										// display hidden node container_additional
-										container_additional.classList.remove('hide')
-									}, 1)
-								})
 							}//end if (ar_legends.length)
 						}//end build_legends
 
 					// delay milliseconds
-						// const is_latin_grouper = row.term_id.includes('sclat1') && row.model && row.model.includes('sclat2_2')
-						const delay = is_grouper
-							? 350
-							: 10
+						// const delay = is_grouper
+						// 	? 350
+						// 	: 10
 
 					// set node only when it is in DOM (to save browser resources)
-						const observer = new IntersectionObserver(function(entries) {
-							const entry = entries[1] || entries[0]
-							if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
-								observer.disconnect();
-								build_legends()
-							}
-						}, { threshold: [0] });
-						setTimeout(function(){
-							observer.observe(term);
-						}, delay)
+						// const observer = new IntersectionObserver(function(entries) {
+						// 	const entry = entries[1] || entries[0]
+						// 	if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
+						// 		observer.disconnect();
+						// 		// build_legends()
+						// 		page.dd_request_idle_callback(build_legends)
+						// 	}
+						// }, { threshold: [0] });
+						// setTimeout(function(){
+						// 	observer.observe(term);
+						// }, delay)
+						build_legends()
 					break;
 				}
 
@@ -865,7 +880,7 @@ var thesaurus =  {
 									const grouper_children_length = grouper_children.length
 									for (let i = 0; i < grouper_children_length; i++) {
 										const child = grouper_children[i]
-										const current_ar_relations = child.dd_relations && child.dd_relations.length >0
+										const current_ar_relations = child.dd_relations && child.dd_relations.length > 0
 											? child.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
 											: []
 										ar_relations.push(...current_ar_relations)
@@ -874,94 +889,93 @@ var thesaurus =  {
 
 							if (ar_relations.length) {
 
-								thesaurus.load_relations_data(row, ar_relations)
-								.then(function(data){
-									if (!data || data.length===0) {
-										return
-									}
+								// load_and_render
+									const load_and_render = async () => {
 
-									// render countermarks
-									const render_countermarks = (e) => {
-										e.stopPropagation()
+										// relations_data load
+										if (!link_countermarks.data) {
+											// fix parsed data
+											link_countermarks.data = await thesaurus.load_relations_data(row, ar_relations)
+										}
+										if (!link_countermarks.data || link_countermarks.data.length===0) {
+											return
+										}
 
-										// close container
-											if (container_additional.countermarks_container) {
-												container_additional.countermarks_container.remove()
-												container_additional.countermarks_container = undefined
-												return
+										// render countermarks
+										const render_countermarks = () => {
+
+											// close container
+												if (container_additional.countermarks_container) {
+													container_additional.countermarks_container.remove()
+													container_additional.countermarks_container = undefined
+													return
+												}
+
+											// data
+												const data = link_countermarks.data
+												if (!data) {
+													return
+												}
+
+											// countermarks_container
+												const countermarks_container = container_additional.countermarks_container
+													? container_additional.countermarks_container
+													: (()=>{
+														const countermarks_container = common.create_dom_element({
+															element_type	: 'div',
+															class_name		: 'epi_container coins_list countermarks_container',
+															parent			: container_additional
+														})
+														container_additional.countermarks_container = countermarks_container
+														return countermarks_container
+													  })();
+
+											// render coins
+												const data_length = data.length
+												for (let i = 0; i < data_length; i++) {
+													const row = data[i]
+													const coin_node	= type_row_fields_min.type_row_fields.draw_coin(row)
+													countermarks_container.appendChild(coin_node)
+												}
+										}//end render_countermarks
+
+										// active link (opacity transition)
+											const fade_in = () => {
+												link_countermarks.classList.add('active')
+												container_additional.classList.remove('hide')
 											}
+											requestAnimationFrame(fade_in)
 
-										// data
-											const data = link_countermarks.data
-											if (!data) {
-												return
-											}
+										render_countermarks()
+									}//end load_and_render
 
-										// countermarks_container
-											const countermarks_container = container_additional.countermarks_container
-												? container_additional.countermarks_container
-												: (()=>{
-													const countermarks_container = common.create_dom_element({
-														element_type	: 'div',
-														class_name		: 'epi_container coins_list countermarks_container',
-														parent			: container_additional
-													})
-													container_additional.countermarks_container = countermarks_container
-													return countermarks_container
-												  })();
-
-										// render coins
-											const data_length = data.length
-											for (let i = 0; i < data_length; i++) {
-												const row = data[i]
-												const coin_node	= type_row_fields_min.type_row_fields.draw_coin(row)
-												countermarks_container.appendChild(coin_node)
-											}
-
-											// const node = map.render_types_rows({
-											// 	types_rows : data.types_rows,
-											// 	coins_rows : data.coins_rows,
-											// 	item_type : 'mint' // string (findspot|mint|hoard)
-											// })
-											// countermarks_container.appendChild(node)
-
-									}//end render_countermarks
-
-									// link countermarks node
+								// link countermarks node
 									const link_countermarks = common.create_dom_element({
 										element_type	: 'a',
 										class_name		: 'epi_link countermarks_link',
-										inner_html		: (tstring.coins || 'Coins') + ' <span class="data_length">'+data.length+'</span',
+										inner_html		: (tstring.coins || 'Coins'),
 										parent			: buttons_additional
 									})
-									link_countermarks.addEventListener('click', render_countermarks)
+									link_countermarks.addEventListener('mousedown', load_and_render)
 									if(SHOW_DEBUG===true) {
 										link_countermarks.title = 'term_id:' + row.term_id + '\nar_legends: ' + JSON.stringify(ar_relations)
 									}
-
-									// fix parsed data
-									link_countermarks.data = data
-
-									// active link (opacity transition)
-									setTimeout(function(){
-										link_countermarks.classList.add('active')
-										container_additional.classList.remove('hide')
-									}, 1)
-								})
 							}//end if (ar_relations.length)
 						}//end build_countermarks
 
 					// set node only when it is in DOM (to save browser resources)
-						const observer = new IntersectionObserver(function(entries) {
-							const entry = entries[1] || entries[0]
-							if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
-								observer.disconnect();
-								build_countermarks()
-							}
-						}, { threshold: [0] });
-						setTimeout(function(){
-							observer.observe(term);
-						}, 10)
+						// const observer = new IntersectionObserver(function(entries) {
+						// 	const entry = entries[1] || entries[0]
+						// 	if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
+						// 		observer.disconnect();
+						// 		// build_countermarks()
+						// 		page.dd_request_idle_callback(build_countermarks)
+						// 	}
+						// }, { threshold: [0] });
+						// setTimeout(function(){
+						// 	observer.observe(term);
+						// }, 1)
+						build_countermarks()
 					break;
 				}
 
@@ -1825,7 +1839,7 @@ var thesaurus =  {
 				)
 			}
 			// latin case. Additional search in plain text for Unicode letters
-			const is_latin = row.term_id.includes('sclat1')
+			const is_latin = row.term_id.includes('sclat1') || thesaurus.utf_models.includes(row.model)
 			if (is_latin===true &&
 				ar_legends.length===0 &&
 				!row.model.includes('sclat2_2') // exclude rows with model 'sclat2_2' grouper
