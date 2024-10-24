@@ -396,7 +396,7 @@ page.render_export_data_buttons = function() {
 
 
 	return fragment
-};//end render_export_data_buttons
+}//end render_export_data_buttons
 
 
 
@@ -526,14 +526,16 @@ page.create_suggestions_button = function(){
 	}//end createForm
 
 	return fragment
-};
+}
 
 
 
 page.removeForm = function(){
 	document.querySelector(".cancel-button").removeEventListener("click",page.removeForm)
 	document.querySelector("#popup-container").remove()
-};
+}
+
+
 
 page.handleForm = function(currentUrl){
 	//event.preventDefault()
@@ -590,7 +592,7 @@ page.handleForm = function(currentUrl){
 				}
 			})
 		})
-};//end handleForm
+}//end handleForm
 
 
 
@@ -634,7 +636,7 @@ page.render_legend = function(options) {
 
 
 	return legend_node
-};//end render_legend
+}//end render_legend
 
 
 
@@ -707,26 +709,30 @@ page.render_type_label = function(row) {
 
 
 	return current_value
-};//end render_type_label
+}//end render_type_label
 
 
 
 /**
 * RENDER_WEIGHT_VALUE
-* @return
+* @param object row
+* @return string
 */
 page.render_weight_value = function(row) {
+
 	const weight = row.ref_type_averages_weight.toFixed(2).replace(/\.?0+$/, "");
 	return weight.replace('.',',') + ' g'
-};//end render_weight_value
+}//end render_weight_value
 
 
 
 /**
 * RENDER_DIAMETER_VALUE
-* @return
+* @param object row
+* @return string
 */
 page.render_diameter_value = function(row) {
+
 	const diameter = row.ref_type_averages_diameter.toFixed(2).replace(/\.?0+$/, "");
 	return diameter.replace('.',',') + ' mm'
-};//end render_diameter_value
+}//end render_diameter_value

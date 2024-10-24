@@ -97,7 +97,21 @@ var image_gallery = {
         }
 
         //Generate popup html content
-        this.popup = document.createRange().createContextualFragment('<div id="'+self.setup.galleryPrimId+'"><div id="gallery-wrapper"><div id="images-wrapper"><img id="img1" src=""><img id="img2" src=""></div><div id="caption-wrapper"><p></p></div><div class="nav-button" id="pre-button"></div><div class="nav-button" id="next-button"></div></div></div>')
+        this.popup = document.createRange().createContextualFragment(
+            `<div id="${self.setup.galleryPrimId}">
+                <div id="gallery-wrapper">
+                    <div id="images-wrapper">
+                        <img id="img1" src="">
+                        <img id="img2" src="">
+                    </div>
+                    <div id="caption-wrapper">
+                        <p></p>
+                    </div>
+                    <div class="nav-button" id="pre-button"></div>
+                    <div class="nav-button" id="next-button"></div>
+                </div>
+            </div>`
+        )
 
         //Get popup elements node
         this.img1 = this.popup.getElementById('img1')

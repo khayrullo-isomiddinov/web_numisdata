@@ -944,7 +944,7 @@ var mint = {
 					parent			: line
 				})
 
-				const ref_biblio		= row_object.bibliography_data
+				const ref_biblio = row_object.bibliography_data
 				const ref_biblio_length	= ref_biblio.length
 				for (let i = 0; i < ref_biblio_length; i++) {
 

@@ -20,7 +20,6 @@
 		$body  			= $this->get_element_from_template_map('body', $template_map->{$mode});
 		$ar_image  		= $this->get_element_from_template_map('image', $template_map->{$mode});
 
-
 	// body images fix url paths
 		$body = str_replace('../../../media', __WEB_BASE_URL__ . '/dedalo/media', $body);
 
@@ -102,6 +101,7 @@
 			'tld',
 			'model',
 			'mib_bibliography',
+			// 'bibliography',
 			'dd_relations'
 		];
 
@@ -206,12 +206,12 @@
 				];
 				// $thesaurus_options = (object)[
 				// 	'table'	=> [
-				// 		// sclat1 - ts_latin | Latin | Latín
-				// 		'ts_latin',
+				// 		// scell1 - ts_greek | Greek | Griego
+				// 		'ts_greek',
 				// 	],
 				// 	'root_term'	=> [
-				// 		// sclat1 - ts_latin | Latin | Latín
-				// 		'sclat1_1',
+				// 		// scell1 - ts_greek | Greek | Griego
+				// 		'scell1_1',
 				// 	],
 				// 	'term_id' => $term_id, // options request term_id add
 				// 	'ar_fields' => $ar_fields
@@ -269,7 +269,7 @@
 						$options->lang  	 	= WEB_CURRENT_LANG_CODE;
 						$options->limit 		= 0;
 						$options->sql_filter 	= 'parent_term_id = \'["hierarchy1_262"]\'';
-					# Http request in php to the API
+					# HTTP request in php to the API
 					$web_data = json_web_data::get_data($options);
 						// dump($web_data, ' web_data ++ '.to_string());
 					$root_term = array_map(function($el){

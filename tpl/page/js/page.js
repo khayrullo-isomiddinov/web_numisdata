@@ -933,7 +933,9 @@ var page = {
 			parent 			: textBlockSeparator
 		})
 
-		textBlockSeparator.addEventListener("click",function(){
+		const click_handler = (e) => {
+			e.stopPropagation()
+
 			if (textBlock.classList.contains("contracted-block")){
 				textBlock.classList.remove ("contracted-block");
 				separatorArrow.style.transform = "rotate(-90deg)";
@@ -941,7 +943,9 @@ var page = {
 				textBlock.classList.add("contracted-block");
 				separatorArrow.style.transform = "rotate(90deg)";
 			}
-		})
+		}
+		textBlockSeparator.addEventListener('click', click_handler)
+
 
 		return true
 	},//end create_expandable_block
@@ -995,15 +999,17 @@ var page = {
 		// debug
 		if(SHOW_DEBUG===true) {
 			if (!options.section_id) {
-				console.warn('options:', options);
-				alert("section_id !!!");
+				if(SHOW_DEBUG===true) {
+					console.warn('options:', options);
+					// alert("Missing section_id !!!");
+				}
 			}
 		}
 
 		// options
 			const {
-				archive = page_globals.OWN_CATALOG_ACRONYM, // like MIB
-				section_id,
+				archive, // like MIB
+				section_id, // like 2715
 				mint_number, // like 40
 				type // like 104b
 			} = options
