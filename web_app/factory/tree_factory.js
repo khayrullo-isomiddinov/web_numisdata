@@ -346,19 +346,23 @@ function tree_factory() {
 
 			if (target) {
 				// append finished node to target DOM
-					target.appendChild(response)
+					const add_node = () => {
 
-				// scroll to hilite
-					if (self.set_hilite===true) {
-						common.when_in_dom(target, function(){
-							// find first hilited term
-							const tree_node = target.querySelector(".term.hilite")
-							// scroll document to hilited term (first founded at DOM)
-							if (tree_node) {
-								tree_node.scrollIntoView({behavior: "auto", block: "center", inline: "nearest"})
-							}
-						})
+						target.appendChild(response)
+
+						// scroll to hilite
+						if (self.set_hilite===true) {
+							common.when_in_dom(target, function(){
+								// find first hilited term
+								const tree_node = target.querySelector(".term.hilite")
+								// scroll document to hilited term (first founded at DOM)
+								if (tree_node) {
+									tree_node.scrollIntoView({behavior: "auto", block: "center", inline: "nearest"})
+								}
+							})
+						}
 					}
+					requestAnimationFrame(add_node)
 			}
 
 			return response
