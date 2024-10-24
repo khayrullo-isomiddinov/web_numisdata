@@ -478,10 +478,8 @@ var biblio =  {
 		// sort rows
 			const collator = new Intl.Collator('es',{ sensitivity: 'base', ignorePunctuation:true});
 			ar_rows.sort( (a,b) => {
-					let order_a = a.autoria +" "+ a.fecha_publicacion
-					let order_b = b.autoria +" "+ b.fecha_publicacion
-					//console.log("order_a",order_a, order_b);
-					//console.log(collator.compare(order_a , order_b));
+					let order_a = a.authors +" "+ a.publication_date
+					let order_b = b.authors +" "+ b.publication_date
 				return collator.compare(order_a , order_b)
 			});
 
