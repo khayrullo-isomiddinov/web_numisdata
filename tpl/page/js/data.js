@@ -1146,7 +1146,7 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 		// time: null
 		// tld: "technique1"
 
-	const ar_parse = ['parent','children','space','mib_bibliography','term_data'] //
+	const ar_parse = ['parent','children','space','mib_bibliography','term_data','bibliography'] //
 	function decode_field(field) {
 		if (field) {
 			return JSON.parse(field)
