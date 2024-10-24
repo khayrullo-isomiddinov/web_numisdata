@@ -53,7 +53,15 @@ var thesaurus =  {
 			'sclat2_3', // ts_latinSigno estándar UTF
 		],
 
-
+		// sign_group_models. Used by epigraphy
+		sign_group_models : [
+			'scell2_2', // ts_greek Signo estándar UTF
+			'scxpu2_2',	 // ts_punic Signo estándar UTF
+			'scxibo2_2', // ts_northern_palaeohispanic Signo estándar UTF
+			'scxibm2_2', // ts_southern_palaeohispanic Signo estándar UTF
+			'sctxr2_2', // ts_south_palaeohispanic Signo estándar UTF
+			'sclat2_2', // ts_latinSigno estándar UTF
+		],
 
 	/**
 	* SET_UP
@@ -376,6 +384,28 @@ var thesaurus =  {
 			tree_node.term_id	= row.term_id
 			tree_node.parent	= row.parent
 
+		// illustration (svg)
+			if (row.illustration && row.illustration.length>0) {
+				const to_left = ['epigraphy','countermarks']
+				const styles = to_left.includes(WEB_AREA) ? 'left' : 'right'
+				const image = common.create_dom_element({
+					element_type	: "img",
+					class_name		: "illustration " + styles,
+					src				: page_globals.__WEB_BASE_URL__ + row.illustration,
+					parent			: tree_node
+				})
+				const outsideClickListener = (event) => {
+					const target = event.target;
+					if (target===image) {
+						image.classList.toggle('big')
+					}else{
+						image.classList.remove('big')
+					}
+				}
+				// document event click
+				document.addEventListener('click', outsideClickListener)
+			}
+
 		// term
 			const ar_value = []
 			if (row.code && row.code.length>0) {
@@ -392,7 +422,7 @@ var thesaurus =  {
 				parent			: tree_node
 			})
 			if(SHOW_DEBUG===true) {
-				term.title = row.term_id
+				term.title = `${row.term_id} ${row.model}`
 			}
 
 		// scroll
@@ -415,32 +445,85 @@ var thesaurus =  {
 				})
 			}
 
-		// illustration (svg)
-			if (row.illustration && row.illustration.length>0) {
-				const image = common.create_dom_element({
-					element_type	: "img",
-					class_name		: "illustration",
-					src				: page_globals.__WEB_BASE_URL__ + row.illustration,
-					parent			: tree_node
-				})
-				const outsideClickListener = (event) => {
-					const target = event.target;
-					if (target===image) {
-						image.classList.toggle('big')
-					}else{
-						image.classList.remove('big')
-					}
-				}
-				// document event click
-				document.addEventListener('click', outsideClickListener)
-			}
-
 		// buttons
+			// button info
+				const show_info = row.time || row.definition || row.scope_note
+				if (show_info) {
+					const btn_info = common.create_dom_element({
+						element_type	: "span",
+						class_name		: "inline_btn btn_info",
+						parent			: tree_node
+					})
+					btn_info.addEventListener("mousedown", async function(){
+						if (this.classList.contains("open")) {
+							info.classList.add("hide")
+							this.classList.remove("open")
+							// remove nodes
+							while (info.firstChild) {
+								info.removeChild(info.firstChild);
+							}
+						}else{
+							// Render nodes
+							const node = await thesaurus.render_info_block(row)
+							info.appendChild(node)
+							// update styles
+							info.classList.remove("hide")
+							this.classList.add("open")
+						}
+					})
+				}
+
+			// button bibliography (moved to info)
+				// if (row.bibliography && row.bibliography.length>0) {
+				// 	const btn_bibliography = common.create_dom_element({
+				// 		element_type	: "span",
+				// 		class_name		: "inline_btn btn_bibliography",
+				// 		parent			: tree_node
+				// 	})
+				// 	btn_bibliography.addEventListener('mousedown', async function(){
+				// 		if (this.classList.contains('open')) {
+				// 			bibliography.classList.add('hide')
+				// 			this.classList.remove('open')
+				// 			// remove nodes
+				// 			while (bibliography.firstChild) {
+				// 				bibliography.removeChild(bibliography.firstChild);
+				// 			}
+				// 		}else{
+				// 			// load bibliographic_references data from API
+				// 			btn_bibliography.data = btn_bibliography.data || await thesaurus.load_bibliography_data(row, row.bibliography)
+				// 			// label
+				// 			common.create_dom_element({
+				// 				element_type	: 'span',
+				// 				class_name		: 'block_label',
+				// 				text_content	: tstring.bibliographic_references || 'Bibliographic references',
+				// 				parent			: bibliography
+				// 			})
+				// 			// Render nodes
+				// 			const ref_biblio		= btn_bibliography.data
+				// 			const ref_biblio_length	= ref_biblio.length
+				// 			for (let i = 0; i < ref_biblio_length; i++) {
+				// 				// build full ref biblio node
+				// 				const biblio_row_node	 = biblio_row_fields.render_row_bibliography(ref_biblio[i])
+				// 				const biblio_row_wrapper = common.create_dom_element({
+				// 					element_type	: 'div',
+				// 					class_name		: 'bibliographic_reference',
+				// 					parent			: bibliography
+				// 				})
+				// 				biblio_row_wrapper.appendChild(biblio_row_node)
+				// 			}
+				// 			// update styles
+				// 			bibliography.classList.remove("hide")
+				// 			this.classList.add("open")
+				// 		}
+				// 	})
+				// }
+
 			// button scope_note
-				if (row.scope_note && row.scope_note.length>0) {
+				const show_scope_note = WEB_AREA!='countermarks' && row.scope_note && row.scope_note.length>0
+				if (show_scope_note) {
 					const btn_scope_note = common.create_dom_element({
 						element_type	: "span",
-						class_name		: "btn_scope_note",
+						class_name		: "inline_btn btn_scope_note",
 						parent			: tree_node
 					})
 					btn_scope_note.addEventListener("mousedown", function(){
@@ -579,33 +662,36 @@ var thesaurus =  {
 				case 'epigraphy': {
 					// epigraphy
 
-					// is_grouper
-						const groupers = [
-							'scell2_2', // ts_greek
-							'scxpu2_2', // ts_punic
-							'scxibo2_2', // ts_northern_palaeohispanic
-							'scxibm2_2', // ts_southern_palaeohispanic
-							'sctxr2_2', // ts_south_palaeohispanic
-							'sclat2_2', // ts_latin
-							// 'scsym2_1', // ts_symbols
-							// 'sccmk2_1' // ts_countermarks
-						]
-						const is_grouper = row.model && groupers.includes(row.model) && row.children
+					// is_sign_group
+						const is_sign_group = !!(row.model && thesaurus.sign_group_models.includes(row.model) && row.children)
+						// debug
+							if(SHOW_DEBUG===true) {
+								// if (row.term_id==='scell1_171') {
+								// 	console.warn('is_sign_group:', is_sign_group);
+								// 	console.log('is_sign_group:', row.term_id, row.model, is_sign_group);
+								// 	console.log('row.children:', row.term_id, row.model, row);
+								// }
+							}
 
-					// is_latin
-						const is_latin = row.term_id.includes('sclat1') || thesaurus.utf_models.includes(row.model)
+					// is_utf
+						const is_utf = !!(row.model && thesaurus.utf_models.includes(row.model))
+						// debug
+							if(SHOW_DEBUG===true) {
+								// if (row.term_id==='scell1_171') {
+								// 	console.log('is_utf:', row.term_id, is_utf);
+								// }
+							}
 
 					// legends
 						const build_legends = () => {
-							// debug
 
 							// ar_legends. get term relations with legends (where these have been used)
 								const ar_legends = row.dd_relations && row.dd_relations.length >0
 									? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
 									: []
 
-							// groupers case
-								if (is_grouper) {
+							// sign_group case
+								if (is_sign_group) {
 									// get children data
 									const grouper_children = self.data.filter(el => row.children.includes(el.term_id))
 									// add every children legends to ar_legends array
@@ -619,28 +705,41 @@ var thesaurus =  {
 									}
 								}
 
-							if (ar_legends.length || is_latin===true) {
+							if (ar_legends.length || is_utf===true || is_sign_group===true) {
 
 								// debug
-									if (row.term_id==='scxibo1_11') {
-										console.log('scxibo1_11 ar_legends:', ar_legends);
+									if(SHOW_DEBUG===true) {
+										// if (row.term_id==='scell1_171') {
+										// 	console.log('ar_legends:', row.term_id, ar_legends);
+										// }
 									}
-									// console.log('ar_legends (numisdata41):', ar_legends);
 
 								// load_and_render
 									const load_and_render = async () => {
+
+										// add_spinner
+										add_spinner()
 
 										// relations_data load
 										if (!link_legends.data) {
 											// fix parsed data
 											link_legends.data = await thesaurus.load_legends_data(row, ar_legends)
 										}
+										// debug
+											if(SHOW_DEBUG===true) {
+												// if (row.term_id==='scell1_171') {
+												// 	console.log('link_legends.data:', row.term_id, link_legends.data);
+												// }
+											}
 										if (!link_legends.data || link_legends.data.length===0) {
+											remove_spinner()
 											return
 										}
 
 										// render legends
 										const render_legends = () => {
+
+											remove_spinner()
 
 											// close container if is already displayed
 												if (container_additional.legends_container) {
@@ -743,11 +842,7 @@ var thesaurus =  {
 									}
 							}//end if (ar_legends.length)
 						}//end build_legends
-
-					// delay milliseconds
-						// const delay = is_grouper
-						// 	? 350
-						// 	: 10
+						build_legends()
 
 					// set node only when it is in DOM (to save browser resources)
 						// const observer = new IntersectionObserver(function(entries) {
@@ -761,7 +856,6 @@ var thesaurus =  {
 						// setTimeout(function(){
 						// 	observer.observe(term);
 						// }, delay)
-						build_legends()
 					break;
 				}
 
@@ -857,11 +951,11 @@ var thesaurus =  {
 						}
 						*/
 
-					// groupers
-						const groupers = [
-							'sccmk2_1' // ts_countermarks
+					// sign_group
+						const sign_group = [
+							'sccmk2_2' // ts_countermarks
 						]
-						const is_grouper = row.model && groupers.includes(row.model) && row.children
+						const is_sign_group = row.model && sign_group.includes(row.model) && row.children
 
 					// countermarks
 						const build_countermarks = () => {
@@ -871,8 +965,8 @@ var thesaurus =  {
 									? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata4') // coins = numisdata4
 									: []
 
-							// groupers case
-								if (is_grouper) {
+							// sign_group case
+								if (is_sign_group) {
 									// get children data
 									const grouper_children = self.data.filter(el => row.children.includes(el.term_id))
 									// add every children legends to ar_legends array
@@ -891,17 +985,23 @@ var thesaurus =  {
 								// load_and_render
 									const load_and_render = async () => {
 
+										// add_spinner
+										add_spinner()
+
 										// relations_data load
 										if (!link_countermarks.data) {
 											// fix parsed data
 											link_countermarks.data = await thesaurus.load_relations_data(row, ar_relations)
 										}
 										if (!link_countermarks.data || link_countermarks.data.length===0) {
+											remove_spinner()
 											return
 										}
 
 										// render countermarks
 										const render_countermarks = () => {
+
+											remove_spinner()
 
 											// close container
 												if (container_additional.countermarks_container) {
@@ -933,9 +1033,11 @@ var thesaurus =  {
 												const data_length = data.length
 												for (let i = 0; i < data_length; i++) {
 													const row = data[i]
+													// render type_row_fields
 													const coin_node	= type_row_fields_min.type_row_fields.draw_coin(row)
 													countermarks_container.appendChild(coin_node)
 												}
+												page.activate_images_gallery(countermarks_container)
 										}//end render_countermarks
 
 										// active link (opacity transition)
@@ -961,6 +1063,7 @@ var thesaurus =  {
 									}
 							}//end if (ar_relations.length)
 						}//end build_countermarks
+						build_countermarks()
 
 					// set node only when it is in DOM (to save browser resources)
 						// const observer = new IntersectionObserver(function(entries) {
@@ -974,7 +1077,6 @@ var thesaurus =  {
 						// setTimeout(function(){
 						// 	observer.observe(term);
 						// }, 1)
-						build_countermarks()
 					break;
 				}
 
@@ -1207,23 +1309,40 @@ var thesaurus =  {
 			}
 
 		// wrappers
-			// scope note wrapper
-				let scope_note
-				if (row.scope_note && row.scope_note.length>0) {
-
-					const hide_style = row.state==="opened" ? "" : " hide"
-
-					// scope_note
-						const scope_note_text = row.scope_note.replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/g,'');
-						scope_note = common.create_dom_element({
-							element_type	: "div",
-							class_name		: "scope_note hide",
-							inner_html		: scope_note_text,
-							parent			: tree_node
-						})
+			// info wrapper
+				let info
+				if (show_info) {
+					// info
+					info = common.create_dom_element({
+						element_type	: "div",
+						class_name		: "info hide",
+						parent			: tree_node
+					})
 				}
 
+			// bibliography wrapper (moved to info)
+				// let bibliography
+				// if (row.bibliography && row.bibliography.length>0) {
+				// 	bibliography = common.create_dom_element({
+				// 		element_type	: "div",
+				// 		class_name		: "bibliography hide",
+				// 		parent			: tree_node
+				// 	})
+				// }
+
 			// scope note wrapper
+				let scope_note
+				if (show_scope_note) {
+					const scope_note_text = row.scope_note.replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/g,'');
+					scope_note = common.create_dom_element({
+						element_type	: "div",
+						class_name		: "scope_note hide",
+						inner_html		: scope_note_text,
+						parent			: tree_node
+					})
+				}
+
+			// definition wrapper
 				let definition
 				if (row.definition && row.definition.length>0) {
 					// definition
@@ -1242,6 +1361,16 @@ var thesaurus =  {
 					class_name		: 'container_additional hide',
 					parent			: tree_node
 				})
+				const add_spinner = () => {
+					// container spinner
+					container_additional.classList.remove('hide')
+					container_additional.classList.add('loading_data')
+				}
+				const remove_spinner = () => {
+					// container spinner
+					container_additional.classList.add('hide')
+					container_additional.classList.remove('loading_data')
+				}
 
 			// relations wrapper
 				let relations_container
@@ -1798,11 +1927,19 @@ var thesaurus =  {
 
 		const self = this
 
-		// latin grouper case
-		// children of latin groupers are not calculated by related ar_legends, but from a catalog search
+		// utf grouper case
+		// children of utf sign_group are not calculated by related ar_legends, but from a catalog search
 		// this is more expensive, but needs to be done is this way at now
-			const is_latin_grouper = row.term_id.includes('sclat1') && row.model && row.model.includes('sclat2_2')
-			if (is_latin_grouper) {
+			// const is_utf_grouper = row.term_id.includes('sclat1') && row.model && row.model.includes('sclat2_2')
+			const is_utf_grouper = !!(row.model && thesaurus.sign_group_models.includes(row.model))
+			// debug
+				if(SHOW_DEBUG===true) {
+					// if (row.term_id==='scell1_171') {
+					// 	console.log('is_utf_grouper:', row.term_id, row.model, is_utf_grouper);
+					// }
+				}
+			if (is_utf_grouper) {
+
 				return new Promise(function(resolve){
 
 					const ar_promise = []
@@ -1837,21 +1974,30 @@ var thesaurus =  {
 					`ref_type_legend_obverse_data LIKE '%"${item.section_id}"%' OR ref_type_legend_reverse_data LIKE '%"${item.section_id}"%'`
 				)
 			}
-			// latin case. Additional search in plain text for Unicode letters
-			const is_latin = row.term_id.includes('sclat1') || thesaurus.utf_models.includes(row.model)
-			if (is_latin===true &&
+			// utf case. Additional search in plain text for Unicode letters
+			const is_utf = thesaurus.utf_models.includes(row.model)
+			if (is_utf===true &&
 				ar_legends.length===0 &&
-				!row.model.includes('sclat2_2') // exclude rows with model 'sclat2_2' grouper
+				// !row.model.includes('sclat2_2') // exclude rows with model 'sclat2_2' grouper
+				!thesaurus.sign_group_models.includes(row.model)
 				) {
 				legends_filter.push(
 					`ref_type_legend_obverse_text LIKE '%${row.term}%' OR ref_type_legend_reverse_text LIKE '%${row.term}%'`
 				)
+				// debug
+					if(SHOW_DEBUG===true) {
+						// if (row.term_id==='scell1_171') {
+						// 	console.log('legends_filter pushed:', row.term_id, row.model, legends_filter);
+						// }
+					}
 			}
 			const sql_filter = `term_table = 'types' AND (` + legends_filter.join(' OR ') + ')'
 
 			// debug
-				if (row.term_id==='sclat1_96') {
-					console.log('sclat1_96 sql_filter:', sql_filter);
+				if(SHOW_DEBUG===true) {
+					// if (row.term_id==='sclat1_96') {
+					// 	console.log('sclat1_96 sql_filter:', sql_filter);
+					// }
 				}
 
 		// search_rows
@@ -1866,25 +2012,6 @@ var thesaurus =  {
 
 
 		return js_promise
-
-
-		// return data_manager.request({
-		// 	body : {
-		// 		code		: page_globals.API_WEB_USER_CODE,
-		// 		lang		: page_globals.WEB_CURRENT_LANG_CODE,
-		// 		db_name		: page_globals.WEB_DB,
-		// 		dedalo_get	: 'records',
-		// 		table		: 'catalog',
-		// 		ar_fields	: '*',
-		// 		count		: false,
-		// 		limit		: 0,
-		// 		sql_filter	: sql_filter,
-		// 		process_result	: {
-		// 			fn		: 'process_result::add_parents_and_children_recursive',
-		// 			columns	: [{name : "parents"}]
-		// 		}
-		// 	}
-		// })
 	},//end load_legends_data
 
 
@@ -2041,7 +2168,163 @@ var thesaurus =  {
 
 			return data
 			*/
-	}//end load_relations_data
+	},//end load_relations_data
+
+
+
+	/**
+	* LOAD_bibliography_DATA
+	* 	bibliographic_references search of related countermarks
+	* @param object row
+	* 	Table row from API response result
+	* @param array bibliography
+	* 	Related bibliographic_references from
+	* @return array data
+	*/
+	load_bibliography_data : async function(row, bibliography) {
+
+		// sql_filter
+			const section_id_list	= bibliography.join(',')
+			const sql_filter		= `section_id IN (${section_id_list})`
+
+		const api_response = await data_manager.request({
+			body : {
+				code			: page_globals.API_WEB_USER_CODE,
+				lang			: page_globals.WEB_CURRENT_LANG_CODE,
+				db_name			: page_globals.WEB_DB,
+				dedalo_get		: 'records',
+				table			: 'bibliographic_references',
+				ar_fields		: '*',
+				count			: false,
+				sql_filter		: sql_filter,
+				// resolve_portals_custom	: {
+				// 	'publications_data'	: 'publications'
+				// }
+			}
+		})
+
+		if (!api_response.result) {
+			console.error('Invalid api_response result:', api_response);
+			return []
+		}
+
+		// data don't need to parse it
+		const data = api_response.result
+
+
+		return data
+	},//end load_bibliography_data
+
+
+
+	/**
+	* RENDER_INFO_BLOCK
+	* 	Renders full info block containing time, definition, scope_note, bibliography
+	* @param object row
+	* 	Table row from API response result
+	* @return DocumentFragment content
+	*/
+	render_info_block : async function(row) {
+
+		// DocumentFragment
+			const content = new DocumentFragment()
+
+		// time
+			if (row.time) {
+
+				try {
+
+					// split and format time from source like '-100-00-00 00:00:00,-075-00-00 00:00:00'
+					const ar_date	= row.time.split(',')
+					const regex		= /^(-?[0-9]{1,})-[0-9]{2}-[0-9]{2} .*/;
+					const date_in	= regex.exec(ar_date[0])[1]
+					const date_out	= regex.exec(ar_date[1])[1]
+
+					const value = `${date_in} <> ${date_out}`
+
+					// label
+					common.create_dom_element({
+						element_type	: 'span',
+						class_name		: 'block_label',
+						text_content	: tstring.time_frame || 'Time frame',
+						parent			: content
+					})
+					common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'item item_time',
+						inner_html		: value,
+						parent			: content
+					})
+
+				} catch (error) {
+					console.error(error)
+				}
+			}
+
+		// definition
+			if (row.definition) {
+				// label
+				common.create_dom_element({
+					element_type	: 'span',
+					class_name		: 'block_label',
+					text_content	: tstring.definition || 'Definition',
+					parent			: content
+				})
+				common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'item item_definition',
+					inner_html		: row.definition,
+					parent			: content
+				})
+			}
+
+		// scope_note
+			if (row.scope_note) {
+				// label
+				common.create_dom_element({
+					element_type	: 'span',
+					class_name		: 'block_label',
+					text_content	: tstring.scope_note || 'Scope note',
+					parent			: content
+				})
+				common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'item item_scope_note',
+					inner_html		: row.scope_note,
+					parent			: content
+				})
+			}
+
+		// bibliography
+			if (row.bibliography && row.bibliography.length) {
+				// label
+				common.create_dom_element({
+					element_type	: 'span',
+					class_name		: 'block_label',
+					text_content	: tstring.bibliographic_references || 'Bibliographic references',
+					parent			: content
+				})
+				// Render nodes
+				// load bibliographic_references data from API
+				row.bibliographic_references_data = row.bibliographic_references_data
+					|| await thesaurus.load_bibliography_data(row, row.bibliography)
+				const ref_biblio		= row.bibliographic_references_data
+				const ref_biblio_length	= ref_biblio.length
+				for (let i = 0; i < ref_biblio_length; i++) {
+					// build full ref biblio node
+					const biblio_row_node = biblio_row_fields.render_row_bibliography(ref_biblio[i])
+					const biblio_row_wrapper = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'bibliographic_reference',
+						parent			: content
+					})
+					biblio_row_wrapper.appendChild(biblio_row_node)
+				}
+			}
+
+
+		return content
+	}//end render_info_block
 
 
 

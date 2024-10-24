@@ -144,7 +144,7 @@
 						'sccmk1_1'
 					],
 					'term_id' => $term_id, // options request term_id add
-					'ar_fields' => $ar_fields
+					'ar_fields' => ['*']
 				];
 				break;
 
