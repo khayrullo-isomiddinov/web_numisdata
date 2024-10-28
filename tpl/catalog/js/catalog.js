@@ -354,9 +354,10 @@ var catalog = {
 				name			: "culture",
 				label			: tstring.culture || "culture",
 				q_column		: "p_culture",
-				value_wrapper	: ['["','"]'], // to obtain ["value"] in selected value only
+				value_wrapper	: ['',''], // no add wrapper (affects q_selected)
 				eq_in			: "%",
 				eq_out			: "%",
+				q_selected_eq	: 'LIKE', // is always like, even for q_selected
 				is_term			: true,
 				parent			: form_row,
 				callback		: function(form_item) {
