@@ -330,12 +330,20 @@ var catalog = {
 				}
 			})
 
-		// number
+		// section_id
 			self.form.item_factory({
-				id 			: "number",
-				name 		: "number",
-				q_column 	: "term",
-				q_table 	: "types",
+				id				: "section_id",
+				name			: "section_id",
+				label			: tstring.id || "id",
+				q_column		: "term_data",
+				q_table 		: "types",
+				value_wrapper	: ['["','"]'], // to obtain ["value"] in selected value only
+				eq				: "=",
+				eq_in			: '["',
+				eq_out			: '"]',
+				is_term			: true,
+				parent			: form_row
+			})
 				label		: tstring.number_key || "Number & Key",
 				is_term 	: false,
 				parent		: form_row,
