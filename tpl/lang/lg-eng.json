@@ -43,7 +43,6 @@
     "datapoints": "Datapoints",
     "date": "Date",
     "dating": "Date",
-    "definition": "Definition",
     "denomination": "Denomination",
     "description": "Description",
     "descriptors": "Theme",
@@ -84,7 +83,6 @@
     "items": "Items",
     "lang": "Language",
     "legend": "Legend",
-    "legends": "Legends",
     "legend_obverse": "Obverse legend",
     "legend_reverse": "Reverse legend",
     "limit": "Limit",
@@ -141,7 +139,6 @@
     "reset_all_violins": "Reset all violins",
     "reverse": "Reverse",
     "role": "Role",
-    "scope_note": "Scope note",
     "search": "Search",
     "secondary_treatment": "Secondary treatment",
     "serial": "Series",
@@ -164,7 +161,6 @@
     "technique": "Technique",
     "term": "Term",
     "territory": "Territory",
-    "time_frame": "Time frame",
     "title": "Title",
     "to": "to",
     "total": "Total",
@@ -181,5 +177,7 @@
     "weight": "Weight",
     "whiskers": "Whiskers",
     "work_in_progress": "Work in progress. Provisional numbering. Not for citation",
-    "xticklabel_angle": "X-Tick label angle"
+    "xticklabel_angle": "X-Tick label angle",
+    "parent": "Parent",
+    "parents": "Parents"
 }
