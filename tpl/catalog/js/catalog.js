@@ -344,10 +344,20 @@ var catalog = {
 				is_term			: true,
 				parent			: form_row
 			})
+
+		// number
+			self.form.item_factory({
+				id			: "number",
+				name		: "number",
+				q_column	: "term",
+				q_table		: "types",
+				// eq		: 'LIKE',
+				eq_in		: '%',
+				eq_out		: '%',
 				label		: tstring.number_key || "Number & Key",
-				is_term 	: false,
+				is_term		: false,
 				parent		: form_row,
-				group_op 	: '$or',
+				group_op	: '$or',
 				callback	: function(form_item) {
 					self.form.activate_autocomplete({
 						form_item	: form_item,
