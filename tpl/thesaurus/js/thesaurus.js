@@ -63,6 +63,8 @@ var thesaurus =  {
 			'sclat2_2', // ts_latinSigno estándar UTF
 		],
 
+
+
 	/**
 	* SET_UP
 	*/

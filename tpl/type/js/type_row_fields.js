@@ -97,12 +97,12 @@ export const type_row_fields = {
 					parent 			: popUpContainer
 				})
 
-				const close_buttom = common.create_dom_element({
+				const close_button = common.create_dom_element({
 					element_type	: "div",
-					class_name		: "close-buttom",
+					class_name		: "close-button",
 					parent 			: popUpContainer
 				})
-				close_buttom.addEventListener("click",function(){
+				close_button.addEventListener("click",function(){
 					// popUpContainer.remove()
 				})
 				document.body.addEventListener("click",function(event_cite){
@@ -2771,9 +2771,9 @@ export const type_row_fields = {
 				parent 			: float_prompt
 			})
 
-			const close_buttom = common.create_dom_element({
+			const close_button = common.create_dom_element({
 				element_type	: "div",
-				class_name		: "close-buttom",
+				class_name		: "close-button",
 				parent 			: float_prompt
 			})
 
@@ -2802,6 +2802,7 @@ export const type_row_fields = {
 			}
 
 			parentNode.addEventListener("click",function(e){
+				e.stopPropagation()
 
 				const float_prompts_list = document.getElementsByClassName("float-prompt");
 				for (let i=0;i<float_prompts_list.length;i++){
@@ -2815,7 +2816,9 @@ export const type_row_fields = {
 				float_prompt.classList.remove("hide");
 			})
 
-			close_buttom.addEventListener("click",function(){
+			close_button.addEventListener("click",function(e){
+				e.stopPropagation()
+
 				float_prompt.classList.add("hide");
 			})
 		}

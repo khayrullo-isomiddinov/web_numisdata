@@ -38,84 +38,10 @@ var coin_row = {
 
 		// Cite of record
 			const golden_separator = document.querySelector('.golden-separator')
-			const cite = common.create_dom_element({
-				element_type	: "span",
-				class_name		: "cite_this_record",
-				text_content	: tstring.cite_this_record || 'cite this record',
-				parent			: golden_separator
-			})
-			cite.addEventListener('click', async function(){
-				const main_catalog_data = await page.load_main_catalog()
-				const cite_data = main_catalog_data.result[0];
-				const publication_data = cite_data.publication_data[0];
-				cite_data.autors = {
-					authorship_data		: row.authorship_data || null,
-					authorship_names	: row.authorship_names || null,
-					authorship_surnames	: row.authorship_surnames || null,
-					authorship_roles	: row.authorship_roles || null,
-				}
-				cite_data.catalog = null
-				cite_data.title = '<em>'+ page_globals.OWN_CATALOG_ACRONYM +' '+ row.section_id + '</em>'
-				cite_data.publication_data = publication_data
-				cite_data.uri_location 	= window.location
-
-				const cite_data_node = biblio_row_fields.render_cite_this(cite_data)
-
-				const popUpContainer = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-cite",
-					parent 			: document.body
-				})
-				popUpContainer.addEventListener('mouseup',function() {
-
-   					popUpContainer.classList.add('copy')
-   					cite_data_node.classList.add('copy')
-
-   					const selection = window.getSelection();
-					//create a selection range
-					const copy_range = document.createRange();
-					//choose the element we want to select the text of
-					copy_range.selectNodeContents(cite_data_node);
-					//select the text inside the range
-					selection.removeAllRanges();
-       				selection.addRange( copy_range );
-
-       				//copy the text to the clipboard
-					document.execCommand("copy");
-
-					//remove our selection range
-					window.getSelection().removeAllRanges();
-				})
-
-				const title = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-label",
-					text_content	: tstring.cite_this_record || 'Cite this record',
-					parent 			: popUpContainer
-				})
-
-				const close_buttom = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "close-buttom",
-					parent 			: popUpContainer
-				})
-				close_buttom.addEventListener("click",function(){
-					// popUpContainer.remove()
-				})
-				document.body.addEventListener("click",function(event_cite){
-					document.body.removeEventListener("click", function(event_cite){})
-					popUpContainer.remove()
-				})
-
-				popUpContainer.appendChild(cite_data_node)
-
-				const click_to_copy = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-text_copy",
-					text_content	: tstring.click_to_copy || 'Click to copy',
-					parent 			: popUpContainer
-				})
-			})
+			page.render_cite_record(
+				row,
+				golden_separator // cite_container
+			)
 
 		// identify_images
 			const identify_images = common.create_dom_element({
@@ -464,14 +390,14 @@ var coin_row = {
 			const type_uri = page_globals.__WEB_ROOT_WEB__ + "/type/" + type_section.section_id
 
 			// left label ('Type')
-			const label_type_node = common.create_dom_element({
+			common.create_dom_element({
 				element_type	: "label",
 				class_name		: "left-labels",
 				inner_html		: label_type,
 				parent			: info_container
 			})
 
-			const value_type_node = common.create_dom_element({
+			common.create_dom_element({
 				element_type	: "a",
 				class_name		: "rigth-values type_label",
 				// inner_html	: value_type + " <a class=\"icon_link\" href=\""+type_uri+"\"></a> ",
@@ -485,7 +411,7 @@ var coin_row = {
 				const catalogue = row.catalogue_type_mint[i]
 				if(catalogue === page_globals.OWN_CATALOG_ACRONYM ) continue;
 
-				const value_type_node = common.create_dom_element({
+				common.create_dom_element({
 					element_type	: "span",
 					class_name		: "rigth-values equivalents",
 					inner_html		: catalogue+' '+row.type[i],

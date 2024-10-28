@@ -465,14 +465,12 @@ page.parse_coin_data = function(data) {
 				}
 			}
 
-
 		// find
 		row.find_date = self.parse_date(row.find_date)
 
 		row.coin_uri = page_globals.__WEB_ROOT_WEB__ + "/coin/" + row.section_id
 
 		row.uri = self.parse_iri_data(row.uri)
-
 
 		// bibliography (portal resolved case)
 			if (row.bibliography_data && Array.isArray(row.bibliography_data) ) {
@@ -1121,6 +1119,8 @@ page.parse_ts_web = function(rows) {
 * PARSE_TREE_DATA
 * Parse rows data to use in tree_factory (thesaurus tables)
 * Table ts_thematic, ts_technique, ts_onomastic, ts_material
+* @param array ar_rows
+* @param array|undefined hilite_terms
 */
 page.parse_tree_data = function(ar_rows, hilite_terms) {
 
@@ -1136,6 +1136,7 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 		// model: null
 		// norder: "0"
 		// parent: "["hierarchy1_273"]"
+		// parents: "["hierarchy1_273"]"
 		// related: ""
 		// scope_note: "En el presente Tesauro el empleo del término es más restrictivo, ya que se aplica a los procedimientos técnicos empleados en la elaboración de bienes culturales."
 		// section_id: "1"
@@ -1220,7 +1221,6 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 					item.model = item.model[0]
 				}
 			}
-
 
 		data.push(item)
 	}
