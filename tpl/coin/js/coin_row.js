@@ -419,6 +419,42 @@ var coin_row = {
 				})
 			}
 
+		// denomination (added 28-10-2024)
+			if (row.denomination) {
+				// label left
+				common.create_dom_element({
+					element_type	: "label",
+					class_name		: "left-labels sub-label",
+					text_content	: tstring.denomination || "Denomination",
+					parent			: info_container
+				})
+				// value right
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "rigth-values",
+					inner_html 		: row.denomination,
+					parent 			: info_container
+				})
+			}
+
+		// material (added 28-10-2024)
+			if (row.material) {
+				// label left
+				common.create_dom_element({
+					element_type	: "label",
+					class_name		: "left-labels sub-label",
+					text_content	: tstring.material || "Material",
+					parent			: info_container
+				})
+				// value right
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "rigth-values",
+					inner_html 		: row.material,
+					parent 			: info_container
+				})
+			}
+
 		// obverse
 			common.create_dom_element({
 				element_type	: "label",
