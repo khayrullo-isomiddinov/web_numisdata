@@ -45,10 +45,24 @@ var image_gallery = {
         let galleryNode = self.setup.galleryNode
         this.currentIndex = 0
 
-
         const parsedGallery = self.ParseGallery(galleryNode)
 
-        this.popup = document.createRange().createContextualFragment('<div id="'+self.setup.galleryPrimId+'"><div id="gallery-wrapper"><div class="nav-button" id="pre-button"></div><div id="images-wrapper"><img id="img1" src=""><img id="img2" src=""></div><div class="nav-button" id="next-button"></div></div></div>')
+
+        this.popup = document.createRange().createContextualFragment(
+            `<div id="${self.setup.galleryPrimId}">
+                <div id="gallery-wrapper">
+                    <div class="nav-button" id="pre-button"></div>
+                    <div id="images-wrapper">
+                        <img id="img1" src="">
+                        <img id="img2" src="">
+                    </div>
+                    <div id="caption-wrapper-identify">
+                     <p></p>
+                    </div>
+                    <div class="nav-button" id="next-button"></div>
+                </div>
+            </div>`
+        )
 
         this.img1 = this.popup.getElementById('img1')
         this.img2 = this.popup.getElementById('img2')
@@ -57,7 +71,11 @@ var image_gallery = {
         this.img1.src = parsedGallery[0][0].attributes.href.value
         this.img2.src = parsedGallery[0][1].attributes.href.value
 
-        this.caption = ""
+        // caption
+        this.caption = this.popup.getElementById('caption-wrapper-identify').getElementsByTagName('p')[0]
+        this.caption.innerHTML = parsedGallery[this.currentIndex][0].children[0].dataset.caption
+
+        // nav buttons
         this.preButton = this.popup.getElementById("pre-button")
         this.nextButton = this.popup.getElementById("next-button")
 
