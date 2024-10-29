@@ -32,7 +32,7 @@
   margin-left: 0.5em;
 }
 .result #row_detail .line-tittle-wrap .authorship {
-  margin-left: 0.7em;
+  margin-left: 1rem;
   font-size: 0.8em;
   letter-spacing: 1px;
 }
@@ -115,8 +115,6 @@
   .result #types99 .types_container .type_wrap .type_info {
     font-size: 120%;
   }
-}
-@media screen and (max-width: 1600px) {
 }
 @media screen and (max-width: 736px) {
   .result #types99 .types_container .type_wrap .info_wrap a {
