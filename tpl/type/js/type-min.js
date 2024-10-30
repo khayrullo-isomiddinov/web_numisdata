@@ -254,7 +254,6 @@ var type =  {
 			// parse parse_ordered_coins creating _coins_group
 				self.parse_ordered_coins(row)
 
-
 			// render row
 				type_row_fields_min.type_row_fields.caller = self
 				const row_node = type_row_fields_min.type_row_fields.draw_item(row)

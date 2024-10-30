@@ -18,6 +18,13 @@
 .button_icon_simple:hover {
   opacity: 1;
 }
+.line-tittle-wrap {
+  margin: 1rem;
+  margin-left: 0px;
+}
+.line-tittle-wrap .info_value {
+  font-size: 1.4rem;
+}
 #main .inner .result .block-expandable {
   margin-bottom: 1rem;
 }
@@ -163,6 +170,12 @@
   opacity: 0.9;
   border-bottom: 1px solid #b7996d;
 }
+.tree_wrapper .tree_node > .btn_link {
+  background-image: url('../../assets/images/icon_link_color.svg');
+  background-repeat: no-repeat;
+  background-size: 76%;
+  background-position: center center;
+}
 .tree_wrapper .tree_node > .btn_info {
   background-image: url('../../assets/images/icon/info-square.svg');
   background-repeat: no-repeat;
@@ -212,7 +225,7 @@
 .tree_wrapper .tree_node > .info {
   padding-bottom: 1rem;
   padding-top: 0.25rem;
-  padding-left: 2rem;
+  padding-left: 4.4rem;
 }
 .tree_wrapper .tree_node > .info .block_label {
   display: inline-block;
@@ -230,6 +243,9 @@
   margin-top: 0.5rem;
   font-size: 1.2rem;
   line-height: 1.9rem;
+}
+.tree_wrapper .tree_node > .info .item.term_id {
+  font-weight: 500;
 }
 .tree_wrapper .tree_node > .bibliography {
   padding-bottom: 1rem;

@@ -127,6 +127,29 @@ var page = {
 			}
 		},
 
+		// thesaurus map
+		// correspondences between section_tipo and table name like 'sccmk1' => 'ts_countermarks'
+		thesaurus_map : {
+			sccmk1			: 'ts_countermarks',
+			cult1			: 'ts_culture',
+			cont1			: 'ts_find_context',
+			scell1			: 'ts_greek',
+			icon1			: 'ts_iconography',
+			sclat1			: 'ts_latin',
+			scxibo1			: 'ts_northern_palaeohispanic',
+			scxibm1			: 'ts_southern_palaeohispanic',
+			grup1			: 'ts_numismatic_group',
+			// ts_object	: 'ts_object',
+			peri1			: 'ts_period',
+			scxpu1			: 'ts_punic',
+			ds1				: 'ts_semantic_relations',
+			sctxr1			: 'ts_south_palaeohispanic',
+			scsym1			: 'ts_symbols',
+			terr1			: 'ts_territories',
+			tema1			: 'ts_theme',
+			// numisdata349	: 'ts_web'
+		},
+
 
 
 	/**

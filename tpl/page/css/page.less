@@ -1358,6 +1358,7 @@
 	border-radius: 5px;
 	box-shadow: 8px 8px 10px 0px rgb(180 180 180 / 80%);
 	max-width: 600px;
+	z-index: 1000;
 }
 .float-cite .float-label {
 	width: auto;
@@ -1489,7 +1490,12 @@
 		}
 	}
 
-
+// authorship (used in mints and thesaurus node)
+.authorship {
+	// margin-left: 1rem;
+	// font-size: 0.8rem;
+	letter-spacing: 1px;
+}
 
 // shared_wrapper
 	.shared_wrapper {
@@ -1585,6 +1591,8 @@
             flex-direction: row;
             width: 100%;
             margin: auto;
+            position: relative;
+
             @media screen and (max-width: @movil_max_width) {
 				width: 95vw;
             	height: 92.5%;
@@ -1592,41 +1600,58 @@
         }
 
         #images-wrapper {
-        	padding:1em;
-            display: flex;
-            flex-direction: row;
-            height: 25em;
-            width: 90%;
-            margin: 0 auto;
-            background-color: #ffffff;
+			padding:1em;
+			display: flex;
+			flex-direction: row;
+			height: 25em;
+			width: 90%;
+			margin: 0 auto;
+			margin-bottom: 1.5rem;
+			background-color: #ffffff;
 
             @media screen and (max-width: @movil_max_width) {
 				flex-direction: column;
 			}
         }
 
-        #images-wrapper img{
+        #images-wrapper img {
             display: block;
             width: 50%;
             height: 100%;
             object-fit: contain;
-            margin:auto;
+            margin: auto;
+            user-select: none;
+
             @media screen and (max-width: @movil_max_width) {
 				width: 95%;
 				height: 50%;
 			}
         }
 
-        #caption-wrapper{
+        #caption-wrapper {
             width: 100%;
             background-color: rgb(0,0,0);
             visibility: hidden;
+
+            p {
+				font-size: 100%;
+				color: rgb(255,255,255);
+				text-align: center;
+            }
         }
 
-        #caption-wrapper p {
-            font-size: 100%;
-            color: rgb(255,255,255);
-            text-align: center;
+        #caption-wrapper-identify {
+        	width: 100%;
+        	position: absolute;
+        	bottom: 0px;
+        	text-align: center;
+
+        	p {
+				font-size: 1rem;
+				text-align: center;
+				color: @color_gold_logo;
+				color: #a9a9a9;
+            }
         }
 
         .nav-button{
@@ -1660,7 +1685,6 @@
             visibility: hidden;
             //display:none;
          }
-
 	}
 
 	#popup-container {

@@ -6,7 +6,9 @@
 		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/js/catalog'.JS_SUFFIX.'.js';
 		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/js/catalog_row_fields'.JS_SUFFIX.'.js';
 		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/type/js/type_row_fields'.JS_SUFFIX.'.js';
-		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/map/js/map'.JS_SUFFIX.'.js';
+		// page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/map/js/map'.JS_SUFFIX.'.js';
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/thesaurus/js/render_thesaurus'.JS_SUFFIX.'.js';
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/thesaurus/js/render_thesaurus_links'.JS_SUFFIX.'.js';
 		// css
 		// page::$css_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/css/catalog.css';
 		array_unshift(page::$css_ar_url,

@@ -1018,7 +1018,6 @@ var type_row_fields_min = (function (exports) {
 
 			const fragment = new DocumentFragment();
 
-
 			// dedalo_link
 				if (dedalo_logged===true) {
 					const dedalo_link_link = self.dedalo_link(item, 'numisdata3');
@@ -1051,7 +1050,7 @@ var type_row_fields_min = (function (exports) {
 				const identify_coin = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "identify_coin_wrapper gallery",
-					parent			: fragment
+					parent				: fragment
 				});
 
 				// ref_coins_image_obverse
@@ -1066,9 +1065,9 @@ var type_row_fields_min = (function (exports) {
 
 				//embedded gallery reference node
 				common.create_dom_element({
-					element_type 	: "div",
-					id 				: "embedded-gallery",
-					parent 			: fragment
+					element_type	: "div",
+					id						: "embedded-gallery",
+					parent				: fragment
 				});
 
 			// identify_coin
@@ -1085,14 +1084,14 @@ var type_row_fields_min = (function (exports) {
 			const sides_wrapper = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "sides_wrapper",
-				parent			: fragment
+				parent				: fragment
 			});
 
 			// obverse_info_wrapper
 			const obverse_wrapper = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "obverse_wrapper",
-				parent			: sides_wrapper
+				parent				: sides_wrapper
 			});
 
 			// design_obverse
@@ -1133,7 +1132,7 @@ var type_row_fields_min = (function (exports) {
 			const reverse_wrapper = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "reverse_wrapper",
-				parent			: sides_wrapper
+				parent				: sides_wrapper
 			});
 
 			// design_reverse
@@ -1216,8 +1215,8 @@ var type_row_fields_min = (function (exports) {
 					common.create_dom_element({
 						element_type	: "span",
 						class_name		: "info_value related_types",
-						inner_html 		: label +": "+ ar_final.join(" | "),
-						parent 			: fragment
+						inner_html		: label +": "+ ar_final.join(" | "),
+						parent			: fragment
 					});
 				}
 
