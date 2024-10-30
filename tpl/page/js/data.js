@@ -1162,27 +1162,11 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 		// time: null
 		// tld: "technique1"
 
-	const ar_parse = ['parent','children','space','mib_bibliography','term_data','bibliography'] //
-	function decode_field(field) {
-		if (field) {
-			return JSON.parse(field)
-		}
-		return null;
-	}
-	function parse_item(item){
-		for (let i = ar_parse.length - 1; i >= 0; i--) {
-			const name = ar_parse[i]
-			item[name] = decode_field(item[name])
-		}
-
-		return item
-	}
-
 	const ar_rows_length = ar_rows.length
 	for (let i = 0; i < ar_rows_length; i++) {
 
-		// parse json encoded strings
-			const item = parse_item(ar_rows[i])
+		// parse JSON encoded strings
+			const item = page.parse_term(ar_rows[i])
 
 		// resolve relations images url
 			// if (item.relations && item.relations.length>0) {
@@ -1224,18 +1208,24 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 			}
 
 		// dd_relations
-			if (item.dd_relations) {
-				item.dd_relations = JSON.parse(item.dd_relations)
-			}
+			// if (item.dd_relations) {
+			// 	item.dd_relations = JSON.parse(item.dd_relations)
+			// }
 
 		// model
 			if (item.model) {
-				item.model = JSON.parse(item.model)
+
+				if (typeof item.model==='string') {
+					item.model = JSON.parse(item.model)
+				}
 				// get only first element of the array
 				if (Array.isArray(item.model) && item.model[0]) {
 					item.model = item.model[0]
 				}
 			}
+
+		// parsed
+			item.parsed = true
 
 		data.push(item)
 	}
@@ -1320,7 +1310,6 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 			console.warn("term_id_to_remove:",term_id_to_remove);
 		}
 
-
 	// remove unused terms
 		const data_clean = data.filter(el => term_id_to_remove.indexOf(el.term_id)===-1);
 
@@ -1363,6 +1352,39 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 
 	return data_clean
 }//end parse_tree_data
+
+
+
+/**
+* PARSE_TERM
+* Parses JSON row properties
+* @param object row
+* @return object row
+*/
+page.parse_term = function(row) {
+
+	const ar_parse = ['parent','parents','children','space','mib_bibliography','term_data','bibliography','dd_relations','model','indexation','authorship'] //
+	const decode_field = (field) => {
+		if (field && typeof field === 'string') {
+			return JSON.parse(field)
+		}
+		return field ?? null;
+	}
+
+	const ar_parse_length = ar_parse.length
+	for (let i = ar_parse_length - 1; i >= 0; i--) {
+		const name = ar_parse[i]
+		row[name] = decode_field(row[name])
+	}
+
+	// remove legacy columns
+	if (row.childrens) {
+		delete row.childrens;
+	}
+
+
+	return row
+}//end parse_term
 
 
 
