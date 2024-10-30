@@ -148,7 +148,7 @@ thesaurus.render_iconography_links = (row, buttons_additional, container_additio
 								inner_html		: 'catalog data: <br>' + JSON.stringify(data_preview, null, 2),
 								parent			: result_node
 							})
-							console.log('catalog.errors:', catalog.errors);
+							console.error('catalog.errors:', catalog.errors);
 						}
 					})
 			}//end render_types
@@ -196,7 +196,7 @@ thesaurus.render_iconography_links = (row, buttons_additional, container_additio
 	// debug
 		if(SHOW_DEBUG===true) {
 			if (row.term_id=="icon1_93") {
-				console.log('row:', row);
+				console.log('icon1_93 row:', row);
 			}
 		}
 }//end render_iconography_links
@@ -510,7 +510,7 @@ thesaurus.render_epigraphy_links = (row, buttons_additional, container_additiona
 											inner_html		: 'catalog data: <br>' + JSON.stringify(data_preview, null, 2),
 											parent			: result_node
 										})
-										console.log('catalog.errors:', catalog.errors);
+										console.error('catalog.errors:', catalog.errors);
 									}
 								})
 						}//end render_legends

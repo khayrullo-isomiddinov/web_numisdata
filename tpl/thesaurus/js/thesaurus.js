@@ -1075,7 +1075,6 @@ var thesaurus =  {
 				types_rows : types_rows,
 				coins_rows : coins_rows
 			}
-			console.log('data:', data);
 
 			return data
 			*/

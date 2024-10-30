@@ -1336,7 +1336,6 @@ var mint = {
 			types : types
 		})
 		.then(function(response){
-			// console.log("draw_map get_place_data: ",response);
 
 			const container	= self.map_container // document.getElementById("map_container")
 
@@ -1512,7 +1511,7 @@ var mint = {
 			}
 			map_points.push(item)
 		}
-		// console.log("--map_data map_points:",map_points);
+
 
 		return map_points
 	}//end map_data

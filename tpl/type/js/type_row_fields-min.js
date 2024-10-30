@@ -1285,7 +1285,6 @@ var type_row_fields_min = (function (exports) {
 				}
 
 			// Weight, diameter, and axis
-				// console.log(item)
 				let color = COLOR_PALETTE[0];
 				if (item.denomination_data
 					&& item.denomination_data.length
@@ -1580,7 +1579,7 @@ var type_row_fields_min = (function (exports) {
 				for (let i = parents_ordered.length - 1; i >= 0; i--) {
 
 					if (parents_ordered[i].term_table === 'mints') {
-						// console.log("parents_ordered[i]", parents_ordered[i]);
+
 						const mint_section_id = (parents_ordered[i].term_data)
 							? JSON.parse(parents_ordered[i].term_data)[0]
 							: '';
@@ -2521,7 +2520,6 @@ var type_row_fields_min = (function (exports) {
 					// 			if (result[0] && result[0].photographer) {
 					// 				const currentAttr = image_obverse.getAttribute("data-caption")
 					// 				image_obverse.setAttribute("data-caption", currentAttr + '<spam> | </spam> <i class="fa fa-camera"></i> ' + result[0].photographer)
-					// 				console.log("image_obverse:",image_obverse);
 					// 			}
 					// 		})
 					// 	}
@@ -2732,9 +2730,6 @@ var type_row_fields_min = (function (exports) {
 			// 			body : request_body
 			// 		})
 			// 		.then(function(response){
-			// 			// console.log("++++++++++++ request_body:",request_body);
-			// 			 // console.log("get_image_data:",response);
-
 			// 			resolve(response.result)
 			// 		})
 			// 	})
@@ -2785,7 +2780,6 @@ var type_row_fields_min = (function (exports) {
 				});
 
 			function draw_coin_inside(data, container) {
-				// console.log("--draw_coin_inside data:",data);
 
 				const wrapper = common.create_dom_element({
 					element_type	: "div",
@@ -2982,8 +2976,6 @@ var type_row_fields_min = (function (exports) {
 							for (let j = 0; j < coins_length; j++) {
 								const coin_section_id	= coins[j];
 								const current_coin		= item.coin_references.find(el => el.section_id==coin_section_id);
-									// console.log("item.coin_references:",item.coin_references);
-									// console.log("current_coin:",current_coin, coin_section_id);
 								if (current_coin) {
 									draw_coin_inside(current_coin, typology_coins);
 									ar_coins.push(coin_section_id);
@@ -3089,8 +3081,6 @@ var type_row_fields_min = (function (exports) {
 							for (let j = 0; j < coins_length; j++) {
 								const coin_section_id	= coins[j];
 								const current_coin		= item.coin_references.find(el => el.section_id==coin_section_id);
-									// console.log("item.coin_references:",item.coin_references);
-									// console.log("current_coin:",current_coin, coin_section_id);
 								if (current_coin) {
 									draw_coin_inside(current_coin, typology_coins);
 									ar_coins.push(coin_section_id);
@@ -3680,9 +3670,9 @@ var type_row_fields_min = (function (exports) {
 						op		: '=' // default is 'LIKE'
 					}]
 				}];
-				// console.log("form_factory", psqo_factory);
-				const parse_psqo = psqo_factory.encode_psqo(psqo);
-				const catalog_url = page_globals.__WEB_ROOT_WEB__+"/catalog/?psqo="+ parse_psqo;
+
+				const parse_psqo	= psqo_factory.encode_psqo(psqo);
+				const catalog_url	= page_globals.__WEB_ROOT_WEB__+"/catalog/?psqo="+ parse_psqo;
 
 				common.create_dom_element({
 					element_type	: "a",

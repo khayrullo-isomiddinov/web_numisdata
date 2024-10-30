@@ -392,7 +392,6 @@ var type =  {
 	* MAP_POPUP_BUILDER
 	*/
 	map_popup_builder : function(data) {
-		// console.log("-- map_popup_builder data:",data);
 
 		const data_group = data.group[0]
 

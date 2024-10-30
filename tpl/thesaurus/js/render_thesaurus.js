@@ -448,9 +448,7 @@ thesaurus.render_tree_node = function(row) {
 						// Use traditional 'for loops' for IE 11
 						for(let mutation of mutationsList) {
 							if (mutation.type==='attributes' && mutation.attributeName==='class') {
-									// console.log('The ' + mutation.attributeName + ' attribute was modified.');
-									// console.log("mutationsList:",mutationsList);
-									// console.log("mutationsList.target:",mutationsList[0].target);
+
 								if (!mutationsList[0].target.classList.contains("hide")) {
 
 									// draw nodes
@@ -468,8 +466,6 @@ thesaurus.render_tree_node = function(row) {
 
 					// Start observing the target node for configured mutations
 					observer.observe(relations_container, { attributes: true, childList: false, subtree: false });
-
-					// console.log("self.hilite_relations_limit:",self.hilite_relations_limit, self.hilite_relations_showed);
 
 					if (row.hilite===true && self.hilite_relations_showed<self.hilite_relations_limit) {
 						// relations_container.classList.remove("hide")
@@ -498,9 +494,7 @@ thesaurus.render_tree_node = function(row) {
 						// Use traditional 'for loops' for IE 11
 						for(let mutation of mutationsList) {
 							if (mutation.type==='attributes' && mutation.attributeName==='class') {
-									// console.log('The ' + mutation.attributeName + ' attribute was modified.');
-									// console.log("mutationsList:",mutationsList);
-									// console.log("mutationsList.target:",mutationsList[0].target);
+
 								if (!mutationsList[0].target.classList.contains("hide")) {
 
 									// draw nodes
@@ -518,8 +512,6 @@ thesaurus.render_tree_node = function(row) {
 
 					// Start observing the target node for configured mutations
 					observer.observe(indexation_container, { attributes: true, childList: false, subtree: false });
-
-					// console.log("self.hilite_indexation_limit:",self.hilite_indexation_limit, self.hilite_indexation_showed);
 
 					if (row.hilite===true && self.hilite_indexation_showed<self.hilite_indexation_limit) {
 						// indexation_container.classList.remove("hide")
@@ -642,7 +634,6 @@ thesaurus.render_base_line = (row) => {
 	// scroll
 		// self.scrolled = false
 		// if (to_hilite && self.scrolled===false) {
-		// 	// console.log("to_hilite:",row.term, row.term_id);
 		// 	common.when_in_dom(tree_node, function(){
 		// 		tree_node.scrollIntoView()
 		// 	})

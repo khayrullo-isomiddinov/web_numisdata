@@ -105,7 +105,6 @@ page.render_export_data_buttons = function() {
 					})
 			})
 			.then(function(rows){
-				// console.log("----> render_export_data_buttons rows:",rows);
 
 				// data_object.data. parsed rows is optional
 				data_object.data = (export_data_parser && typeof export_data_parser==='function')
@@ -119,7 +118,6 @@ page.render_export_data_buttons = function() {
 	// event data_request_done is triggered when new search is done
 		event_manager.subscribe('data_request_done', manage_data_request_done)
 		function manage_data_request_done(options) {
-			// console.warn("data_request_done options:",options);
 
 			// fill vars values
 				request_body		= options.request_body
@@ -195,9 +193,6 @@ page.render_export_data_buttons = function() {
 										  '/' +WEB_AREA+
 										  '/?psqo=' + encoded_psqo;
 
-					// console.log("encoded_psqo", encoded_psqo);
-					// console.log("uri", uri);
-
 					const shared_uri_encoded = common.create_dom_element({
 						element_type	: "div",
 						class_name		: "shared_uri_encoded",
@@ -232,9 +227,8 @@ page.render_export_data_buttons = function() {
 			class_name		: "btn primary button_download json",
 			parent			: button_export_json_container
 		})
-		button_export_json.addEventListener("click", function(){
-			// console.log("request_body:",request_body);
-			// console.log("result:",result);
+		button_export_json.addEventListener("click", function(e){
+			e.stopPropagation()
 
 			const button = this
 
@@ -247,7 +241,6 @@ page.render_export_data_buttons = function() {
 				})
 
 			get_data().then(function(data){
-				// console.log("data:",data);
 
 				const file_name	= 'mib_export_data.json'
 
@@ -301,11 +294,10 @@ page.render_export_data_buttons = function() {
 				})
 
 			get_data().then(function(data){
-				// console.log("data:",data);
 
 				const file_name	= 'mib_export_data.csv'
 
-				// Convert json obj to csv
+				// Convert JSON obj to csv
 					const csv = page.convert_json_to_csv(data.data)
 
 				// Blob data
@@ -359,7 +351,6 @@ page.render_export_data_buttons = function() {
 				})
 
 			// row
-				console.log('result:', result);
 				const nomisma_rdf = Array.isArray(result)
 					? result[0].nomisma_rdf
 					: (result.nomisma_rdf || null)
@@ -430,8 +421,8 @@ page.create_suggestions_button = function(){
 	event_manager.subscribe('data_request_done', manage_data_request_done)
 
 	function manage_data_request_done(options) {
-		// console.warn("data_request_done options:",options);
-		const filter 				= options.filter
+
+		const filter = options.filter
 
 		if (filter != null){
 			const min_psqo = psqo_factory.build_safe_psqo(filter)
@@ -510,10 +501,6 @@ page.create_suggestions_button = function(){
 
 		})
 
-		// fmail.querySelector("#fmail").addEventListener("blur",function(){
-		// 	console.log("entra")
-		// })
-
 		form.firstElementChild.appendChild(fname)
 		form.firstElementChild.appendChild(fmail)
 		form.firstElementChild.appendChild(fmessage)
@@ -541,7 +528,6 @@ page.handleForm = function(currentUrl){
 	//event.preventDefault()
 	document.querySelector('#error-msn').textContent = ""
 	const currentForm = document.querySelector('#contact-form')
-	// console.log(currentForm.querySelector('#fname').value)
 	// currentForm.reset()
 
 	// short vars
@@ -581,7 +567,9 @@ page.handleForm = function(currentUrl){
 				body	: body
 			})
 			.then((api_response)=>{
-				console.log("--- sendmail api_response:", api_response);
+				if(SHOW_DEBUG===true) {
+					console.log("--- sendmail api_response:", api_response);
+				}
 				if (api_response.result){
 					alert (success_msn)
 					currentForm.reset()
@@ -615,7 +603,6 @@ page.render_legend = function(options) {
 		// 	  parsed_node.innerHTML	= value
 
 		// const textNodes = Array.from(parsed_node.childNodes).filter(node => node.nodeType===3 && node.textContent.trim().length > 0)
-		// 		console.log("textNodes:",textNodes);
 
 		// textNodes.forEach(node => {
 		// 	// node.textContent = node.textContent.replace(regex, '&nbsp;')
@@ -623,7 +610,6 @@ page.render_legend = function(options) {
 		// 	node.after(span);
 		// 	span.appendChild(node);
 		// });
-		// console.log("parsed_node:",parsed_node);
 
 	const legend_node = common.create_dom_element({
 		element_type	: "div",
