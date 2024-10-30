@@ -1,5 +1,5 @@
 {
-    "accessed": "accesed",
+    "accessed": "accessed",
     "address": "Address",
     "advanced_search": "Advanced search",
     "analysis": "Analysis",
@@ -36,6 +36,7 @@
     "control_panel": "Control panel",
     "countermark_obverse": "Obverse countermark",
     "countermark_reverse": "Reverse countermark",
+    "countermark": "Countermark",
     "creator": "Authority",
     "cultural_group": "Cultural group",
     "culture": "Culture",
