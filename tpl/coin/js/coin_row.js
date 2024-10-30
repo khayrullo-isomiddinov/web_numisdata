@@ -38,9 +38,15 @@ var coin_row = {
 
 		// Cite of record
 			const golden_separator = document.querySelector('.golden-separator')
-			page.render_cite_record(
-				row,
-				golden_separator // cite_container
+			requestAnimationFrame(
+				() => {
+					const title = '<em>' + page_globals.OWN_CATALOG_ACRONYM + ' ' + row.section_id + '</em>'
+					page.render_cite_record(
+						row,
+						golden_separator, // cite_container
+						title // title
+					)
+				}
 			)
 
 		// identify_images

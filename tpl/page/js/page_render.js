@@ -736,3 +736,106 @@ page.render_diameter_value = function(row) {
 	const diameter = row.ref_type_averages_diameter.toFixed(2).replace(/\.?0+$/, "");
 	return diameter.replace('.',',') + ' mm'
 }//end render_diameter_value
+
+
+/**
+* RENDER_CITE_RECORD
+* Renders cite nodes and append it to container
+* @param object row
+* @param HTMLElement container
+* @return HTMLElement cite
+*/
+page.render_cite_record = async (row, container, title) => {
+
+	const click_handler = async function(e) {
+		e.stopPropagation()
+
+		// cite_data_node
+			const main_catalog_data	= await page.load_main_catalog()
+			const cite_data			= main_catalog_data.result[0];
+			const publication_data	= cite_data.publication_data[0];
+			cite_data.autors				= {
+				authorship_data		: row.authorship_data || null,
+				authorship_names	: row.authorship_names || null,
+				authorship_surnames	: row.authorship_surnames || null,
+				authorship_roles	: row.authorship_roles || null,
+			}
+			cite_data.catalog			= null
+			cite_data.title				= title || row.name || 'Untitled'
+			cite_data.publication_data	= publication_data
+			cite_data.uri_location		= window.location
+
+		// render cite. Note that is rendered using 'biblio_row_fields'
+			const cite_data_node = biblio_row_fields.render_cite_this(cite_data)
+
+		// popUpContainer
+			const popUpContainer = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "float-cite",
+				parent			: document.body
+			})
+			popUpContainer.addEventListener('mouseup', function() {
+
+				popUpContainer.classList.add('copy')
+				cite_data_node.classList.add('copy')
+
+				const selection = window.getSelection();
+				//create a selection range
+				const copy_range = document.createRange();
+				//choose the element we want to select the text of
+				copy_range.selectNodeContents(cite_data_node);
+				//select the text inside the range
+				selection.removeAllRanges();
+   				selection.addRange( copy_range );
+
+   				//copy the text to the clipboard
+				document.execCommand("copy");
+
+				//remove our selection range
+				window.getSelection().removeAllRanges();
+			})
+
+		// title
+			common.create_dom_element({
+				element_type	: "div",
+				class_name		: "float-label",
+				text_content	: tstring.cite_this_record || 'Cite this record',
+				parent			: popUpContainer
+			})
+
+		// close button
+		const close_button = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "close-button",
+			parent			: popUpContainer
+		})
+		close_button.addEventListener("click",function(){
+			// popUpContainer.remove()
+		})
+		document.body.addEventListener("click",function(event_cite){
+			document.body.removeEventListener("click", function(event_cite){})
+			popUpContainer.remove()
+		})
+
+		popUpContainer.appendChild(cite_data_node)
+
+		const click_to_copy = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "float-text_copy",
+			text_content	: tstring.click_to_copy || 'Click to copy',
+			parent			: popUpContainer
+		})
+	}
+
+	// cite span button
+	const cite = common.create_dom_element({
+		element_type	: 'span',
+		class_name		: 'cite_this_record',
+		text_content	: tstring.cite_this_record || 'cite this record',
+		parent			: container
+	})
+	cite.addEventListener('click', click_handler)
+
+
+	return cite
+}//end render_cite_record
