@@ -728,26 +728,8 @@ var mint = {
 					}
 
 				// authorship
-					if (row_object.authorship_names && row_object.authorship_names.length>0) {
-
-						const ar_names = row_object.authorship_names.split('|');
-						const ar_surnames = row_object.authorship_surnames.split('|');
-						const ar_roles = row_object.authorship_roles.split('|');
-
-						const authorship_length = ar_names.length
-						for (let i = 0; i < authorship_length; i++) {
-							const name		= ar_names[i].trim().toUpperCase()
-							const surname	= ar_surnames[i].trim().toUpperCase()
-							const rol		= ar_roles[i].trim()
-
-							const authorship = name + ' ' + surname+ ' | ' +rol
-							common.create_dom_element({
-								element_type 	: "div",
-								class_name 		: "authorship",
-								text_content 	: authorship,
-								parent 			: lineTittleWrap
-							})
-						}
+					if(row_object.authorship_names && row_object.authorship_names.length>0) {
+						page.render_authorship(row_object, lineTittleWrap)
 					}
 			}//end if (row_object.name && row_object.name.length>0)
 

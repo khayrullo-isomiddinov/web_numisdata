@@ -839,3 +839,65 @@ page.render_cite_record = async (row, container, title) => {
 
 	return cite
 }//end render_cite_record
+
+
+
+/**
+* RENDER_AUTHORSHIP
+* Renders row authorship info and append it to container
+* @param object row
+* 	Database record parsed
+* @param HTMLElement container
+* 	Target node where place the result nodes
+* @return void
+*/
+page.render_authorship = async (row, container) => {
+
+	const ar_names = row.authorship_names
+		? row.authorship_names.split('|')
+		: []
+
+	const ar_surnames = row.authorship_surnames
+		? row.authorship_surnames.split('|')
+		: []
+
+	const ar_roles = row.authorship_roles
+		? row.authorship_roles.split('|')
+		: []
+
+	const authorship_length = ar_names.length
+	for (let i = 0; i < authorship_length; i++) {
+
+		const authorship_value_parts = []
+
+		// name
+			const name_parts = []
+
+			if (ar_names[i]) {
+				name_parts.push(ar_names[i].trim().toUpperCase())
+			}
+
+			if (ar_surnames[i]) {
+				name_parts.push(ar_surnames[i].trim().toUpperCase())
+			}
+
+		// full name add
+			authorship_value_parts.push(
+				name_parts.join(' ')
+			)
+
+		// role add
+			if (ar_roles[i]) {
+				authorship_value_parts.push( ar_roles[i].trim() )
+			}
+
+		const authorship_value = authorship_value_parts.join(' | ')
+
+		common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'authorship item',
+			text_content	: authorship_value,
+			parent			: container
+		})
+	}
+}//end render_authorship
