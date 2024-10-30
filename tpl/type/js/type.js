@@ -89,21 +89,25 @@ var type =  {
 									container.appendChild(row_wrapper)
 
 								// newGallery
-									const embeddedGallery = row_wrapper.querySelectorAll('a')
-									if (embeddedGallery && embeddedGallery.length>0) {
-										// hide default images div
-										const identify_coin_wrapper = row_wrapper.querySelector('.identify_coin_wrapper')
-										if (identify_coin_wrapper) {
-											identify_coin_wrapper.remove()
+									requestAnimationFrame(
+										() => {
+											const embeddedGallery = row_wrapper.querySelectorAll('a')
+											if (embeddedGallery && embeddedGallery.length>0) {
+												// hide default images div
+												const identify_coin_wrapper = row_wrapper.querySelector('.identify_coin_wrapper')
+												if (identify_coin_wrapper) {
+													identify_coin_wrapper.remove()
+												}
+												// create identify images gallery
+												const newGallery = Object.create(image_gallery);
+												newGallery.set_up_embedded ({
+													galleryNode		: embeddedGallery,
+													galleryPrimId	: 'embedded-gallery-id',
+													containerId		: 'embedded-gallery'
+												})
+											}
 										}
-										// create identify images gallery
-										const newGallery = Object.create(image_gallery);
-										newGallery.set_up_embedded ({
-											galleryNode		: embeddedGallery,
-											galleryPrimId	: 'embedded-gallery-id',
-											containerId		: 'embedded-gallery'
-										})
-									}
+									)
 
 								// activate images light box
 									const images_gallery_containers = row_wrapper.querySelectorAll('.gallery')

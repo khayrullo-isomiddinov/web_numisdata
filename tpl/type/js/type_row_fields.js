@@ -62,24 +62,37 @@ export const type_row_fields = {
 			const identify_coin = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "identify_coin_wrapper gallery",
-				parent				: fragment
+				parent			: fragment
 			})
 
 			// ref_coins_image_obverse
-				identify_coin.appendChild(
-					self.image(item, "ref_coins_image_obverse")
+				requestAnimationFrame(
+					() => {
+						identify_coin.appendChild(
+							self.image(item, "ref_coins_image_obverse")
+						)
+					}
 				)
+
+			// <a href="https://gallica.bnf.fr/ark:/12148/btv1b84812787/f1.highres" class="image_link">
+			// <img title="44726" src="https://gallica.bnf.fr/ark:/12148/btv1b84812787/f1.highres" loading="lazy" data-caption="Bibliotèque nationale de France Fonds général.280 (36-5-29)">
+			// </a>
 
 			// ref_coins_image_reverse
-				identify_coin.appendChild(
-					self.image(item, "ref_coins_image_reverse")
+				requestAnimationFrame(
+					() => {
+						identify_coin.appendChild(
+							self.image(item, "ref_coins_image_reverse")
+						)
+					}
 				)
 
-			//embedded gallery reference node
+
+			// embedded gallery reference node
 			common.create_dom_element({
 				element_type	: "div",
-				id						: "embedded-gallery",
-				parent				: fragment
+				id				: "embedded-gallery",
+				parent			: fragment
 			})
 
 		// identify_coin
@@ -709,37 +722,79 @@ export const type_row_fields = {
 
 		// line
 			const line = common.create_dom_element({
-				element_type	: "div",
-				class_name		: "info_line inline " + name
+				element_type	: 'div',
+				class_name		: 'info_line inline ' + name
 			})
 
 		if (item[name] && item[name].length>0) {
 
-			const url = item[name]
+			const url = item[name] || ''
+
+			let caption = ''
+
+			// search for math coin image in coin references
+			const coin_references = item.coin_references || []
+			const found_coin = coin_references.find(el => el.image_obverse===url || el.image_reverse===url)
+			if (found_coin) {
+
+				// collection
+					if (found_coin.collection && found_coin.collection.length) {
+						const collection = found_coin.collection
+						caption += collection
+					}
+
+				// ref_auction
+					const parts = []
+					if (found_coin.ref_auction_group && found_coin.ref_auction_group.length) {
+						// name
+						const name = found_coin.ref_auction_group[0].name || ''
+						parts.push(name)
+						// date
+						const date = found_coin.ref_auction_group[0].date || ''
+						parts.push(date)
+						// number
+						const number = found_coin.ref_auction_group[0].number || ''
+						parts.push(number)
+					}
+					caption += parts.join(' ')
+
+				// lot
+					if (found_coin.number && found_coin.number.length) {
+						const lot = found_coin.number
+						caption += ', ' + (tstring.lot || 'lot') + ' ' + lot
+					}
+
+				// photographer
+					if (found_coin.photographer && found_coin.photographer.length) {
+						const photographer = found_coin.photographer
+						caption += '<spam> | </spam> <i class="fa fa-camera"></i> ' + photographer
+					}
+			}
 
 			const image_link = common.create_dom_element({
-				element_type	: "a",
-				class_name		: "image_link",
+				element_type	: 'a',
+				class_name		: 'image_link',
 				href			: url,
 				parent			: line
 			})
 
 			// caption text (bellow images)
-			const ar_caption = []
-			if (self.type) {
-				ar_caption.push(self.type)
-			}
-			if (self.equivalents) {
-				ar_caption.push(self.equivalents)
-			}
+				// const ar_caption = []
+				// if (self.type) {
+				// 	ar_caption.push(self.type)
+				// }
+				// if (self.equivalents) {
+				// 	ar_caption.push(self.equivalents)
+				// }
 
-			const img = common.create_dom_element({
-				element_type	: "img",
-				class_name		: "image",
+			// img
+			common.create_dom_element({
+				element_type	: 'img',
+				class_name		: 'image',
 				src				: url,
 				title			: item.number,
 				dataset			: {
-					caption : ar_caption.join(' | ')
+					caption : caption
 				},
 				parent			: image_link
 			})
