@@ -1084,14 +1084,14 @@ var type_row_fields_min = (function (exports) {
 			const sides_wrapper = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "sides_wrapper",
-				parent				: fragment
+				parent			: fragment
 			});
 
 			// obverse_info_wrapper
 			const obverse_wrapper = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "obverse_wrapper",
-				parent				: sides_wrapper
+				parent			: sides_wrapper
 			});
 
 			// design_obverse
@@ -1183,7 +1183,7 @@ var type_row_fields_min = (function (exports) {
 			// related_types : "MIB | 03a<br>MIB | 15b"
 				if(item.related_types){
 					item.related_types;
-					const related_types_data 	= item.related_types_data;
+					const related_types_data	= item.related_types_data;
 
 					const label		= tstring.related_types || "Related types";
 					const beats 	= related_types_data.length;

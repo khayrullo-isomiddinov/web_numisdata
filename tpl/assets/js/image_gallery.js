@@ -47,7 +47,6 @@ var image_gallery = {
 
         const parsedGallery = self.ParseGallery(galleryNode)
 
-
         this.popup = document.createRange().createContextualFragment(
             `<div id="${self.setup.galleryPrimId}">
                 <div id="gallery-wrapper">

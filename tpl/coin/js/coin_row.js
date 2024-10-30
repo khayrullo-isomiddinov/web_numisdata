@@ -554,7 +554,7 @@ var coin_row = {
 					common.create_dom_element({
 						element_type	: "label",
 						class_name		: "left-labels sub-label",
-						text_content	: tstring.countermark || "countermark",
+						text_content	: tstring.countermark || "Countermark",
 						parent			: info_container
 					})
 					const current_node = page.render_legend({
@@ -654,7 +654,7 @@ var coin_row = {
 					common.create_dom_element({
 						element_type	: "label",
 						class_name		: "left-labels sub-label",
-						text_content	: tstring.countermark || "countermark",
+						text_content	: tstring.countermark || "Countermark",
 						parent			: info_container
 					})
 					const current_node = page.render_legend({
