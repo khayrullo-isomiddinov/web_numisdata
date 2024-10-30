@@ -603,7 +603,7 @@ var biblio_row_fields = {
 
 
 
-	render_row_bibliography : function(row){
+	render_row_bibliography : function(row) {
 
 		// let biblio_object = this.biblio_object
 		let biblio_object = row
@@ -647,14 +647,13 @@ var biblio_row_fields = {
 
 		// date
 			const date = (biblio_object.ref_publications_date)
-				? " ("+biblio_object.ref_publications_date + "): "
+				? " (" + biblio_object.ref_publications_date + "): "
 				: ""
 			common.create_dom_element({
 				element_type	: "span",
 				inner_html		: date,
 				parent			: line
 			})
-
 
 		// title if book italics 1, 4, if not regular
 		// ref_publications_typology
@@ -938,7 +937,6 @@ var biblio_row_fields = {
 				})
 			}// end if authors
 
-
 		// Catalog & title
 			const ar_title = []
 
@@ -959,17 +957,15 @@ var biblio_row_fields = {
 				})
 			}
 
-
-		// editors
-		// // other_people_info : name and role other_people_full_names
+		// editors. other_people_info : name and role other_people_full_names
 			if (cite_data.publication_data.other_people_data && cite_data.publication_data.other_people_data.length>0) {
 
 				const particle_in = tstring.in || 'in'
 
 				common.create_dom_element({
-					element_type 	: "span",
-					text_content 	: particle_in.toLowerCase()+' ',
-					parent 			: line
+					element_type	: "span",
+					text_content	: particle_in.toLowerCase()+' ',
+					parent			: line
 				})
 
 				const ar_data = cite_data.publication_data.other_people_data.split(" | ")
@@ -981,17 +977,17 @@ var biblio_row_fields = {
 				for (let i = 0; i < ar_data_len; i++) {
 					const fragment = new DocumentFragment()
 
-					const ar_current_data = JSON.parse(ar_data[i])
-					const ar_current_names = JSON.parse(ar_other_people_name[i])
-					const ar_current_surnames = JSON.parse(ar_other_people_surname[i])
-					const ar_current_role = JSON.parse(ar_other_people_role[i])
+					const ar_current_data		= JSON.parse(ar_data[i])
+					const ar_current_names		= JSON.parse(ar_other_people_name[i])
+					const ar_current_surnames	= JSON.parse(ar_other_people_surname[i])
+					const ar_current_role		= JSON.parse(ar_other_people_role[i])
 
 					const authors =[]
 					const ar_current_data_len = ar_current_names.length
 					for (let i = 0; i < ar_current_data_len; i++) {
 
 						const current_full_surname	= ar_current_surnames[i]
-						const current_full_name	= ar_current_names[i]
+						const current_full_name		= ar_current_names[i]
 
 						const ar_current_name = []
 						current_full_name.split(' ')
@@ -1030,7 +1026,7 @@ var biblio_row_fields = {
 				}
 			}
 
-		//title
+		// title
 			const title = (cite_data.publication_data.title)
 				? cite_data.publication_data.title +' ('+page_globals.OWN_CATALOG_ACRONYM+'), '
 				: ' ('+page_globals.OWN_CATALOG_ACRONYM+'), '
@@ -1039,7 +1035,6 @@ var biblio_row_fields = {
 				inner_html		: title,
 				parent			: line
 			})
-
 
 		// place
 			const place = (cite_data.publication_data.place)
@@ -1069,15 +1064,18 @@ var biblio_row_fields = {
 			// const day	= today.getUTCDate()
 
 			const browser_lang = window.navigator.language
-	console.log("tstring:",tstring);
+
 			const string_date	= new Intl.DateTimeFormat(browser_lang).format(today)
-			const accessed = common.create_dom_element({
+			const accessed		= common.create_dom_element({
 				element_type	: "span",
 				inner_html		: '[' + tstring.accessed +' '+ string_date+']',
 				parent			: line
 			})
 
+
 		return line
-	}
+	}//end render_cite_this
+
+
 
 }//end biblio_row_fields

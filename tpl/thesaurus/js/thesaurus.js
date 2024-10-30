@@ -1502,7 +1502,10 @@ var thesaurus =  {
 
 	/**
 	* RENDER_FORM
-	* Create logic and view of search
+	* Create the search form
+	* @param object options
+	* @return promise
+	* 	resolve(self.form.node)
 	*/
 	render_form : function(options) {
 
@@ -1581,7 +1584,6 @@ var thesaurus =  {
 				})
 				self.form.node.appendChild(fragment)
 
-
 			// add node
 				options.container.appendChild(self.form.node)
 
@@ -1593,6 +1595,9 @@ var thesaurus =  {
 
 	/**
 	* ACTIVATE_AUTOCOMPLETE
+	* Add predictive text behaviour to the input form
+	* @param HTMLElment element
+	* @return bool
 	*/
 	activate_autocomplete : function(element) {
 
@@ -1720,6 +1725,8 @@ var thesaurus =  {
 
 	/**
 	* SEARCH_ROWS
+	*
+	* @param object options
 	* @return promise
 	*	resolve array of objects
 	*/
@@ -1841,6 +1848,7 @@ var thesaurus =  {
 	/**
 	* FORM_SUBMIT
 	* Form submit launch search
+	* @return promise js_promise
 	*/
 	form_submit : function() {
 

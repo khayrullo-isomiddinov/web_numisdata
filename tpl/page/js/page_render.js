@@ -738,6 +738,7 @@ page.render_diameter_value = function(row) {
 }//end render_diameter_value
 
 
+
 /**
 * RENDER_CITE_RECORD
 * Renders cite nodes and append it to container

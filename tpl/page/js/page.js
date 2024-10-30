@@ -1039,7 +1039,7 @@ var page = {
 			// Fallback for browsers without requestIdleCallback support like Safari
 	        setTimeout(callback, 1);
 		}
-	}//end dd_request_idle_callback
+	},//end dd_request_idle_callback
 
 
 

@@ -91,8 +91,12 @@ var type =  {
 								// newGallery
 									const embeddedGallery = row_wrapper.querySelectorAll('a')
 									if (embeddedGallery && embeddedGallery.length>0) {
-										// hide default images
-										row_wrapper.querySelector('.identify_coin_wrapper').remove()
+										// hide default images div
+										const identify_coin_wrapper = row_wrapper.querySelector('.identify_coin_wrapper')
+										if (identify_coin_wrapper) {
+											identify_coin_wrapper.remove()
+										}
+										// create identify images gallery
 										const newGallery = Object.create(image_gallery);
 										newGallery.set_up_embedded ({
 											galleryNode		: embeddedGallery,
@@ -249,7 +253,6 @@ var type =  {
 
 			// parse parse_ordered_coins creating _coins_group
 				self.parse_ordered_coins(row)
-
 
 			// render row
 				type_row_fields_min.type_row_fields.caller = self

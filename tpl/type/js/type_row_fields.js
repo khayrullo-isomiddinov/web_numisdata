@@ -30,7 +30,6 @@ export const type_row_fields = {
 
 		const fragment = new DocumentFragment()
 
-
 		// dedalo_link
 			if (dedalo_logged===true) {
 				const dedalo_link_link = self.dedalo_link(item, 'numisdata3')
@@ -63,24 +62,24 @@ export const type_row_fields = {
 			const identify_coin = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "identify_coin_wrapper gallery",
-				parent			: fragment
+				parent				: fragment
 			})
 
-		// ref_coins_image_obverse
-			identify_coin.appendChild(
-				self.image(item, "ref_coins_image_obverse")
-			)
+			// ref_coins_image_obverse
+				identify_coin.appendChild(
+					self.image(item, "ref_coins_image_obverse")
+				)
 
-		// ref_coins_image_reverse
-			identify_coin.appendChild(
-				self.image(item, "ref_coins_image_reverse")
-			)
+			// ref_coins_image_reverse
+				identify_coin.appendChild(
+					self.image(item, "ref_coins_image_reverse")
+				)
 
 			//embedded gallery reference node
 			common.create_dom_element({
-				element_type 	: "div",
-				id 				: "embedded-gallery",
-				parent 			: fragment
+				element_type	: "div",
+				id						: "embedded-gallery",
+				parent				: fragment
 			})
 
 		// identify_coin
@@ -97,14 +96,14 @@ export const type_row_fields = {
 		const sides_wrapper = common.create_dom_element({
 			element_type	: "div",
 			class_name		: "sides_wrapper",
-			parent			: fragment
+			parent				: fragment
 		})
 
 		// obverse_info_wrapper
 		const obverse_wrapper = common.create_dom_element({
 			element_type	: "div",
 			class_name		: "obverse_wrapper",
-			parent			: sides_wrapper
+			parent				: sides_wrapper
 		})
 
 		// design_obverse
@@ -145,7 +144,7 @@ export const type_row_fields = {
 		const reverse_wrapper = common.create_dom_element({
 			element_type	: "div",
 			class_name		: "reverse_wrapper",
-			parent			: sides_wrapper
+			parent				: sides_wrapper
 		})
 
 		// design_reverse
@@ -228,8 +227,8 @@ export const type_row_fields = {
 				const related_types_node = common.create_dom_element({
 					element_type	: "span",
 					class_name		: "info_value related_types",
-					inner_html 		: label +": "+ ar_final.join(" | "),
-					parent 			: fragment
+					inner_html		: label +": "+ ar_final.join(" | "),
+					parent			: fragment
 				})
 			}
 
@@ -1370,6 +1369,7 @@ export const type_row_fields = {
 			})
 			image_obverse.hires = data.image_obverse
 			image_obverse.addEventListener("load", load_hires, false)
+
 			// reverse
 			const image_link_reverse = common.create_dom_element({
 				element_type	: "a",
@@ -1816,8 +1816,8 @@ export const type_row_fields = {
 					src				: data.image_obverse,
 					title 			: data.section_id,
 					dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
+						caption: self.type + ' | '+ self.equivalents
+					},
 					parent			: image_link_obverse
 				})
 				image_obverse.loading="lazy"
@@ -1833,8 +1833,8 @@ export const type_row_fields = {
 					src				: data.image_reverse,
 					title 			: data.section_id,
 					dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
+						caption: self.type + ' | ' + self.equivalents
+					},
 					parent			: image_link_reverse
 				})
 				image_reverse.loading="lazy"
@@ -1914,9 +1914,9 @@ export const type_row_fields = {
 						parent			: info
 					})
 					const ar_references = data.bibliography_data
-						references_container.appendChild(
-							self.draw_bibliographic_reference(ar_references)
-						)
+					references_container.appendChild(
+						self.draw_bibliographic_reference(ar_references)
+					)
 
 		}//end draw_coin_inside
 
