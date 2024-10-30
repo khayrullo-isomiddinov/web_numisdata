@@ -477,6 +477,21 @@ page.parse_coin_data = function(data) {
 				row.bibliography = page.parse_publication(row.bibliography_data)
 			}
 
+		// material
+			if (row.material) {
+				const ar_values = row.material.split(' | ')
+				// set as array of unique values
+				row.material = [...new Set(ar_values)].join(' | ')
+			}
+
+		// denomination
+			if (row.denomination) {
+				const ar_values = row.denomination.split(' | ')
+				// set as array of unique values
+				row.denomination = [...new Set(ar_values)].join(' | ')
+			}
+
+
 		row.parsed = true
 
 	} catch (error) {
