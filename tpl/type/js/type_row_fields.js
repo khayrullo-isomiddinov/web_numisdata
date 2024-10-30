@@ -725,13 +725,22 @@ export const type_row_fields = {
 				parent			: line
 			})
 
-			common.create_dom_element({
+			// caption text (bellow images)
+			const ar_caption = []
+			if (self.type) {
+				ar_caption.push(self.type)
+			}
+			if (self.equivalents) {
+				ar_caption.push(self.equivalents)
+			}
+
+			const img = common.create_dom_element({
 				element_type	: "img",
 				class_name		: "image",
 				src				: url,
 				title			: item.number,
 				dataset			: {
-					caption : self.type + ' | '+self.equivalents
+					caption : ar_caption.join(' | ')
 				},
 				parent			: image_link
 			})
