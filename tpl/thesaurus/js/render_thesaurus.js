@@ -115,25 +115,6 @@ thesaurus.render_tree_node = function(row) {
 			// 	})
 			// }
 
-		// button scope_note
-			const show_scope_note = WEB_AREA!='countermarks' && row.scope_note && row.scope_note.length>0
-			if (show_scope_note) {
-				const btn_scope_note = common.create_dom_element({
-					element_type	: "span",
-					class_name		: "inline_btn btn_scope_note",
-					parent			: tree_node
-				})
-				btn_scope_note.addEventListener("mousedown", function(){
-					if (this.classList.contains("open")) {
-						scope_note.classList.add("hide")
-						this.classList.remove("open")
-					}else{
-						scope_note.classList.remove("hide")
-						this.classList.add("open")
-					}
-				})
-			}
-
 		// button definition
 			if (row.definition && row.definition.length>0) {
 				const btn_definition = common.create_dom_element({
@@ -403,18 +384,6 @@ thesaurus.render_tree_node = function(row) {
 			// 		parent			: tree_node
 			// 	})
 			// }
-
-		// scope note wrapper
-			let scope_note
-			if (show_scope_note) {
-				const scope_note_text = row.scope_note.replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/g,'');
-				scope_note = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "scope_note hide",
-					inner_html		: scope_note_text,
-					parent			: tree_node
-				})
-			}
 
 		// definition wrapper
 			let definition
