@@ -386,7 +386,7 @@ var catalog = {
 				}
 			})
 
-		// creator (autoridad)
+		// role (cargo)
 			self.form.item_factory({
 				id				: "role",
 				name			: "role",
