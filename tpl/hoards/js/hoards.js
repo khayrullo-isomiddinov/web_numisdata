@@ -253,12 +253,10 @@ var hoards =  {
 				}
 			})
 			.then(function(api_response){
-				// console.log("--------------- api_response:",api_response);
 
 				// parse data
 					const data	= page.parse_hoard_data(api_response.result)
 					const total	= api_response.total
-					console.log("data:",data);
 
 					self.pagination.total	= total
 					self.pagination.offset	= offset
@@ -325,8 +323,6 @@ var hoards =  {
 	* @return array map_points
 	*/
 	map_data_geojson : function(data, popup_data) {
-		// console.log("data:",data);
-		// console.log("popup_data:",popup_data);
 
 		const markerIcon = (function(){
 			switch(popup_data.type) {
