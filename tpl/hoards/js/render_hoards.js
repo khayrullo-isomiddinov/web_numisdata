@@ -61,7 +61,7 @@ var render_hoards = {
 										const popup_data = {
 											section_id	: row.section_id,
 											title		: row.name,
-											description	: row.public_info.trim(),
+											description	: row.public_info ? row.public_info.trim() : '',
 											type		: row.table==='findspots'
 												? 'findspot'
 												: 'hoard'
