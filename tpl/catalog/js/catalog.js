@@ -603,24 +603,6 @@ var catalog = {
 				}
 			})
 
-		// group
-			self.form.item_factory({
-				id 			: "group",
-				name 		: "group",
-				label		: tstring.group || "group",
-				q_column 	: "p_group",
-				eq_in 		: "%",
-				// q_table 	: "ts_period",
-				is_term 	: true,
-				parent		: form_row,
-				callback	: function(form_item) {
-					self.form.activate_autocomplete({
-						form_item	: form_item,
-						table		: 'catalog'
-					})
-				}
-			})
-
 		// material
 			self.form.item_factory({
 				id 			: "material",
