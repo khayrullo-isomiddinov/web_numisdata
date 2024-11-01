@@ -51,21 +51,23 @@ function search_rows($json_data) {
 		}
 		// dump($ar_query_safe, ' ar_query_safe ++ '.to_string());
 
+
 		$boolean_operator = ($operator==='$and')
 			? 'AND'
 			: (($operator==='$or')
 				? 'OR'
 				: null);
+
 	// search
 		$search_options = new stdClass();
-			$search_options->ar_query 	= $ar_query;
-			$search_options->limit 		= $limit;
+			$search_options->ar_query	= $ar_query;
+			$search_options->limit		= $limit;
 			// pagination
-			$search_options->offset 	= $offset;
-			$search_options->count 		= $count;
-			#$search_options->total 	= $total;
-			$search_options->order 		= $order;
-			$search_options->operator 	= $boolean_operator;
+			$search_options->offset		= $offset;
+			$search_options->count		= $count;
+			#$search_options->total		= $total;
+			$search_options->order		= $order;
+			$search_options->operator	= $boolean_operator;
 
 		// exec search method
 			$result = biblio::search_biblio($search_options);
@@ -73,7 +75,7 @@ function search_rows($json_data) {
 
 	// response ok
 		$response->result 	= $result;
-		$response->msg 		= 'Ok. Success ['.__FUNCTION__.']';
+		$response->msg 		= 'OK. Success ['.__FUNCTION__.']';
 
 
 	// debug

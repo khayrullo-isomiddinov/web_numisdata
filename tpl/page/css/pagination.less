@@ -13,7 +13,7 @@
 		// 	flex-wrap: wrap;
 		// 	width: 100%;
 		// 	position: relative;
-			
+
 		// 	>* {
 		// 		font-family: "Source Sans Pro", Helvetica, sans-serif;
 		// 	}
@@ -22,7 +22,7 @@
 		// 		margin: 0;
 		// 	}
 
-			
+
 		// 	.first:before {
 		// 		font-family: FontAwesome;
 		// 		content: '\f104 \f104';
@@ -32,7 +32,7 @@
 		// 		font-family: FontAwesome;
 		// 		content: '\f105 \f105';
 		// 	}
-			
+
 		// 	>.navigator {
 		// 		text-decoration: none;
 		// 		padding: 0 1.75rem;
@@ -91,7 +91,7 @@
 				text-align: center;
 				text-decoration: none;
 				text-transform: uppercase;
-				
+
 
 				@media screen and (max-width: 980px) {
 					font-size: 0.9rem;
@@ -119,11 +119,12 @@
 			}
 
 			a, li {
+
 				&.unactive {
 					opacity: 0.5;
 					cursor: default;
 					pointer-events: none;
-				}					
+				}
 			}
 
 			span {
@@ -132,14 +133,13 @@
 
 			.next, .previous {
 				text-decoration: none;
-				padding: 0 1.75rem;
+				padding-left: 0.5rem;
+				padding-right: 0.5rem;
 
-				
 				@media screen and (max-width: 980px) {
 					font-size: 0;
 					padding:0;
 				}
-				
 			}
 
 			.page {
@@ -153,7 +153,7 @@
 					min-width: auto;
 				}
 			}
-				
+
 			.next:after, .previous:before {
 				-moz-osx-font-smoothing: grayscale;
 				-webkit-font-smoothing: antialiased;

@@ -291,7 +291,7 @@ var biblio =  {
 			var ar_query 		= []
 			var ar_form_inputs  = form_obj.querySelectorAll("input.input_values, input.form-control")
 			var ar_input_len 	= ar_form_inputs.length
-			for (var i = 0; i < ar_input_len; i++) {
+			for (let i = 0; i < ar_input_len; i++) {
 
 				const input = ar_form_inputs[i]
 
@@ -315,11 +315,15 @@ var biblio =  {
 							// }
 						}
 
+					// user selection from autocomplete list
+					const is_selection = input.classList.contains('input_values')
+
 					const current_obj = {
-						name 		: current_column, // input.dataset.q_name, // input.name,
-						value 		: current_value,  // input.value
-						search_mode : input.dataset.search,
-						table 		: input.dataset.q_table
+						name			: current_column, // input.dataset.q_name, // input.name,
+						value			: current_value,  // input.value
+						search_mode		: input.dataset.search,
+						table			: input.dataset.q_table,
+						is_selection	: is_selection
 					}
 
 					ar_query.push(current_obj)
@@ -332,14 +336,13 @@ var biblio =  {
 		// operators value
 			const operators_value = form_obj.querySelector('input[name="operators"]:checked').value;
 
-
 		// exec query (promise)
 			const response = self.search_rows({
 				ar_query : ar_query,
 				operator : operators_value
 			})
 
-		// scrool to head result
+		// scroll to head result
 			const div_result = document.querySelector(".result")
 			if (div_result) {
 				div_result.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
