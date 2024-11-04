@@ -114,6 +114,12 @@
 #main > .inner .column_right {
   width: 100%;
 }
+@media (max-width: 736px) {
+  #main > .inner .column_right {
+    padding: 1rem;
+    font-size: 1.2rem;
+  }
+}
 #main > .inner p {
   grid-row-start: 3;
   grid-row-end: 5;

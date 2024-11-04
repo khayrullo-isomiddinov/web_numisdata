@@ -788,7 +788,9 @@
 						margin-bottom: 1rem;
 
 						img {
-							max-height: 5.5rem;
+							@media (max-width: 1010px) { // @movil_max_width
+								max-height: 5.5rem;
+							}
 						}
 					}
 				}
@@ -801,8 +803,11 @@
 						display: flex;
 						justify-content: center;
 
+
 						img {
-							max-height: 7rem;
+							@media (max-width: 1010px) { // @movil_max_width
+								max-height: 7rem;
+							}
 						}
 					}
 				}
@@ -816,7 +821,9 @@
 						justify-content: center;
 
 						img {
-							max-height: 7rem;
+							@media (max-width: 1010px) { // @movil_max_width
+								max-height: 7rem;
+							}
 						}
 					}
 				}
@@ -897,7 +904,6 @@
 				@media (max-width: @movil_max_width) {
 					height: 6em;
 				}
-
 			}
 
 			ul.logos {
