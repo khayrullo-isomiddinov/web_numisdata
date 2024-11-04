@@ -282,38 +282,42 @@ var term = {
 				.then(function(type_row){
 
 					// image obverse
-						const thumb_obverse = type_row.ref_coins_image_obverse.replace('/1.5MB/', '/thumb/')
-						const image_obverse = common.create_dom_element({
-							element_type	: 'img',
-							class_name		: 'type_image',
-							src				: page_globals.__WEB_MEDIA_BASE_URL__ + thumb_obverse,
-							parent			: type_images_container
-						})
-						const obverse_load_handler = () => {
-							requestAnimationFrame(
-								() => {
-									image_obverse.src = page_globals.__WEB_MEDIA_BASE_URL__ + type_row.ref_coins_image_obverse
-								}
-							)
+						if (type_row.ref_coins_image_obverse) {
+							const thumb_obverse = type_row.ref_coins_image_obverse.replace('/1.5MB/', '/thumb/')
+							const image_obverse = common.create_dom_element({
+								element_type	: 'img',
+								class_name		: 'type_image',
+								src				: page_globals.__WEB_MEDIA_BASE_URL__ + thumb_obverse,
+								parent			: type_images_container
+							})
+							const obverse_load_handler = () => {
+								requestAnimationFrame(
+									() => {
+										image_obverse.src = page_globals.__WEB_MEDIA_BASE_URL__ + type_row.ref_coins_image_obverse
+									}
+								)
+							}
+							image_obverse.addEventListener('load', obverse_load_handler)
 						}
-						image_obverse.addEventListener('load', obverse_load_handler)
 
 					// image reverse
-						const thumb_reverse = type_row.ref_coins_image_reverse.replace('/1.5MB/', '/thumb/')
-						const image_reverse = common.create_dom_element({
-							element_type	: 'img',
-							class_name		: 'type_image',
-							src				: page_globals.__WEB_MEDIA_BASE_URL__ + thumb_reverse,
-							parent			: type_images_container
-						})
-						const reverse_load_handler = () => {
-							requestAnimationFrame(
-								() => {
-									image_reverse.src = page_globals.__WEB_MEDIA_BASE_URL__ + type_row.ref_coins_image_reverse
-								}
-							)
+						if (type_row.ref_coins_image_reverse) {
+							const thumb_reverse = type_row.ref_coins_image_reverse.replace('/1.5MB/', '/thumb/')
+							const image_reverse = common.create_dom_element({
+								element_type	: 'img',
+								class_name		: 'type_image',
+								src				: page_globals.__WEB_MEDIA_BASE_URL__ + thumb_reverse,
+								parent			: type_images_container
+							})
+							const reverse_load_handler = () => {
+								requestAnimationFrame(
+									() => {
+										image_reverse.src = page_globals.__WEB_MEDIA_BASE_URL__ + type_row.ref_coins_image_reverse
+									}
+								)
+							}
+							image_reverse.addEventListener('load', reverse_load_handler)
 						}
-						image_reverse.addEventListener('load', reverse_load_handler)
 
 					// show type_images_container
 					type_images_container.classList.remove('invisible')
@@ -671,7 +675,7 @@ var term = {
 				// console.log('debug row:', row);
 				// console.log('debug data:', data);
 			}
-			if (!data) {
+			if (!data || data.length<1) {
 				spinner.remove()
 				container.classList.add('hide')
 				return false
