@@ -267,8 +267,13 @@
 		background-image: url('../../assets/images/overlay_white.png');
 
 		#main {
+			display: block;
+			max-width: 100vw;
+			overflow: auto;
+
 			// min-height: 74vh;
 			min-height: calc(100vh - 27.9rem);
+
 			@media screen and (max-width: @content_data_max_width_1280) {
 				min-height: calc(100vh - 24.9rem);
 			}
@@ -612,9 +617,7 @@
 					margin: 0 auto;
 					transition: transform 0.35s ease-in-out;
 				}
-
 			}
-
 		}
 
 		.golden-separator{
@@ -718,15 +721,6 @@
 				justify-content: space-evenly;
 				align-items: flex-start;
 
-				>ul:first-child{
-					width: 125%;
-				}
-
-				>ul:nth-child(4), >ul:nth-child(5){
-					width: 65%;
-				}
-
-
 				ul {
 					margin: 0;
 					width: 90%;
@@ -737,12 +731,98 @@
 						margin: 0;
 						padding: 0;
 						flex: 1 1;
-						line-height: 1.2em;
+						line-height: 2rem;
 					}
 				}
 
+				// logos
+				>ul >li >ul {
+					width: 100%;
+				}
+
 				>ul {
-					margin-bottom: 0.5rem;
+					margin-bottom: 1rem;
+				}
+
+				// links list
+				>ul:nth-child(1) {
+					// background-color: #56574e;
+					width: 120%;
+
+					@media screen and (max-width: @content_medium_max_width){
+						width: 100%;
+					}
+
+					@media (max-width: 1010px) { // @movil_max_width
+						>li >ul {
+							margin-left: 4rem;
+						}
+					}
+
+					.li {
+						display: block !important;
+					}
+				}
+
+				// members (UV, MUPREVA)
+				>ul:nth-child(2) {
+
+					>li >ul >li {
+						display: flex;
+						justify-content: center;
+						margin-bottom: 1rem;
+
+						img {
+							max-height: 6rem;
+						}
+					}
+				}
+
+				// funding (Tonegawa, Ministerio, Vico, Cayón ..)
+				>ul:nth-child(3) {
+					// background-color: #d7ff17;
+
+					>li >ul >li {
+						display: flex;
+						justify-content: center;
+						margin-bottom: 1rem;
+
+						img {
+							max-height: 5.5rem;
+						}
+					}
+				}
+
+				// supported by (INC)
+				>ul:nth-child(4) {
+					// background-color: #d7ff17;
+
+					>li >ul >li {
+						display: flex;
+						justify-content: center;
+
+						img {
+							max-height: 7rem;
+						}
+					}
+				}
+
+				// technology by (Render)
+				>ul:nth-child(5) {
+					// background-color: #d7ff17;
+
+					>li >ul >li {
+						display: flex;
+						justify-content: center;
+
+						img {
+							max-height: 7rem;
+						}
+					}
+				}
+
+				>ul:nth-child(4), >ul:nth-child(5){
+					// width: 65%;
 				}
 
 				a {
@@ -785,67 +865,14 @@
 					}
 				}
 
-				@media (max-width: 1160px) { // @movil_max_width
+				@media (max-width: 1010px) { // @movil_max_width
 					flex-flow: column;
 				}
 			}
 
-			// .footer-section {
-			// 	width: 25%;
-
-			// 	ul {
-			// 		list-style-type: none;
-			// 		margin-top: 1em;
-			// 		@media (max-width: @movil_max_width) {
-			// 			font-size: 100%;
-			// 		}
-			// 	}
-
-
-			// 	li {
-			// 		font-size: 80%;
-			// 		// margin-top: 0.5em;
-			// 		@media (max-width: @movil_max_width) {
-			// 			font-size: 100%;
-			// 			// float:left;
-			// 			// margin-bottom: 1em;
-			// 			// padding: 0 0.5em;
-			// 		}
-
-			// 		ul {
-			// 			display: none;
-			// 			visibility: hidden;
-			// 		}
-			// 	}
-
-			// 	@media (max-width: @movil_max_width) {
-			// 		width: 100%;
-			// 	}
-			// }
-
 			.footer-copyright-wrapper {
 				margin:0 auto;
 			}
-
-			// .ministerio {
-			// 	background-image: url('../../assets/images/logo_mciu.jpg');
-			// }
-
-			// .mupreva {
-			// 	background-image: url('../../assets/images/LogoMuseoNegroValencia.png');
-			// }
-
-			// .uni_val_hist {
-			// 	background-image: url('../../assets/images/uni_val_hist.png');
-			// }
-
-			// .inc {
-			// 	background-image: url('../../assets/images/logo-inc.svg');
-			// }
-
-			// .render {
-			// 	background-image: url('../../assets/images/logo_render_bn.png');
-			// }
 
 			.logos {
 				margin: auto;
@@ -905,8 +932,11 @@
 				// padding: 1em;
 				padding-bottom: 0;
 				padding-top: 0;
-				line-height: 2.2rem;
 				text-align: center;
+
+				li {
+					line-height: 2rem;
+				}
 
 				.version {
 					width: 100%;
