@@ -386,10 +386,11 @@ var term = {
 				// render parents
 				requestAnimationFrame(
 					() => {
-						const table = page.thesaurus_map[row_object.tld]
+						const table		= page.thesaurus_map[row_object.tld]
+						const parents	= row_object.parents.reverse()
 						term.render_terms(
 							table,
-							row_object.parents,
+							parents,
 							parents_container
 						)
 					}
@@ -876,6 +877,9 @@ var term = {
 			})
 			const sql_filter = 'section_id IN (' + ar_section_id.join(',') + ')'
 
+		// order custom
+			const order = `FIELD(section_id, ${ar_section_id.join(',')})`
+
 		// get terms info
 			const response = await data_manager.request({
 				body : {
@@ -886,7 +890,8 @@ var term = {
 					ar_fields	: ['*'],
 					count		: false,
 					limit		: 0,
-					sql_filter	: sql_filter
+					sql_filter	: sql_filter,
+					order		: order
 				}
 			})
 
@@ -919,7 +924,8 @@ var term = {
 			// const rows = page.parse_tree_data(response.result)
 			const rows_length = rows.length
 			// iterate in reverse order for parents
-			for (let i = rows_length - 1; i >= 0; i--) {
+			// for (let i = rows_length - 1; i >= 0; i--) {
+			for (let i = 0; i < rows_length; i++) {
 
 				const row = rows[i]
 
