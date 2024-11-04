@@ -46,6 +46,7 @@
   grid-template-columns: repeat(2, 1fr);
   width: 100%;
   margin-top: 2rem;
+  padding-left: 0px;
 }
 @media screen and (max-width: 736px) {
   #main > .inner {
@@ -61,6 +62,7 @@
   grid-row-end: 5;
   border-bottom: none;
   min-height: 608px;
+  text-align: center;
 }
 @media screen and (max-width: 736px) {
   #main > .inner .img-wrapper {
@@ -77,12 +79,17 @@
   }
 }
 #main > .inner .img-wrapper img {
-  display: block;
+  display: inline-block;
   width: 90%;
+}
+#main > .inner .img-wrapper > p {
+  display: block;
 }
 #main > .inner .img-wrapper .img-text {
   text-align: center;
-  margin-right: 2.7em;
+  width: 100%;
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 #main > .inner .column_right {
   width: 100%;

@@ -92,7 +92,7 @@
   height: unset;
 }
 .tree_wrapper .tree_node > .term.hilite {
-  background-color: #b7996d;
+  background-color: #997f5a;
   border-radius: 0.15em;
   padding: 0.15em;
   padding-left: 0.35em;
@@ -263,7 +263,7 @@
   line-height: 1.4rem;
 }
 .tree_wrapper .tree_node > .scope_note {
-  background-color: #b7996d;
+  background-color: #997f5a;
   padding: 0.75em;
   margin-top: 0.5rem;
   line-height: 1.4em;
@@ -337,9 +337,9 @@ canvas {
   width: 40px;
   margin: -20px 0 0 -20px;
   border: 3px transparent solid;
-  border-top: 3px #b7996d solid;
-  border-right: 3px #b7996d solid;
-  border-bottom: 3px #b7996d solid;
+  border-top: 3px #997f5a solid;
+  border-right: 3px #997f5a solid;
+  border-bottom: 3px #997f5a solid;
   border-radius: 50%;
   -webkit-animation: spin3 1.25s infinite linear;
   animation: spin3 1.25s infinite linear;
