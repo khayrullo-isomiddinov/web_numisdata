@@ -568,6 +568,8 @@ thesaurus.render_base_line = (row) => {
 				parent			: fragment
 			})
 			const outsideClickListener = (event) => {
+				event.stopPropagation()
+
 				const target = event.target;
 				if (target===image) {
 					image.classList.toggle('big')
@@ -644,18 +646,6 @@ thesaurus.render_info_block = async function(row) {
 			inner_html		: 'MIB ' + row.term_id,
 			parent			: content
 		})
-
-	// authorship
-		if(row.authorship_names && row.authorship_names.length>0) {
-			// label
-			common.create_dom_element({
-				element_type	: 'span',
-				class_name		: 'block_label',
-				text_content	: tstring.authorship || 'Authorship',
-				parent			: content
-			})
-			page.render_authorship(row, content)
-		}
 
 	// time
 		if (row.time) {
@@ -748,6 +738,18 @@ thesaurus.render_info_block = async function(row) {
 				})
 				biblio_row_wrapper.appendChild(biblio_row_node)
 			}
+		}
+
+	// authorship
+		if(row.authorship_names && row.authorship_names.length>0) {
+			// label
+			common.create_dom_element({
+				element_type	: 'span',
+				class_name		: 'block_label',
+				text_content	: tstring.authorship || 'Authorship',
+				parent			: content
+			})
+			page.render_authorship(row, content)
 		}
 
 

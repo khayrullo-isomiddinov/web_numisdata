@@ -650,6 +650,11 @@ var term = {
 
 		// data
 			const data = await thesaurus.load_legends_data(row, ar_legends)
+			// debug
+			if(SHOW_DEBUG===true) {
+				// console.log('debug row:', row);
+				// console.log('debug data:', data);
+			}
 			if (!data) {
 				spinner.remove()
 				container.classList.add('hide')

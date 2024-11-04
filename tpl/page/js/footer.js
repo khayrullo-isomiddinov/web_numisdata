@@ -30,7 +30,11 @@ var footer =  {
 		// render
 			const footer_node = self.render_footer()
 			if (footer_node) {
-				self.footer_dynamic_wraper.appendChild(footer_node)
+				requestAnimationFrame(
+					() => {
+						self.footer_dynamic_wraper.appendChild(footer_node)
+					}
+				)
 			}
 
 			return true

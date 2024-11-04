@@ -668,9 +668,9 @@ var page = {
 			return null
 		}
 
-		const year 	= timestamp.substring(0, 4) // 2014-06-24
-		const month 	= timestamp.substring(5, 7)
-		const day 	= timestamp.substring(8, 10)
+		const year	= timestamp.substring(0, 4) // 2014-06-24
+		const month	= timestamp.substring(5, 7)
+		const day	= timestamp.substring(8, 10)
 
 		// push in order when not empty
 			const ar_parts = []

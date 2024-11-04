@@ -333,27 +333,39 @@ var main_home =  {
 							src				: thumb_url,
 							parent			: image_wrapper
 						})
-						const img_loader = document.createElement('img')
-						img_loader.addEventListener("load", function(){
+
+						const load_handler = () => {
+
 							image_big.src = image_url
-							img_loader.remove()
 
 							// coin text
-								common.create_dom_element({
-									element_type	: "p",
-									class_name		: "img-text",
-									text_content	: item_text + denomination,
-									parent			: image_wrapper
-								})
-						})
-						img_loader.src = image_url
+							common.create_dom_element({
+								element_type	: "p",
+								class_name		: "img-text",
+								text_content	: item_text + denomination,
+								parent			: image_wrapper
+							})
 
-
+							img_loader.remove()
+						}
+						const img_loader = document.createElement('img')
+						img_loader.addEventListener('load', load_handler)
+						// set image URL
+						requestAnimationFrame(
+							() => {
+								img_loader.src = image_url
+							}
+						)
 
 					spinner.remove()
 				})
 			}
-			render_coin_image(self.ar_images)
+			requestAnimationFrame(
+				() => {
+					render_coin_image(self.ar_images)
+				}
+			)
+
 
 		return true
 	}//end main_coin_image

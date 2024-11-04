@@ -63,6 +63,9 @@ var thesaurus =  {
 			'sclat2_2', // ts_latinSigno estándar UTF
 		],
 
+		// thesaurus_area_tables. correspondence between tables and areas
+		// @see page.thesaurus_area_tables
+
 
 
 	/**
@@ -805,6 +808,9 @@ var thesaurus =  {
 
 		const self = this
 
+		// debug sample term_id
+		const debug_sample = 'scell1_165'
+
 		// utf grouper case
 		// children of utf sign_group are not calculated by related ar_legends, but from a catalog search
 		// this is more expensive, but needs to be done is this way at now
@@ -812,9 +818,10 @@ var thesaurus =  {
 			const is_utf_grouper = !!(row.model && thesaurus.sign_group_models.includes(row.model))
 			// debug
 				if(SHOW_DEBUG===true) {
-					// if (row.term_id==='scell1_171') {
-					// 	console.log('is_utf_grouper:', row.term_id, row.model, is_utf_grouper);
-					// }
+					if (row.term_id===debug_sample) {
+						console.log('is_utf_grouper:', row.term_id, row.model, is_utf_grouper);
+						console.log('ar_legends:', ar_legends);
+					}
 				}
 			if (is_utf_grouper) {
 
@@ -854,6 +861,12 @@ var thesaurus =  {
 			}
 			// utf case. Additional search in plain text for Unicode letters
 			const is_utf = thesaurus.utf_models.includes(row.model)
+			// debug
+				if(SHOW_DEBUG===true) {
+					if (row.term_id===debug_sample) {
+						console.log('is_utf:', row.term_id, row.model, is_utf);
+					}
+				}
 			if (is_utf===true &&
 				ar_legends.length===0 &&
 				// !row.model.includes('sclat2_2') // exclude rows with model 'sclat2_2' grouper
@@ -864,7 +877,7 @@ var thesaurus =  {
 				)
 				// debug
 					if(SHOW_DEBUG===true) {
-						// if (row.term_id==='scell1_171') {
+						// if (row.term_id===debug_sample) {
 						// 	console.log('legends_filter pushed:', row.term_id, row.model, legends_filter);
 						// }
 					}
@@ -873,7 +886,7 @@ var thesaurus =  {
 
 			// debug
 				if(SHOW_DEBUG===true) {
-					// if (row.term_id==='sclat1_96') {
+					// if (row.term_id==='debug_sample) {
 					// 	console.log('sclat1_96 sql_filter:', sql_filter);
 					// }
 				}

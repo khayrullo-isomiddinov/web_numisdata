@@ -192,6 +192,7 @@ page.parse_mint_data = function(data) {
 		? JSON.parse(row.related_data)
 		: null
 
+
 	return row
 }//end parse_mint_data
 
@@ -1212,17 +1213,7 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 			// 	item.dd_relations = JSON.parse(item.dd_relations)
 			// }
 
-		// model
-			if (item.model) {
 
-				if (typeof item.model==='string') {
-					item.model = JSON.parse(item.model)
-				}
-				// get only first element of the array
-				if (Array.isArray(item.model) && item.model[0]) {
-					item.model = item.model[0]
-				}
-			}
 
 		// parsed
 			item.parsed = true
@@ -1380,6 +1371,23 @@ page.parse_term = function(row) {
 	// remove legacy columns
 	if (row.childrens) {
 		delete row.childrens;
+	}
+
+	// authorship_date
+	if (row.authorship_date) {
+		row.authorship_date = row.authorship_date.split(' | ')
+	}
+
+	// model
+	if (row.model) {
+
+		if (typeof row.model==='string') {
+			row.model = JSON.parse(row.model)
+		}
+		// get only first element of the array
+		if (Array.isArray(row.model) && row.model[0]) {
+			row.model = row.model[0]
+		}
 	}
 
 

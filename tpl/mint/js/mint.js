@@ -199,6 +199,7 @@ var mint = {
 						'georef_geojson',
 						'relations_types',
 						'authorship_data',
+						// 'authorship_date'
 						'authorship_names',
 						'authorship_surnames',
 						'authorship_roles',
