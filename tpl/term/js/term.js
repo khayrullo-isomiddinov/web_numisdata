@@ -318,6 +318,15 @@ var term = {
 					// show type_images_container
 					type_images_container.classList.remove('invisible')
 				})
+			}else{
+
+				// utf8_term
+				common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'utf8_term',
+					inner_html		: row_object.term,
+					parent			: fragment
+				})
 			}
 
 		// term and definition
@@ -470,17 +479,28 @@ var term = {
 				class_name		: 'block_container types_container hide',
 				parent			: fragment
 			})
+
+			// area type (@see page.thesaurus_area_tables)
+			const area_type = page.thesaurus_area_tables[row_object.table]
+
 			// render types list
 			requestAnimationFrame(
 				() => {
-					if (row_object.table==='ts_iconography') {
-						term.render_iconography_types(row_object, types_container)
-					}else{
-						term.render_types(row_object, types_container)
+					switch (area_type) {
+
+						case 'iconography':
+							term.render_iconography_types(row_object, types_container)
+							break;
+
+						case 'epigraphy':
+							// use default
+
+						default:
+							term.render_types(row_object, types_container)
+							break;
 					}
 				}
 			)
-
 
 		// container final add
 		container.appendChild(fragment)
@@ -620,10 +640,6 @@ var term = {
 			const ar_legends = row.dd_relations && row.dd_relations.length >0
 				? row.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
 				: []
-
-			if (ar_legends.length<1) {
-				return false
-			}
 
 		// info line label + gold line bellow
 			const info_line_separator = common.create_dom_element({
