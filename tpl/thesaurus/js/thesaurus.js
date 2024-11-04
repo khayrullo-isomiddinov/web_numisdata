@@ -83,7 +83,7 @@ var thesaurus =  {
 			self.ar_fields			= options.ar_fields
 			const rows_list			= options.rows_list
 			const authorship_text	= options.authorship_text
-			const body_text			= options.body_text
+			const body_text			= options.body_text || null
 
 		// root_term catalog
 			// if (WEB_AREA==='mints_hierarchy') {
@@ -132,7 +132,9 @@ var thesaurus =  {
 				.then(function(response){
 
 					if (!response.result || !response.result.length) {
-						body_text.classList.remove('hide_opacity')
+						if (body_text) {
+							body_text.classList.remove('hide_opacity')
+						}
 						return
 					}
 
@@ -141,10 +143,14 @@ var thesaurus =  {
 
 					if(data.authorship_names && data.authorship_names.length>0) {
 						page.render_authorship(data, authorship_text)
-						body_text.classList.remove('hide_opacity')
+						if (body_text) {
+							body_text.classList.remove('hide_opacity')
+						}
 					}
 
-					body_text.classList.remove('hide_opacity')
+					if (body_text) {
+						body_text.classList.remove('hide_opacity')
+					}
 				})
 			}
 
