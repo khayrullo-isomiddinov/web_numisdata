@@ -869,8 +869,8 @@ var thesaurus =  {
 			// debug
 				if(SHOW_DEBUG===true) {
 					if (row.term_id===debug_sample) {
-						console.log('is_utf_grouper:', row.term_id, row.model, is_utf_grouper);
-						console.log('ar_legends:', ar_legends);
+						console.log('debug is_utf_grouper:', row.term_id, row.model, is_utf_grouper);
+						console.log('debug ar_legends:', ar_legends);
 					}
 				}
 			if (is_utf_grouper) {
