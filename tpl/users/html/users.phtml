@@ -23,6 +23,17 @@
 					<!-- abstract -->
 						<?php echo $abstract ?>
 
+					<!-- Images -->
+						<?php if(!empty($ar_image)) { ?>
+						<section class="images">
+							<?php foreach ($ar_image as $item) { ?>
+								<!-- <a href="<?php echo __WEB_BASE_URL__ . $item->image ?>" class="gallery image fit" rel="noreferrer"> -->
+									<img src="<?php echo __WEB_BASE_URL__ . $item->image ?>" alt="" class="image_big" />
+								<!-- </a> -->
+							<?php } ?>
+						</section>
+						<?php } ?>
+
 					<!-- body -->
 						<section class="content">
 							<?php echo $body ?>
