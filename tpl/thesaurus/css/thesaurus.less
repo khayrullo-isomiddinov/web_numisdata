@@ -14,6 +14,7 @@
 .line-tittle-wrap {
 	margin: 1rem;
     margin-left: 0px;
+    text-align: center;
 
 	.info_value {
 		font-size: 1.4rem;
@@ -30,6 +31,10 @@
 
 	>.info_text_block {
 		padding: 0px;
+
+		p {
+			display: inline-block;
+		}
 	}
 }
 
@@ -294,6 +299,11 @@
 
 				&.term_id {
 					font-weight: 500;
+					color: @color_gold_logo;
+
+					.code {
+						font-weight: 300;
+					}
 				}
 			}
 

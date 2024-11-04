@@ -640,12 +640,21 @@ thesaurus.render_info_block = async function(row) {
 		const content = new DocumentFragment()
 
 	// id
-		common.create_dom_element({
+		const ar_id = []
+		// ad base id as 'MIB scxpu1_160'
+		ar_id.push(`MIB ${row.term_id}`)
+		// add code when found as '| 12'
+		if (row.code) {
+			ar_id.push(`<span class="code"> | ${row.code}</span>`)
+		}
+
+		const id_node = common.create_dom_element({
 			element_type	: 'div',
 			class_name		: 'item term_id',
-			inner_html		: 'MIB ' + row.term_id,
+			inner_html		: ar_id.join(' '),
 			parent			: content
 		})
+		console.log('row:', row);
 
 	// time
 		if (row.time) {
