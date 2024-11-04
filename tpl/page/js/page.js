@@ -150,6 +150,21 @@ var page = {
 			// numisdata349	: 'ts_web'
 		},
 
+		// thesaurus_area_tables
+		// correspondence between tables and areas
+		thesaurus_area_tables : {
+			'ts_iconography'				: 'iconography',
+			'ts_symbols'					: 'symbols',
+			'ts_countermarks'				: 'countermarks',
+			// epigraphy
+			'ts_greek'						: 'epigraphy',
+			'ts_punic'						: 'epigraphy',
+			'ts_northern_palaeohispanic'	: 'epigraphy',
+			'ts_southern_palaeohispanic'	: 'epigraphy',
+			'ts_south_palaeohispanic'		: 'epigraphy',
+			'ts_latin'						: 'epigraphy'
+		},
+
 
 
 	/**
