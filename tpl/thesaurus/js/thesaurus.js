@@ -77,11 +77,13 @@ var thesaurus =  {
 		const self = this
 
 		// options
-			self.table		= options.table; // self table (array)
-			self.root_term	= options.root_term; // self root_term (array)
-			self.term_id	= options.term_id
-			self.ar_fields	= options.ar_fields
-			const rows_list	= options.rows_list
+			self.table				= options.table; // self table (array)
+			self.root_term			= options.root_term; // self root_term (array)
+			self.term_id			= options.term_id
+			self.ar_fields			= options.ar_fields
+			const rows_list			= options.rows_list
+			const authorship_text	= options.authorship_text
+			const body_text			= options.body_text
 
 		// root_term catalog
 			// if (WEB_AREA==='mints_hierarchy') {
@@ -103,6 +105,48 @@ var thesaurus =  {
 			// 		})
 			// 	}) ()
 			// }
+
+		// authorship
+			if (self.root_term && self.root_term.length) {
+				const root_term_id = self.root_term[0]
+
+				const body = {
+					dedalo_get	: 'records',
+					db_name		: page_globals.WEB_DB,
+					table		: self.table,
+					ar_fields	: [
+						'authorship_data',
+						'authorship_date',
+						'authorship_names',
+						'authorship_surnames',
+						'authorship_roles'
+					],
+					lang		: page_globals.WEB_CURRENT_LANG_CODE,
+					sql_filter	: `term_id = '${root_term_id}'`,
+					limit		: 1,
+					count		: false
+				}
+				data_manager.request({
+					body : body
+				})
+				.then(function(response){
+
+					if (!response.result || !response.result.length) {
+						body_text.classList.remove('hide_opacity')
+						return
+					}
+
+					const row	= response.result[0]
+					const data	= page.parse_term(row)
+
+					if(data.authorship_names && data.authorship_names.length>0) {
+						page.render_authorship(data, authorship_text)
+						body_text.classList.remove('hide_opacity')
+					}
+
+					body_text.classList.remove('hide_opacity')
+				})
+			}
 
 		// set view_mode default
 			self.view_mode = 'tree'

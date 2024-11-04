@@ -26,6 +26,7 @@
 							<?php if (!empty($abstract)) { ?>
 							<div class="line-tittle-wrap">
 								<div class="info_value"><?php echo $abstract ?></div>
+								<div id="authorship_text"></div>
 							</div>
 							<?php }//if (!empty($abstract)) ?>
 
@@ -33,7 +34,7 @@
 							<?php if (!empty($body)) { ?>
 							<div id="row_body">
 								<div class="block-expandable" id="block_expandable">
-									<div class="info_text_block"><?php echo $body ?></div>
+									<div id="body_text" class="info_text_block hide_opacity"><?php echo $body ?></div>
 								</div>
 							</div>
 							<?php }//if (!empty($body)) ?>
@@ -64,11 +65,13 @@
 <script>
 dom_ready(function(){
 	thesaurus.set_up({
-		table		: <?php echo json_encode($thesaurus_options->table) ?>,
-		root_term	: <?php echo json_encode($thesaurus_options->root_term) ?>,
-		term_id		: <?php echo json_encode($thesaurus_options->term_id) ?>,
-		ar_fields	: <?php echo json_encode($thesaurus_options->ar_fields) ?>,
-		rows_list	: document.getElementById('rows_list')
+		table			: <?php echo json_encode($thesaurus_options->table) ?>,
+		root_term		: <?php echo json_encode($thesaurus_options->root_term) ?>,
+		term_id			: <?php echo json_encode($thesaurus_options->term_id) ?>,
+		ar_fields		: <?php echo json_encode($thesaurus_options->ar_fields) ?>,
+		rows_list		: document.getElementById('rows_list'),
+		body_text		: document.getElementById('body_text'),
+		authorship_text	: document.getElementById('authorship_text')
 	})
 	// active expandable block
 	const block_expandable = document.getElementById('block_expandable')

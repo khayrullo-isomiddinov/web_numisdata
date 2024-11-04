@@ -852,6 +852,10 @@ page.render_authorship = async (row, container) => {
 		? row.authorship_roles.split('|')
 		: []
 
+	const ar_dates = row.authorship_date
+		? row.authorship_date
+		: []
+
 	const authorship_length = ar_names.length
 	for (let i = 0; i < authorship_length; i++) {
 
@@ -876,6 +880,19 @@ page.render_authorship = async (row, container) => {
 		// role add
 			if (ar_roles[i]) {
 				authorship_value_parts.push( ar_roles[i].trim() )
+			}
+
+		// date
+			if (ar_dates[i]) {
+
+				// sample 2022-00-00 00:00:00,2024-00-00 00:00:00
+				const compose_date = ar_dates[i]
+
+				const dates = compose_date.split(',').map(el => {
+					return page.parse_date(el)
+				})
+
+				authorship_value_parts.push( dates.join(' <> ') )
 			}
 
 		const authorship_value = authorship_value_parts.join(' | ')
