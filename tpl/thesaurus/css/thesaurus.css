@@ -21,6 +21,7 @@
 .line-tittle-wrap {
   margin: 1rem;
   margin-left: 0px;
+  text-align: center;
 }
 .line-tittle-wrap .info_value {
   font-size: 1.4rem;
@@ -33,6 +34,9 @@
 }
 #main .inner .result .block-expandable > .info_text_block {
   padding: 0px;
+}
+#main .inner .result .block-expandable > .info_text_block p {
+  display: inline-block;
 }
 .form_factory {
   display: flex;
@@ -246,6 +250,10 @@
 }
 .tree_wrapper .tree_node > .info .item.term_id {
   font-weight: 500;
+  color: #997f5a;
+}
+.tree_wrapper .tree_node > .info .item.term_id .code {
+  font-weight: 300;
 }
 .tree_wrapper .tree_node > .bibliography {
   padding-bottom: 1rem;

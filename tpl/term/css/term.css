@@ -133,6 +133,10 @@
 }
 #main #row_detail > .block_container.info .item.term_id {
   font-weight: 500;
+  color: #997f5a;
+}
+#main #row_detail > .block_container.info .item.term_id .code {
+  font-weight: 300;
 }
 #main #row_detail > .block_container.coins_container .coins_list {
   margin-top: 1rem;
