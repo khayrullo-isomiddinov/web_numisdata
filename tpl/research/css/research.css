@@ -3,6 +3,21 @@
 * Global less vars
 * (file included from vars.less)
 */
+.button_icon_simple {
+  background-repeat: no-repeat;
+  background-position: center center;
+  width: 1em;
+  height: 1em;
+  cursor: pointer;
+  background-size: contain;
+  opacity: 0.7;
+}
+.button_icon_simple:active {
+  opacity: 0.5;
+}
+.button_icon_simple:hover {
+  opacity: 1;
+}
 h3 {
   font-size: 1.1em;
   letter-spacing: 2px;
@@ -43,7 +58,7 @@ input[type=button].btn.entrada_dedalo:hover {
   word-break: break-all;
   background: #f4f4f4;
   border: 1px solid #ddd;
-  border-left: 3px solid #b7996d;
+  border-left: 3px solid #997f5a;
   color: #666;
   page-break-inside: avoid;
   font-family: monospace;
@@ -61,7 +76,7 @@ input[type=button].btn.entrada_dedalo:hover {
   word-break: break-all;
   background: #f4f4f4;
   border: 1px solid #ddd;
-  border-left: 3px solid #b7996d;
+  border-left: 3px solid #997f5a;
   color: #666;
   page-break-inside: avoid;
   font-family: monospace;
@@ -86,7 +101,7 @@ input[type=button].btn.entrada_dedalo:hover {
   word-break: break-all;
   background: #f4f4f4;
   border: 1px solid #ddd;
-  border-left: 3px solid #b7996d;
+  border-left: 3px solid #997f5a;
   color: #666;
   page-break-inside: avoid;
   font-family: monospace;

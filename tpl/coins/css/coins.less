@@ -27,7 +27,7 @@
 		.image {
 			height: 6em;
 
-			@media screen and (max-width: 736px){
+			@media screen and (max-width: @content_medium_max_width){
 				height: 8em;
 			}
 
@@ -100,7 +100,7 @@
 			.info_container {
 				flex-grow:1;
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					width: 100%;
 				}
 
@@ -110,7 +110,7 @@
 				text-align: right;
 				flex-direction: row;
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					width: 100%;
 					text-align: left;
 				}

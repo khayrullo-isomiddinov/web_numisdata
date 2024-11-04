@@ -1,10 +1,7 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-	@path_page: "../../page"; ;
 
 // Usage library
-	// @import "@{path_page}/css/vars.less";
+	@import "../../page/css/vars.less";
 
 
 #wrapper {
@@ -21,19 +18,17 @@
 }
 
 #main {
-	//background-color: #ffffff;
 	padding-top: 2.5em;
 	padding-bottom: 2em;
-	//border-radius: 8px;
 	margin-bottom: 1em;
+
 	h1 {
 		text-align: center;
-		//border-bottom: 1px solid #f0bf6f;
 	}
 }
 
 #form_container{
-	@media (max-width: 736px) {
+	@media (max-width: @content_medium_max_width) {
 		grid-column-start: 1;
 		grid-column-end: 3;
 
@@ -81,7 +76,7 @@
 	margin-top: 2rem;
 	padding-left: 0px;
 
-	@media screen and (max-width: 736px) {
+	@media screen and (max-width: @content_medium_max_width) {
 		display: block;
 	}
 
@@ -96,11 +91,11 @@
 		min-height: 608px;
 		text-align: center;
 
-		@media screen and (max-width: 736px) {
+		@media screen and (max-width: @content_medium_max_width) {
 			min-height: 20rem;
 		}
 
-		@media (max-width: 736px) {
+		@media (max-width: @content_medium_max_width) {
 			width: 80%;
 			grid-row-start: 5;
 			grid-row-end: 5;
@@ -133,7 +128,7 @@
 		grid-row-start:3;
 		grid-row-end: 5;
 
-		@media (max-width: 736px) {
+		@media (max-width: @content_medium_max_width) {
 			grid-column-start: 1;
 			grid-column-end: 3;
 

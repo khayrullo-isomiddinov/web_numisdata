@@ -1,10 +1,7 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-	@page_path : "../../page";
 
 // Usage library
-	@import "@{page_path}/css/vars.less";
+	@import "../../page/css/vars.less";
 
 
 
@@ -360,7 +357,7 @@
 
 
 // update 9-3-2021 paco
-	@media screen and (min-width: 960px){
+	@media screen and (min-width: @content_medium2_max_width){
 		#main .inner .identify_coin_wrapper {
 			display: grid;
 			grid-template-columns: 1fr 1fr;

@@ -1,10 +1,6 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-	@page_path : "../../page";
-
 // Usage library
-	@import "@{page_path}/css/vars.less";
+	@import "../../page/css/vars.less";
 
 
 .result {
@@ -135,7 +131,7 @@
 					width: 50%;
 				}
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					width: 100%;
 				}
 
@@ -147,7 +143,7 @@
 						font-size: 90%;
 					}
 
-					@media screen and (max-width: 736px){
+					@media screen and (max-width: @content_medium_max_width){
 						font-size: 120%;
 					}
 				}
@@ -159,7 +155,7 @@
 							//font-size: 1vw !important ;
 						}
 
-						@media screen and (max-width: 736px){
+						@media screen and (max-width: @content_medium_max_width){
 							font-size: 100% !important ;
 						}
 
@@ -192,7 +188,7 @@
 							font-size: 90%;
 						}
 
-						@media screen and (max-width: 736px){
+						@media screen and (max-width: @content_medium_max_width){
 							font-size: 120%;
 						}
 
@@ -208,7 +204,7 @@
 							font-size: 90%;
 						}
 
-						@media screen and (max-width: 736px){
+						@media screen and (max-width: @content_medium_max_width){
 							font-size: 120%;
 						}
 					}
@@ -308,10 +304,9 @@
 						font-size: 90%;
 					}
 
-					@media screen and (max-width: 736px){
+					@media screen and (max-width: @content_medium_max_width){
 						font-size: 120%;
 					}
-
 				}
 
 				img {
@@ -336,7 +331,7 @@
 					// 	font-size: 90%;
 					// }
 
-					// @media screen and (max-width: 736px){
+					// @media screen and (max-width: @content_medium_max_width){
 					// 	font-size: 120%;
 					// }
 				}
