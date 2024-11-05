@@ -49,6 +49,8 @@
 .rows_list {
   padding-top: 0;
   min-height: 50vh;
+  width: 100%;
+  overflow-x: auto;
 }
 .rows_list .sorted_coin .line_full span {
   margin: unset;

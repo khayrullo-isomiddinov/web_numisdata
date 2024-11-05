@@ -182,10 +182,9 @@ var map = {
 			}
 
 		// events
-			event_manager.subscribe('map_selected_marker', map_selected_marker)
-			function map_selected_marker(options){
+			const map_selected_marker_handler = (options) => {
 				if(SHOW_DEBUG===true) {
-					console.log("///-> map_selected_marker options:",options);
+					console.log("///-> map_selected_marker options:", options);
 				}
 
 				// options
@@ -248,7 +247,8 @@ var map = {
 					})
 
 				return true
-			}//end map_selected_marker
+			}
+			event_manager.subscribe('map_selected_marker', map_selected_marker_handler)
 
 
 		return true
@@ -995,7 +995,7 @@ var map = {
 				if(SHOW_DEBUG===true) {
 					let t = 'found types '+ JSON.stringify(types_rows, null, 2)
 					t +='<br>found coins '+ JSON.stringify(coins_rows.map(el=>el.section_id), null, 2)
-					t += '<br>map_global <pre>' + JSON.stringify(global_data_item, null, 3) + '</pre>'
+					t += '<br>item_type <pre>' + JSON.stringify(item_type, null, 3) + '</pre>'
 					common.create_dom_element({
 						element_type	: "div",
 						class_name		: "debug_info ",

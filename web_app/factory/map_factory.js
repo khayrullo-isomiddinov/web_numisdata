@@ -269,13 +269,14 @@ function map_factory() {
 			// create marker. Build marker with custom icon and popup
 				const create_marker = function(element, latlng, marker_icon, popup) {
 					const marker = L.marker(latlng, {icon: marker_icon}).bindPopup(popup) //.openPopup();
-					marker.on('mousedown', function(e) {
+					const click_handler = (e) => {
 						// event publish map_selected_marker
 						event_manager.publish('map_selected_marker', {
 							item	: element,
 							event	: e
 						})
-					})
+					}
+					marker.on('mousedown', click_handler)
 					return marker
 				}
 
@@ -362,13 +363,14 @@ function map_factory() {
 							}
 						})
 
-						marker.on('mousedown', function(e) {
+						const click_handler = (e) => {
 							// event publish map_selected_marker
 							event_manager.publish('map_selected_marker', {
 								item	: element,
 								event	: e
 							})
-						})
+						}
+						marker.on('click', click_handler)
 
 						ar_markers.push(marker)
 					}

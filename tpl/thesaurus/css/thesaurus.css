@@ -18,6 +18,11 @@
 .button_icon_simple:hover {
   opacity: 1;
 }
+#wrapper #main {
+  display: block;
+  max-width: 100vw;
+  overflow: auto;
+}
 .line-tittle-wrap {
   margin: 1rem;
   margin-left: 0px;
