@@ -1045,12 +1045,10 @@ var page = {
 		}
 
 		// options
-			const {
-				archive, // like MIB
-				section_id, // like 2715
-				mint_number, // like 40
-				type // like 104b
-			} = options
+			const archive		= options.archive || '' // like MIB
+			const section_id	= options.section_id || '' // like 2715
+			const mint_number	= options.mint_number || '' // like 40
+			const type			= options.type || '' // like 104b
 
 		const catalog_id = `${archive} ${section_id} <span class="no_bold"> | ${mint_number}/${type}</span>`
 

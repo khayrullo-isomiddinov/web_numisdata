@@ -685,7 +685,7 @@ page.render_type_label = function(row) {
 
 		const type_string = page.compose_catalog_id({
 			archive		: page_globals.OWN_CATALOG_ACRONYM,
-			section_id	: row.term_section_id,
+			section_id	: row.term_section_id || '',
 			mint_number	: mint_number,
 			type		: row.term
 		})
