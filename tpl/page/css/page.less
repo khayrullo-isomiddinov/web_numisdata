@@ -721,9 +721,13 @@
 
 				ul {
 					margin: 0;
-					// width: 90%;
+					width: 90%;
 					padding-left: 0.5rem;
 					padding-right: 0.5rem;
+
+					@media screen and (max-width: @content_medium_max_width){
+						width: 100%;
+					}
 
 					li {
 						margin: 0;
