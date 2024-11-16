@@ -683,9 +683,13 @@ page.render_type_label = function(row) {
 		current_value = a_term.outerHTML
 	}else{
 
+		const section_id = (typeof row.term_section_id==='string')
+			? row.term_section_id
+			: ''
+
 		const type_string = page.compose_catalog_id({
 			archive		: page_globals.OWN_CATALOG_ACRONYM,
-			section_id	: row.term_section_id || '',
+			section_id	: section_id,
 			mint_number	: mint_number,
 			type		: row.term
 		})
