@@ -26,18 +26,19 @@ var mint_row = {
 			case 'types':
 
 				if (row.children && row.children.length>0) {
-					// case type whith subtypes
+					// case type with sub-types
 
-					const type_number_value = page.render_type_label(row)
+					const type_label = page.render_type_label(row)
 
-					const type_group_text = type_number_value.split(",")
+					// const ar_type_label_text	= type_label.split(",")
+					// const type_group_text	= '<b>'+ar_type_label_text[0]+'</b>, '+(ar_type_label_text[1] ?? '')
 
 					// term_line
 						common.create_dom_element({
 							element_type	: "div",
 							class_name		: "term_line bold type_group",
-							// inner_html	: row.term,
-							inner_html		: "<b>"+type_group_text[0]+"</b>, "+type_group_text[1],
+							// inner_html	: type_group_text,
+							inner_html		: type_label, // normalized type label
 							parent			: wrapper
 						})
 					// container
