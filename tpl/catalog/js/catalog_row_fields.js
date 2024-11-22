@@ -184,8 +184,8 @@ var catalog_row_fields = {
 
 					// images
 						const mint_number = (item.ref_mint_number)
-						? item.ref_mint_number
-						: ''
+							? item.ref_mint_number
+							: ''
 
 						const ar		= item.term.split(", ")
 						const c_name	= ar[0]
