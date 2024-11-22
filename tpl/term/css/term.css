@@ -21,6 +21,10 @@
 .main_title {
   height: 3rem;
 }
+.cite_this_record {
+  position: absolute;
+  right: 0px;
+}
 #main #row_detail {
   position: relative;
   min-height: 80vh;

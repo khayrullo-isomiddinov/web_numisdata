@@ -620,7 +620,8 @@
 			}
 		}
 
-		.golden-separator{
+		.golden-separator {
+			position: relative;
 			width: 100%;
 			background-color: @color_gold_logo;
 			height: 2px;
@@ -1386,14 +1387,15 @@
 
 // Cite
 
-.cite_this_record{
+.cite_this_record {
 	float: right;
 	// font-weight: 100;
 	font-size: .8em;
 	cursor: pointer;
 	color: @color_gold_logo;
+	z-index: 1;
 }
-.float-cite{
+.float-cite {
 	position: fixed;
 	top: 200px;
 	right: 100px;
