@@ -152,64 +152,45 @@ var biblio =  {
 				// 		return;
 				// 	}
 
-				const trigger_url  = self.trigger_url
-				const trigger_vars = {
-						q				: term,
-						mode			: element.dataset.mode,
-						q_name			: element.dataset.q_name || null,
-						q_search		: element.dataset.q_search || element.dataset.q_name,
-						q_table			: element.dataset.q_table || null,
-						dd_relations	: element.dataset.dd_relations || null,
-						limit			: element.dataset.limit || 30
+				const body = {
+					q				: term,
+					mode			: element.dataset.mode,
+					q_name			: element.dataset.q_name || null,
+					q_search		: element.dataset.q_search || element.dataset.q_name,
+					q_table			: element.dataset.q_table || null,
+					dd_relations	: element.dataset.dd_relations || null,
+					limit			: element.dataset.limit || 30
 				}
 				if(SHOW_DEBUG===true) {
-					// console.log("[biblio.activate_autocomplete] trigger_vars:", trigger_vars, self.trigger_url);
+					console.log('debug activate_autocomplete get_json_data body:', body);
 				}
-
-				common.get_json_data(trigger_url, trigger_vars).then(function(response_data) {
-					// if(SHOW_DEBUG===true) {
-						// console.log("[biblio.activate_autocomplete] response_data",response_data)
-					// }
+				common.get_json_data(
+					self.trigger_url,
+					body
+				)
+				.then(function(response_data) {
 
 					let result_final = []
-					if (element.id==='descriptors_rec') {
+					switch (element.id) {
 
-						const len = response_data.result.length
-						for (let i = 0; i < len; i++) {
+						case 'autoria':
+							result_final = self.process_drop_down_list(term, response_data.result, ' | ')
+							break;
 
-							const item = response_data.result[i]
+						case 'descriptors_rec':
+							result_final = self.process_drop_down_list(term, response_data.result, ' - ')
+							break;
 
-							const terms = item.label.split(" - ")
-							for (let k = 0; k < terms.length; k++) {
+						case 'fecha_publicacion':
+							result_final = response_data.result.map( item => {
+								item.label = item.label.substring(0, 4)
+								return item
+							})
+							break;
 
-								const term_name = terms[k].trim()
-								const found = result_final.find(el => el.value===term_name)
-								if (!found && term_name.length > 0) {
-									result_final.push({
-										label : term_name,
-										value : term_name
-									})
-								}
-							}
-						}
-
-						const ar_ordered_result	= page.sort_array_by_property(result_final, "value")
-						const ar_filtered_result= (term.length!=0) ? page.filter_drop_down_list(ar_ordered_result, term) : ar_ordered_result
-						const ar_drow_down_list	= ar_filtered_result.slice(0,30)
-
-						// replace
-						result_final = ar_drow_down_list
-
-					}else if(element.id==="fecha_publicacion") {
-
-						result_final = response_data.result.map( item => {
-							item.label = item.label.substring(0, 4)
-							return item
-						})
-
-					}else{
-
-						result_final = response_data.result
+						default:
+							result_final = response_data.result
+							break;
 					}
 
 					response(result_final)
@@ -668,7 +649,68 @@ var biblio =  {
 				separatorArrow.style.transform = "rotate(90deg)";
 			}
 		})
-	}//end createExpandableBlock
+	},//end createExpandableBlock
+
+
+
+	/**
+	* PROCESS_DROP_DOWN_LIST
+	* Used to process fields like 'Authors' or 'Themes' autocomplete results
+	* API call results are split by given separator, duplicates are removed and
+	* result list is sorted alphabetically
+	* @param string term
+	* 	input value as 'ripoll'
+	* @param array rows
+	* 	API response.result array of rows
+	* @param string separator
+	* 	like ' | '
+	* @return array ar_drow_down_list
+	*/
+	process_drop_down_list : function(term, rows, separator) {
+
+		// debug
+		if(SHOW_DEBUG===true) {
+			console.log('debug process_drop_down_list rows:', term, rows);
+		}
+
+		let result_final = []
+
+		const len = rows.length
+		for (let i = 0; i < len; i++) {
+
+			const item = rows[i]
+
+			const terms = item.label.split(separator)
+			const term_length = terms.length
+			for (let k = 0; k < term_length; k++) {
+
+				const term_name = terms[k].trim()
+				const found = result_final.find(el => el.value===term_name)
+				if (!found && term_name.length > 0) {
+					result_final.push({
+						label : term_name,
+						value : term_name
+					})
+				}
+			}
+		}
+
+		const ar_ordered_result	= page.sort_array_by_property(result_final, 'value')
+		const ar_filtered_result= (term.length!=0)
+			? page.filter_drop_down_list(ar_ordered_result, term)
+			: ar_ordered_result
+
+		// slice first 100 items to prevent too much large sets
+		const ar_drow_down_list	= ar_filtered_result.slice(0, 100)
+
+		// debug
+		if(SHOW_DEBUG===true) {
+			console.log('debug process_drop_down_list ar_drow_down_list:', term, ar_drow_down_list);
+		}
+
+
+		return ar_drow_down_list
+	}//end process_drop_down_list
 
 
 
