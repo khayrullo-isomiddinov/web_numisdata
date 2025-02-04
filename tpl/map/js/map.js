@@ -343,7 +343,8 @@ var map = {
 				callback		: function(form_item) {
 					self.form.activate_autocomplete({
 						form_item	: form_item,
-						table		: 'coins'
+						table		: 'coins',
+						limit		: 50
 					})
 				}
 			})
