@@ -556,7 +556,8 @@ var map = {
 				class_name		: "btn btn-light btn-block primary",
 				parent			: submit_group
 			})
-			submit_button.addEventListener("click",function(e){
+			submit_button.addEventListener("click", function(e){
+				e.stopPropagation();
 				e.preventDefault()
 				self.form_submit()
 			})
