@@ -333,7 +333,8 @@ var map = {
 				name			: "mint",
 				label			: tstring.mint || "mint",
 				q_column		: "mint",
-				value_wrapper	: ['["','"]'], // to obtain ["value"] in selected value only
+				// value_wrapper	: ['["','"]'], // to obtain ["value"] in selected value only
+				value_wrapper	: ['"','"'], // to obtain "value" in selected value only
 				eq				: "LIKE",
 				eq_in			: "%",
 				eq_out			: "%",
