@@ -186,6 +186,9 @@ var page = {
 				},500)
 			}
 
+		// banner
+			self.render_banner_ans()
+
 		// debug_info
 			let showing_debug
 			document.addEventListener("keydown", function(e){
@@ -1076,6 +1079,86 @@ var page = {
 	        setTimeout(callback, 1);
 		}
 	},//end dd_request_idle_callback
+
+
+
+	/**
+	* WHEN_IN_VIEWPORT
+	* Exec a callback when node element is visible in document viewport
+	* @param DOM node 'node'
+	* @param function callback
+	* @param bool once
+	*
+	* @return mutation observer
+	*/
+	when_in_viewport : function(node, callback, once=true) {
+
+		// observer. Exec the callback when element is in viewport
+		const observer = new IntersectionObserver(
+			function(entries, observer) {
+
+				const entry = entries[1] || entries[0]
+				if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
+
+					// default is true (executes the callback once)
+					if (once===true) {
+						observer.disconnect();
+					}
+
+					// callback()
+					window.requestAnimationFrame(callback)
+				}
+			},
+			{
+				rootMargin: "0px",
+				threshold: [0]
+			}
+		);
+		observer.observe(node);
+
+
+		return observer
+	},//end when_in_viewport
+
+
+
+	/**
+	* RENDER_BANNER_ANS
+	* @return
+	*/
+	render_banner_ans : function () {
+
+		const self = this
+
+		// banner HTMLElement from page DOM
+		const banner = document.querySelector('.banner')
+		if (!banner) {
+			return
+		}
+
+		// click event
+		const click_handler = (e) => {
+			e.stopPropagation()
+			// open window
+			window.open(
+				'https://numismatics.org/2024-collier-prize-ceremony/',
+				'_blank'
+			)
+		}
+		banner.addEventListener('click', click_handler)
+
+		// activate animation
+		const svg = banner.querySelector('svg')
+
+		page.when_in_viewport(svg, () => {
+			// svg.classList.add('active')
+			setTimeout(function(){
+				svg.classList.add('active')
+			}, 300)
+		})
+
+		return true
+	}//end render_banner_ans
 
 
 

@@ -78,8 +78,6 @@
   display: block;
   width: 100%;
   margin: auto;
-  grid-row-start: 1;
-  grid-row-end: 5;
   border-bottom: none;
   min-height: 608px;
   text-align: center;
@@ -92,10 +90,6 @@
 @media (max-width: 736px) {
   #main > .inner .img-wrapper {
     width: 80%;
-    grid-row-start: 5;
-    grid-row-end: 5;
-    grid-column-start: 1;
-    grid-column-end: 3;
   }
 }
 #main > .inner .img-wrapper img {
