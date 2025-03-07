@@ -400,7 +400,7 @@ var biblio =  {
 
 	/**
 	* SEARCH_ITEM
-	* Build a set of search options for gived column and exec the search
+	* Build a set of search options for given column and exec the search
 	*/
 	search_item : function(name, value){
 
@@ -417,8 +417,9 @@ var biblio =  {
 		return self.search_rows({
 			ar_query	: ar_query,
 			count		: count
-		}).then(function(){
-			// scrool to head result
+		})
+		.then(function(){
+			// scroll to head result
 			const div_result = document.querySelector(".result")
 			if (div_result) {
 				div_result.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});

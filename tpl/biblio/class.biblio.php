@@ -90,7 +90,7 @@ class biblio {
 					// 	break;
 
 					default:
-						if ($value_obj->is_selection===true) {
+						if (isset($value_obj->is_selection) && $value_obj->is_selection===true) {
 
 							// values from autocomplete selection
 

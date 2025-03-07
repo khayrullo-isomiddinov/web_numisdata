@@ -201,7 +201,9 @@ var users =  {
 					})
 				}
 			}
-			// console.log("editors:",editors);
+			if(SHOW_DEBUG===true) {
+				console.log("editors:",editors);
+			}
 
 			// draw_editors_list function
 				const draw_editors_list = function(list_raw) {

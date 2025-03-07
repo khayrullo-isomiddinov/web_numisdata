@@ -544,7 +544,8 @@ var biblio_row_fields = {
 					// href			: url,
 					parent			: line
 				})
-				link.addEventListener("click", function(){
+				link.addEventListener("click", function(e){
+					e.stopPropagation();
 					self.caller.search_item('descriptors', name)
 				})
 			}

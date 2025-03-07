@@ -3208,6 +3208,9 @@ var type_row_fields_min = (function (exports) {
 			// draw map
 				if (map_data.length>0) {
 					common.when_in_dom(map_container, draw_map);
+					if(SHOW_DEBUG===true) {
+						console.log('type row fields map_data:', map_data);
+					}
 					function draw_map() {
 						self.caller.draw_map({
 							container		: map_container,
