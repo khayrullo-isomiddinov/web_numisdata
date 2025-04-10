@@ -1003,8 +1003,19 @@ page.parse_map_global_data = function(ar_rows) {
 					return name
 				})(row.table);
 
-				const coins_list_total = row.coins_list ? row.coins_list.length : 0;
-				const types_list_total = row.types_list ? row.types_list.length : 0;
+				const get_total = (list) => {
+					if (!list) {
+						return 0;
+					}
+					const set = new Set(list) // create a set to remove duplicates
+					return set.size
+				}
+
+				// coins_list_total
+				const coins_list_total = get_total(row.coins_list)
+
+				// types_list_total
+				const types_list_total = get_total(row.types_list)
 
 				const title = '<span class="note">'+(tstring[name] || name)+'</span> ' + row.name
 				// const description = (tstring.coins || 'Coins') + ': ' + coins_list_total +'<br>'+ (tstring.types || 'Types') + ': ' + types_list_total

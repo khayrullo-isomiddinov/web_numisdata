@@ -125,7 +125,9 @@ var map = {
 				body : request_body
 			})
 			.then((response)=>{
-				// console.log("--- search_rows API response:", response);
+				if(SHOW_DEBUG===true) {
+					console.log("--- search_rows API response:", response);
+				}
 
 				if (response.result) {
 
@@ -216,7 +218,9 @@ var map = {
 					// load_map_selection_info
 					self.load_map_selection_info(selected_element, map_global_data)
 					.then(function(response){
-						// console.log("--> load_map_selection_info response:",response);
+						if(SHOW_DEBUG===true) {
+							console.log("///--> load_map_selection_info response:", response);
+						}
 						if (response) {
 							const types_list_node = self.render_types_list({
 								global_data_item	: response.global_data_item,
@@ -854,10 +858,12 @@ var map = {
 					}
 				})
 				.then((api_response)=>{
-					// console.log("-> load_map_selection_info api_response:", api_response);
+					if(SHOW_DEBUG===true) {
+						console.log("--> load_map_selection_info api_response:", api_response);
+					}
 
 					if (!api_response.result) {
-						console.warn("-> load_map_selection_info api_response:", api_response);
+						console.warn("--> load_map_selection_info api_response:", api_response);
 						resolve(false)
 						return false
 					}
