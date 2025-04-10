@@ -760,8 +760,10 @@ export const type_row_fields = {
 
 				// lot
 					if (found_coin.number && found_coin.number.length) {
-						const lot = found_coin.number
-						caption += ', ' + (tstring.lot || 'lot') + ' ' + lot
+						const lot = (found_coin.ref_auction_group && found_coin.ref_auction_group.length)
+						 ? (tstring.lot || 'lot') +' '+ found_coin.number
+						 : found_coin.number
+						caption += ', ' + lot
 					}
 
 				// photographer
@@ -2059,15 +2061,15 @@ export const type_row_fields = {
 						const hoard_data_map = JSON.parse(hoard.map)
 						if (hoard_data_map) {
 							map_data.push({
-								section_id	: hoard.section_id,
-								name		: hoard.name,
-								place		: hoard.place,
-								georef		: hoard.georef,
-								data		: hoard_data_map,
-								items		: ar_coins.length,
-								total_items	: coins_length,
-								type		: 'hoard',
-								marker_icon	: page.maps_config.markers.hoard
+								section_id		: hoard.section_id,
+								name			: hoard.name,
+								place			: hoard.place,
+								georef_geojson	: hoard.georef_geojson,
+								data			: hoard_data_map,
+								items			: ar_coins.length,
+								total_items		: coins_length,
+								type			: 'hoard',
+								marker_icon		: page.maps_config.markers.hoard
 							})
 						}
 
@@ -2160,15 +2162,15 @@ export const type_row_fields = {
 						const findspot_data_map = JSON.parse(findspot.map)
 						if (findspot_data_map) {
 							map_data.push({
-								section_id	: findspot.section_id,
-								name		: findspot.name,
-								place		: findspot.place,
-								georef		: findspot.georef,
-								data		: findspot_data_map,
-								items 		: ar_coins.length,
-								total_items : coins_length,
-								type 		: 'findspot',
-								marker_icon	: page.maps_config.markers.findspot
+								section_id		: findspot.section_id,
+								name			: findspot.name,
+								place			: findspot.place,
+								georef_geojson	: findspot.georef_geojson,
+								data			: findspot_data_map,
+								items			: ar_coins.length,
+								total_items		: coins_length,
+								type			: 'findspot',
+								marker_icon		: page.maps_config.markers.findspot
 							})
 						}
 
@@ -2205,15 +2207,15 @@ export const type_row_fields = {
 					const mint_data_map = JSON.parse(mint.map)
 					if (mint_data_map) {
 						map_data.push({
-							section_id	: mint.section_id,
-							name		: mint.name,
-							place		: mint.place,
-							georef		: mint.georef,
-							data		: mint_data_map,
-							items 		: ar_coins.length,
-							total_items : coins_length,
-							type 		: 'mint',
-							marker_icon	: page.maps_config.markers.mint
+							section_id		: mint.section_id,
+							name			: mint.name,
+							place			: mint.place,
+							georef_geojson	: mint.georef_geojson,
+							data			: mint_data_map,
+							items			: ar_coins.length,
+							total_items		: coins_length,
+							type			: 'mint',
+							marker_icon		: page.maps_config.markers.mint
 						})
 					}
 				}

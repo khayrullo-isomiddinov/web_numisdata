@@ -366,28 +366,73 @@ var type =  {
 	* MAP_DATA
 	* @return array data
 	*/
+		// map_data_OLD : function(data) {
+
+		// 	const data_clean = []
+		// 	for (let i = 0; i < data.length; i++) {
+
+		// 		const item = {
+		// 			lat			: parseFloat(data[i].data.lat),
+		// 			lon			: parseFloat(data[i].data.lon),
+		// 			marker_icon	: data[i].marker_icon || null,
+		// 			data		: {
+		// 				section_id	: data[i].section_id,
+		// 				name		: data[i].name,
+		// 				place		: data[i].place,
+		// 				type 		: data[i].type,
+		// 				items 		: data[i].items,
+		// 				total_items	: data[i].total_items
+		// 			}
+		// 		}
+		// 		data_clean.push(item)
+		// 	}
+
+		// 	return data_clean
+		// },//end map_data
+
+
+
+	/**
+	* MAP_DATA
+	* @return array data
+	*/
 	map_data : function(data) {
 
-		const data_clean = []
+		const map_points = []
 		for (let i = 0; i < data.length; i++) {
 
-			const item = {
-				lat			: parseFloat(data[i].data.lat),
-				lon			: parseFloat(data[i].data.lon),
-				marker_icon	: data[i].marker_icon || null,
-				data		: {
-					section_id	: data[i].section_id,
-					name		: data[i].name,
-					place		: data[i].place,
-					type 		: data[i].type,
-					items 		: data[i].items,
-					total_items	: data[i].total_items
-				}
+			// ignore empty georef_geojson rows
+			if (!data[i].georef_geojson) {
+				continue
 			}
-			data_clean.push(item)
+
+			const geojson = Array.isArray(data[i].georef_geojson)
+				? data[i].georef_geojson
+				: JSON.parse(data[i].georef_geojson)
+
+			const marker_icon = data[i].marker_icon || null
+
+			const popup_data = {
+				section_id	: data[i].section_id,
+				name		: data[i].name,
+				place		: data[i].place,
+				type 		: data[i].type,
+				items 		: data[i].items,
+				total_items	: data[i].total_items
+			}
+
+			const item = {
+				lat			: null,
+				lon			: null,
+				geojson		: geojson,
+				marker_icon	: marker_icon,
+				data		: popup_data
+			}
+			map_points.push(item)
 		}
 
-		return data_clean
+
+		return map_points
 	},//end map_data
 
 
