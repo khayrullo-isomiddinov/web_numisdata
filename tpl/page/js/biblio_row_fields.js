@@ -59,22 +59,26 @@ var biblio_row_fields = {
 
 		if (biblio_object.authors && biblio_object.authors.length>0) {
 
-			const authors_data 			= biblio_object.authors_data
-			const authors_data_length 	= authors_data.length
+			// old way (< 07-03-2025)
+				// const authors_data 			= biblio_object.authors_data
+				// const authors_data_length 	= authors_data.length
 
-			const ar_final_authors = []
-			for (var j = 0; j < authors_data_length; j++) {
-				const ar = []
-				if (authors_data[j].surname) ar.push(authors_data[j].surname)
-				if (authors_data[j].name) ar.push(authors_data[j].name)
-				const autor_text = ar.join(", ")
-				ar_final_authors.push(autor_text)
-			}
-			const final_authors = ar_final_authors.join("; ")
+				// const ar_final_authors = []
+				// for (var j = 0; j < authors_data_length; j++) {
+				// 	const ar = []
+				// 	if (authors_data[j].surname) ar.push(authors_data[j].surname)
+				// 	if (authors_data[j].name) ar.push(authors_data[j].name)
+				// 	const autor_text = ar.join(", ")
+				// 	ar_final_authors.push(autor_text)
+				// }
+				// const final_authors = ar_final_authors.length > 0
+				// 	? ar_final_authors.join("; ")
+				// 	: biblio_object.authors
+
 			common.create_dom_element({
 				element_type 	: "div",
 				class_name 		: "info_value",
-				text_content 	: final_authors,
+				text_content 	: biblio_object.authors,
 				parent 			: line
 			})
 		}else{
@@ -139,13 +143,14 @@ var biblio_row_fields = {
 		// pdf data
 			// unified pdf_uri_items objects (from component pdf -internal- or component iri -external-)
 			const pdf_uri_items = []
-			if (biblio_object.pdf) {
-				// add formatted object
-				pdf_uri_items.push({
-					title	: 'Download pdf',
-					iri		: (page_globals.__WEB_MEDIA_BASE_URL__ + biblio_object.pdf)
-				})
-			}else if(biblio_object.pdf_uri) {
+			// if (biblio_object.pdf) {
+			// 	// add formatted object
+			// 	pdf_uri_items.push({
+			// 		title	: 'Download pdf',
+			// 		iri		: (page_globals.__WEB_MEDIA_BASE_URL__ + biblio_object.pdf)
+			// 	})
+			// }else
+			if(biblio_object.pdf_uri) {
 				const ar_uri = JSON.parse(biblio_object.pdf_uri)
 				pdf_uri_items.push(...ar_uri)
 			}
@@ -531,7 +536,7 @@ var biblio_row_fields = {
 				class_name		: "info_line descriptors"
 			})
 
-			const descriptors_list = value.split(' - ')
+			const descriptors_list = value.split(', ')
 			for (let i = 0; i < descriptors_list.length; i++) {
 
 				const name = descriptors_list[i]
