@@ -21,7 +21,6 @@
 #wrapper #main {
   display: block;
   max-width: 100vw;
-  overflow: auto;
 }
 .line-tittle-wrap {
   margin: 1rem;
@@ -137,7 +136,7 @@
   height: 2rem;
   padding-left: 0.25rem;
   padding-right: 0.25rem;
-  transition: transform 0.3s ease-out;
+  transition: transform 0.25s ease-out;
   vertical-align: middle;
   border-radius: 4px;
   cursor: pointer;
@@ -161,6 +160,9 @@
   z-index: 99999;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   padding-top: 0.25rem;
+  position: absolute;
+  left: 40%;
+  top: 40%;
 }
 .tree_wrapper .tree_node img.illustration.big.thumb_image {
   padding-top: 0px;
