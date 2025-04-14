@@ -638,7 +638,9 @@ page.render_type_label = function(row) {
 	const mint_number = (row.ref_mint_number)
 		? row.ref_mint_number // +'/'
 		: ''
-	if (row.term_section_id && !row.children) {
+
+	// if (row.term_section_id && !row.children) {
+	if (row.term_section_id && row.term_table==='types') {
 
 		const ar		= row.term.split(", ")
 		const c_name	= ar[0]
@@ -685,7 +687,7 @@ page.render_type_label = function(row) {
 
 		const section_id = (typeof row.term_section_id==='string')
 			? row.term_section_id
-			: ''
+			: row.term_section_id?.section_id || ''
 
 		const type_string = page.compose_catalog_id({
 			archive		: page_globals.OWN_CATALOG_ACRONYM,
