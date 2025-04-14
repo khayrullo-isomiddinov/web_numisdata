@@ -420,8 +420,29 @@ var mint_row = {
 		// page.activate_images_gallery(img_wrap)
 
 		return row_type
-	}//end create_type_element
+	},//end create_type_element
 
+
+
+	/**
+	* RENDER_TYPE_PRINT
+	*
+	* @param array ar_rows
+	* 	type rows list
+	* @return DocumentFragment
+	*/
+	render_type_print : async function (ar_rows) {
+
+		const fragment = new DocumentFragment();
+
+		const node = await catalog.draw_rows({
+			ar_rows	: ar_rows,
+			target	: fragment
+		})
+
+
+		return fragment
+	}//end render_type_print
 
 
 

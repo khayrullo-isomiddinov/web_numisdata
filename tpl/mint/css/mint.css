@@ -41,134 +41,6 @@
   margin: 1.2em 0;
   content: " ";
 }
-.result #types99 {
-  margin-top: 1em;
-}
-.result #types99 .term_line {
-  background-color: #f8556c;
-  width: 100%;
-}
-.result #types99 > .type_row {
-  display: table;
-  width: 100%;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 0.5em;
-  margin-bottom: 0.5em;
-}
-.result #types99 > .type_row > span {
-  padding-right: 1em;
-}
-.result #types99 > .type_row .equivalents {
-  display: block;
-}
-.result #types99 .ts_numismatic_group {
-  padding-left: 1em;
-  cursor: pointer;
-}
-.result #types99 .ts_period {
-  cursor: pointer;
-  margin-top: 1em;
-  font-weight: 600;
-}
-.result #types99 .arrow {
-  background: url(../../assets/images/arrow.svg) no-repeat bottom left;
-  background-size: contain;
-  display: inline-block;
-  transform: rotate(0deg);
-  width: 25px;
-  height: 25px;
-  margin-left: 1em;
-  vertical-align: middle;
-}
-.result #types99 .types_container {
-  display: flex;
-  flex-wrap: wrap;
-  padding-left: 2em;
-}
-.result #types99 .types_container .row_node {
-  padding-left: 2em;
-}
-.result #types99 .types_container .type_wrap {
-  width: 32%;
-  padding: 1em;
-}
-@media screen and (max-width: 980px) {
-  .result #types99 .types_container .type_wrap {
-    width: 50%;
-  }
-}
-@media screen and (max-width: 736px) {
-  .result #types99 .types_container .type_wrap {
-    width: 100%;
-  }
-}
-.result #types99 .types_container .type_wrap .type_info {
-  font-size: 72%;
-  margin: 0;
-}
-@media screen and (max-width: 980px) {
-  .result #types99 .types_container .type_wrap .type_info {
-    font-size: 90%;
-  }
-}
-@media screen and (max-width: 736px) {
-  .result #types99 .types_container .type_wrap .type_info {
-    font-size: 120%;
-  }
-}
-@media screen and (max-width: 736px) {
-  .result #types99 .types_container .type_wrap .info_wrap a {
-    font-size: 100% !important ;
-  }
-}
-.result #types99 .types_container .type_wrap img {
-  object-fit: contain;
-  width: 50%;
-}
-.result #types99 .types_container .type_wrap .type_number p {
-  margin: 0;
-  height: 2em;
-}
-.result #types99 .types_container .type_wrap .type_number .type_label {
-  border: none;
-  font-weight: bold;
-  display: inline-block;
-  text-decoration: none;
-}
-@media screen and (max-width: 980px) {
-  .result #types99 .types_container .type_wrap .type_number .type_label {
-    font-size: 90%;
-  }
-}
-@media screen and (max-width: 736px) {
-  .result #types99 .types_container .type_wrap .type_number .type_label {
-    font-size: 120%;
-  }
-}
-.result #types99 .types_container .type_wrap .type_number .subType_label {
-  border: none;
-  border-top: 1px solid #e3e3e3;
-  display: block;
-  height: 2em;
-}
-@media screen and (max-width: 980px) {
-  .result #types99 .types_container .type_wrap .type_number .subType_label {
-    font-size: 90%;
-  }
-}
-@media screen and (max-width: 736px) {
-  .result #types99 .types_container .type_wrap .type_number .subType_label {
-    font-size: 120%;
-  }
-}
-.result #types99 .types_container .type_wrap .type_number .subType_number {
-  margin-left: -1em;
-  margin-right: -1em;
-  padding-left: 1em;
-}
-.result #types99 .types_container .type_wrap:nth-child(3n) {
-  border-right: none;
-}
 .result #types .info_line.separator {
   margin-bottom: 1.25em;
 }
@@ -260,201 +132,330 @@
   max-height: 1em;
   width: auto;
 }
+.types_print {
+  display: none;
+}
 .print-info {
   visibility: hidden;
   display: none;
 }
 @media print {
+  @font-face {
+    font-family: '.SF UI Text Condensed Regular';
+    font-style: normal;
+    font-weight: normal;
+    src: local('.SF UI Text Condensed Regular'), url('../../assets/fonts/SFUITextCondensed/SFUITextCondensed-Regular.woff') format('woff');
+  }
+  @font-face {
+    font-family: '.SF UI Text Condensed Light';
+    font-style: normal;
+    font-weight: normal;
+    src: local('.SF UI Text Condensed Light'), url('../../assets/fonts/SFUITextCondensed/SFUITextCondensed-Light.woff') format('woff');
+  }
+  @font-face {
+    font-family: '.SF UI Text Regular';
+    font-style: normal;
+    font-weight: normal;
+    src: local('.SF UI Text Regular'), url('../../assets/fonts/sf-pro-display/SFUIProDisplay-Regular.otf') format('opentype');
+  }
+  @font-face {
+    font-family: '.SF UI Text Bold';
+    font-style: normal;
+    font-weight: normal;
+    src: local('.SF UI Text Bold'), url('../../assets/fonts/sf-pro-display/SFUIProDisplay-Bold.otf') format('opentype');
+  }
   @page {
     size: 210mm 297mm;
-    margin: 22mm 22mm 22mm 22mm;
+    margin: 25mm 10mm 20mm 25mm;
   }
-  .leaflet-control-container {
-    display: none;
-  }
-  #map_container {
-    page-break-before: always;
-    height: 120mm;
-    width: 210mm;
-  }
-  #main {
-    width: 100% !important;
-  }
-  .print-info {
-    visibility: visible;
-    display: inherit;
-  }
+  #header,
+  #menu,
+  #footer,
+  #export_data,
+  #map_container,
+  #types,
   .inner > h1,
   .form,
-  nav {
+  nav,
+  .leaflet-control-container,
+  .golden-separator,
+  .text-block-separator,
+  .export_data_container,
+  .mint,
+  .link_mint,
+  .mint_relations,
+  .authorship,
+  .icon_link,
+  .bibliography_container,
+  .go_to_dedalo {
     display: none !important;
-  }
-  #header {
-    padding: 0 !important;
-  }
-  #footer,
-  #header,
-  #export_data {
-    display: none;
-  }
-  .bibliographic_reference {
-    font-size: 12px !important;
-    margin-top: 0.5em !important;
-  }
-  .icon_link {
-    font-size: 10px !important;
-  }
-  .line-tittle-wrap {
-    display: flex;
-    flex-flow: column;
-  }
-  .line-tittle-wrap .info_value {
-    font-size: 14px;
-    text-align: center;
-    margin-bottom: 5em;
-  }
-  .line-tittle-wrap .info_value::first-letter {
-    font-size: 0px !important;
-  }
-  .line-tittle {
-    font-size: 25px !important;
-    text-align: center;
-    color: black !important;
-  }
-  #wrapper {
-    font-size: 60%;
-    color: black !important;
   }
   a {
     color: black !important;
+    border: none;
   }
-  .term {
+  body {
+    background-color: transparent;
+    margin: 0px !important;
+    padding: 0px !important;
     color: black !important;
   }
-  .coins_images {
-    width: 10vw;
+  #wrapper {
+    font-family: ".SF UI Text Condensed Regular", serif;
+    background-color: transparent;
+    background: none;
+    margin: 0px !important;
+    padding: 0px !important;
+    width: 160mm !important;
+    height: auto;
   }
-  .type_container {
-    display: inline-grid !important;
-    grid-template-columns: auto 40% !important;
-    grid-template-rows: auto auto !important;
-    margin-bottom: 0.5em;
+  #wrapper #main {
+    width: 100%;
+    padding-bottom: 0px;
+    margin: 0px !important;
+    padding: 0px !important;
+  }
+  #wrapper #main > .inner {
+    margin: 0px !important;
+    padding: 0px !important;
+  }
+  #wrapper #main > .inner .result {
+    margin: 0px !important;
+    padding: 0px !important;
+    width: 160mm;
+  }
+  #wrapper #main > .inner .result > .row_detail {
+    margin-bottom: 30pt;
+  }
+  #wrapper #main > .inner .result > .row_detail .line-tittle-wrap {
+    margin: 0px;
+    font-family: "Times New Roman", Times, serif;
+    display: flex;
+    flex-flow: column;
+  }
+  #wrapper #main > .inner .result > .row_detail .line-tittle-wrap .line-tittle {
+    font-size: 18pt;
+    text-align: center;
+    color: black;
+    text-transform: uppercase;
+    margin-left: 0px;
+  }
+  #wrapper #main > .inner .result > .row_detail .line-tittle-wrap .info_value {
+    font-size: 10pt;
+    text-align: center;
+    margin-bottom: 6em;
+    margin-left: 0px;
+    font-variant-caps: small-caps;
+  }
+  #wrapper #main > .inner .result > .row_detail .line-tittle-wrap .info_value::first-letter {
+    font-size: 0px;
+  }
+  #wrapper #main > .inner .result > .row_detail .contracted-block {
+    max-height: unset;
+    overflow: visible;
+    transition: none;
+  }
+  #wrapper #main > .inner .result > .row_detail .info_text_block {
+    margin: 0px !important;
+    padding: 0px !important;
+    max-height: unset;
+    overflow: unset;
+    text-align: justify;
+    font-family: ".SF UI Text Regular", sans-serif;
+    font-size: 10pt;
+    letter-spacing: 0.2pt;
+    word-spacing: -0.2pt;
+    line-height: 14pt;
+  }
+  .types_print {
+    display: block;
+    font-size: 8pt;
+  }
+  .types_print .children_contanier {
+    margin-left: 10pt;
+  }
+  .types_print > .children_contanier {
+    margin-left: 0px;
+  }
+  .types_print .row_node.mints > .children_contanier {
+    margin-left: 0px;
+  }
+  .types_print .row_node.mints > .children_contanier > .row_node {
     margin-top: 0.5em;
   }
-  .inner {
-    width: 210mm;
-    font-family: "Times New Roman", Times, serif !important;
-    margin: 22mm;
-  }
-  .inner .golden-separator {
-    display: none !important;
-  }
-  .inner .line-tittle-wrap {
-    margin: 0 !important;
-  }
-  .inner .contracted-block {
-    max-height: 10000px !important;
-  }
-  .inner .info_text_block {
-    padding: unset;
-    font-size: 1em !important;
-    line-height: 1.4em !important;
-  }
-  .inner .ts_period {
-    font-size: 120% !important;
-    padding-left: 0 !important;
-  }
-  .inner .text-block-separator {
+  .types_print .row_node .term_grouper {
     display: none;
   }
-  .inner .item_wrapper {
-    padding-left: 0 !important;
+  .types_print .row_node .grouper_value {
+    font-family: ".SF UI Text Regular", sans-serif;
+    font-size: 10pt;
   }
-  .inner .item_wrapper .type_group {
-    font-weight: inherit !important;
+  .types_print .row_node .type_container_deep {
+    display: inline-block;
+    -webkit-column-break-inside: avoid;
+    /* Chrome, Safari, Opera */
+    page-break-inside: avoid;
+    /* Firefox */
+    break-inside: avoid;
+    /* IE 10+ */
   }
-  .inner .item_wrapper .container {
-    padding-left: 1em;
+  .types_print .row_node .type_container_deep .grouper_value:first-of-type {
+    margin-top: 0.25em;
   }
-  .inner .item_wrapper .unit {
-    padding-left: 1em !important;
+  .types_print .row_node.types .children_contanier > .row_node.types:last-of-type {
+    border: none;
   }
-  .inner .item_wrapper .unit {
-    font-size: 150% !important;
-    width: 100% !important;
-    margin-bottom: 1em;
-  }
-  .inner .item_wrapper .unit .type_wrap {
-    font-size: 13px;
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-template-rows: repeat(6, auto);
-    grid-column-gap: 1em;
+  .types_print .row_node.types {
+    width: 160mm;
+    overflow: visible;
+    border-top: none;
     border-bottom: 1px solid #ddd;
-    padding: 0 !important;
   }
-  .inner .item_wrapper .unit .type_number {
-    white-space: normal !important;
+  .types_print .row_node.types .grouper_print {
+    display: block;
   }
-  .inner .item_wrapper .unit .type_info {
-    font-size: 84% !important;
+  .types_print .row_node.types .coins_images {
+    zoom: 0.55;
   }
-  .inner .item_wrapper .unit .types_img {
-    grid-column-start: 2;
-    grid-row-start: 1;
-    grid-row-end: 6;
-    text-align: right;
-    margin: inherit !important;
+  .types_print .row_node.types span {
+    margin-right: 0.5em;
   }
-  .inner .item_wrapper .unit .info_wrap {
-    grid-row-start: 2;
+  .types_print .row_node.types .term_line {
+    word-spacing: -1pt;
   }
-  .inner .item_wrapper .unit .info_wrap .type_info {
-    text-align: left !important;
+  .types_print .row_node.types .term_line span {
+    margin-right: 0.25em;
   }
-  .inner .item_wrapper .unit .design-info {
+  .types_print .row_node.types .term_line > .term {
+    font-family: ".SF UI Text Bold", sans-serif;
     display: inline-block;
-    text-align: left !important;
-    grid-column-start: 1;
+    padding-top: 1em;
   }
-  .inner .item_wrapper .unit .sides-wrapper {
-    display: flex;
-    flex-flow: row;
+  .types_print .row_node.types .term_line > .term > .no_bold {
+    font-family: ".SF UI Text Regular", sans-serif;
   }
-  .inner .item_wrapper .unit .legend-info {
-    display: inline-block;
-    text-align: left;
-    line-height: inherit;
-    margin-left: 1em;
-    font-size: 11px !important;
+  .types_print .row_node.types .legend_box.small,
+  .types_print .row_node.types .ref_type_averages_weight,
+  .types_print .row_node.types .ref_type_total_weight_items,
+  .types_print .row_node.types .ref_type_averages_diameter,
+  .types_print .row_node.types .ref_type_total_diameter_items,
+  .types_print .row_node.types .descriptions {
+    font-size: unset !important;
   }
-  .inner .item_wrapper .unit .equivalents {
-    grid-row-start: 5;
-    text-align: left !important;
-    font-size: 60% !important;
+  .types_print .row_node.types .ref_type_averages_weight,
+  .types_print .row_node.types .ref_type_total_weight_items,
+  .types_print .row_node.types .ref_type_averages_diameter,
+  .types_print .row_node.types .ref_type_total_diameter_items {
+    font-family: ".SF UI Text Condensed Light", sans-serif;
+    word-spacing: -1.5pt;
   }
-  .inner .item_wrapper .unit .coins-info {
-    font-size: 65%;
-    text-align: right;
-    color: #888 !important;
-    margin: 0 !important;
-    grid-column-start: 2;
+  .types_print .row_node.types .ref_type_averages_weight,
+  .types_print .row_node.types .ref_type_averages_diameter {
+    margin-right: 0.25em;
   }
-  .inner .item_wrapper .unit .public-info {
-    font-size: 80%;
-    display: flex;
-    grid-row-start: 6;
+  .types_print .row_node.types .ref_type_material::after {
+    content: ".";
   }
-  .inner .item_wrapper .unit .public-info img {
+  .types_print .row_node.types .ref_type_denomination::after {
+    content: ".";
+  }
+  .types_print .row_node.types .term {
+    display: block;
     line-height: 1em;
-    display: inline;
-    width: 1em !important;
-    height: 2em !important;
-    margin: 0 1em;
+    padding-top: 0.25em;
   }
-  .inner .info_line .big_label {
+  .types_print .row_node.types .term .a_term {
+    font-family: ".SF UI Text Bold", sans-serif;
+  }
+  .types_print .row_node.types .term .a_term > span {
+    font-family: ".SF UI Text Regular", sans-serif;
+    margin-right: 0px;
+  }
+  .types_print .row_node.types .term .a_term > span.keyword {
+    font-family: ".SF UI Text Condensed Light", sans-serif;
+  }
+  .types_print .row_node.types .descriptions {
+    padding-top: 0.3em;
+    letter-spacing: 0.01pt;
+    row-gap: 0.3em;
+  }
+  .types_print .row_node.types .descriptions .ref_type_design_obverse,
+  .types_print .row_node.types .descriptions .ref_type_design_reverse {
+    line-height: 10pt;
+  }
+  .types_print .row_node.types .descriptions .legend_obverse .ref_type_legend_transcription_obverse,
+  .types_print .row_node.types .descriptions .legend_reverse .ref_type_legend_transcription_obverse,
+  .types_print .row_node.types .descriptions .legend_obverse .ref_type_legend_transcription_reverse,
+  .types_print .row_node.types .descriptions .legend_reverse .ref_type_legend_transcription_reverse {
+    font-family: ".SF UI Text Condensed Light", sans-serif;
+    font-size: 7pt;
+    margin-right: 0px;
+  }
+  .types_print .row_node.types .descriptions .legend_box.small {
+    line-height: unset;
+  }
+  .types_print .row_node.types .descriptions .legend_box.small img {
+    height: 8pt;
+  }
+  .types_print .type_container {
+    width: 160mm;
+    overflow: visible;
+    -webkit-column-break-inside: avoid;
+    /* Chrome, Safari, Opera */
+    page-break-inside: avoid;
+    /* Firefox */
+    break-inside: avoid;
+    /* IE 10+ */
+  }
+  .types_print .type_container .type_info {
+    grid-row-start: initial;
+    grid-column-start: initial;
+    z-index: 1;
+    letter-spacing: 0.2pt;
+    font-size: 8pt;
+  }
+  .types_print .type_container .type_info .ref_type_design_reverse {
+    padding-right: 2em;
+  }
+  .types_print .type_container > .ref_type_equivalents,
+  .types_print .type_container > .collection_auction {
+    font-family: ".SF UI Text Condensed Light", sans-serif;
+    font-size: 5.5pt;
+  }
+  .biblio_print {
+    margin: 0px;
+    page-break-before: always;
+  }
+  .biblio_print > .bibliography_container_print .info_line.separator {
+    margin-top: 0px !important;
+    margin-bottom: 32pt;
+    border: none !important;
+  }
+  .biblio_print > .bibliography_container_print .info_line.separator .big_label {
     background-color: unset;
-    color: #777777;
+    color: #000000;
+    margin: 0px !important;
+    font-family: "Times New Roman", Times, serif;
+    text-align: center;
+    width: 100%;
+    font-size: 10pt;
+  }
+  .biblio_print .bibliography_container_print > .info_text_block {
+    padding: 0px !important;
+    padding-top: 0.5em !important;
+    overflow: unset !important;
+    max-height: unset !important;
+  }
+  .biblio_print .bibliography_container_print .big_label {
+    padding-left: 0px !important;
+  }
+  .biblio_print .bibliographic_reference {
+    margin-top: 0.5em !important;
+    line-height: 1.25em !important;
+    font-size: 7pt !important;
+    text-indent: -3em;
+    padding-left: 3em;
+    text-align: justify;
   }
 }
 /*# sourceMappingURL=mint.css.map */

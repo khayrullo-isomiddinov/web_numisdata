@@ -50,7 +50,7 @@ var catalog_row_fields = {
 					// term_line
 						const term_line = common.create_dom_element({
 							element_type	: "div",
-							class_name		: "term_line",
+							class_name		: "term_grouper term_line",
 							parent			: fragment
 						})
 
@@ -65,6 +65,7 @@ var catalog_row_fields = {
 						self.node_factory(item, "ref_type_averages_diameter", term_line, null, null)
 						self.node_factory(item, "ref_type_total_diameter_items", term_line, null, null)
 
+					catalog.ar_gropper_nodes.push(term_line);
 				}else{
 					// i.e.
 						// children: null
@@ -112,10 +113,32 @@ var catalog_row_fields = {
 						// term_section_tipo: "["numisdata3"]"
 						// term_table: "types"
 
+					// ar_gropper_nodes (used in mint print options to create non page breakable blocks)
+						const type_container_deep = common.create_dom_element({
+							element_type	: "div",
+							class_name		: "type_container_deep"
+						})
+						const ar_gropper_nodes_len = catalog.ar_gropper_nodes.length
+						if( ar_gropper_nodes_len > 0 ){
+
+							fragment.appendChild(type_container_deep)
+
+							for (let i = 0; i < ar_gropper_nodes_len; i++) {
+								const grouper_clone = catalog.ar_gropper_nodes[i].cloneNode( true )
+								grouper_clone.classList.remove('term_grouper')
+								grouper_clone.classList.add('grouper_print')
+
+								const indent = (ar_gropper_nodes_len - i) * 10
+								grouper_clone.style.marginLeft = '-' + indent + 'pt'
+								type_container_deep.appendChild( grouper_clone )
+							}
+							catalog.ar_gropper_nodes = [];
+						}
+
 					const type_container = common.create_dom_element({
 						element_type	: "div",
 						class_name		: "type_container",
-						parent			: fragment
+						parent			: ar_gropper_nodes_len>0 ? type_container_deep : fragment
 					})
 
 					const type_info = common.create_dom_element({
@@ -309,12 +332,14 @@ var catalog_row_fields = {
 				break;
 
 			default:
-				common.create_dom_element({
+				const groupper = common.create_dom_element({
 					element_type	: "div",
-					class_name		: term_table+'_value',
+					class_name		: 'term_grouper grouper_value ' + term_table + '_value',
 					text_content	: item.term, // + " [" + term_table + "]",
 					parent			: fragment
 				})
+
+				catalog.ar_gropper_nodes.push(groupper);
 				break;
 		}//end switch
 

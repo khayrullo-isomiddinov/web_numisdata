@@ -349,7 +349,6 @@
 .row_node.types {
   border-top: 1px solid #ddd;
   display: grid;
-  page-break-inside: avoid;
 }
 .row_node.types span {
   margin-right: 1em;
@@ -364,6 +363,9 @@
 .row_node.types .term .keyword {
   font-weight: 300;
   margin: 0;
+}
+.row_node.types .grouper_print {
+  display: none;
 }
 .row_node.types .ref_type_averages_weight,
 .row_node.types .ref_type_averages_diameter {
@@ -489,6 +491,9 @@
   .row_node.types .type_container {
     grid-template-columns: auto 50%;
   }
+}
+.row_node.types .type_container .type_info {
+  z-index: 1;
 }
 .row_node.types .types {
   display: grid;

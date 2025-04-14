@@ -102,7 +102,7 @@ var mint = {
 							self.get_types_data2({
 								section_id : _mint_catalog.section_id
 							})
-							.then(function(result){
+							.then(async function(result){
 								// self.draw_types({
 								// 	target	: document.getElementById('types'),
 								// 	ar_rows	: result
@@ -114,6 +114,7 @@ var mint = {
 									//result[i].term_section_id = result[i].term_section_id.section_id
 								}
 
+								// types
 								const types_node = self.draw_types2({
 									ar_rows			: result,
 									mint_section_id	: _mint_catalog.section_id
@@ -122,6 +123,13 @@ var mint = {
 									const target = document.getElementById('types')
 									target.appendChild(types_node)
 									page.activate_images_gallery(target)
+								}
+
+								// types print
+								const types_node_print = await mint_row.render_type_print(result)
+								if (types_node_print) {
+									const target = document.getElementById('types_print')
+									target.appendChild(types_node_print)
 								}
 							})
 						}else{
@@ -676,7 +684,7 @@ var mint = {
 		// line
 			const line = common.create_dom_element({
 				element_type 	: "div",
-				class_name 		: "",
+				class_name 		: "line",
 				parent 			: fragment
 			})
 
@@ -819,7 +827,7 @@ var mint = {
 						element_type	: "a",
 						class_name		: "icon_link info_value",
 						href			: page_globals.__WEB_ROOT_WEB__ + '/mint/' + mint_id,
-						text_content	: label,
+						inner_html		: label,
 						target			: '_blank',
 						parent			: line
 					})
@@ -828,11 +836,18 @@ var mint = {
 
 		// bibliography_data
 			if (row_object.bibliography_data && row_object.bibliography_data.length>0) {
+
+				const bibliography_container = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'bibliography_container',
+					parent			: line
+				})
+
 				//create the graphical red line that divide blocks
 				const lineSeparator = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "info_line separator",
-					parent			: line
+					parent			: bibliography_container
 				})
 				//create the tittle block inside a red background
 				common.create_dom_element({
@@ -845,7 +860,7 @@ var mint = {
 				const bibliography_block = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "info_text_block",
-					parent			: line
+					parent			: bibliography_container
 				})
 
 				const ref_biblio = row_object.bibliography_data
@@ -863,33 +878,41 @@ var mint = {
 					biblio_row_wrapper.appendChild(biblio_row_node)
 				}
 
-				// createExpandableBlock(bibliography_block,line);
-				page.create_expandable_block(bibliography_block, line)
+				// createExpandableBlock(bibliography_block,bibliography_container);
+				// page.create_expandable_block(bibliography_block, bibliography_container)
+
+				// clone to bibliography_container for print
+				const biblio_print = document.getElementById('biblio_print')
+				if (biblio_print) {
+					const bibliography_container_clone = bibliography_container.cloneNode(true);
+					bibliography_container_clone.classList.remove('bibliography_container')
+					bibliography_container_clone.classList.add('bibliography_container_print')
+					biblio_print.appendChild(bibliography_container_clone)
+				}
 			}
 
-			// other permanent uri
-				if (row_object.uri && row_object.uri.length>0) {
+		// other permanent URI
+			if (row_object.uri && row_object.uri.length>0) {
 
-					//create the graphical red line that divide blocks
-					// const lineSeparator = common.create_dom_element({
-					// 	element_type	: "div",
-					// 	class_name		: "info_line separator",
-					// 	parent 			: line
-					// })
-					for (let i = 0; i < row_object.uri.length; i++) {
+				// create the graphical red line that divide blocks
+				// const lineSeparator = common.create_dom_element({
+				// 	element_type	: "div",
+				// 	class_name		: "info_line separator",
+				// 	parent 			: line
+				// })
+				for (let i = 0; i < row_object.uri.length; i++) {
 
-						const el		= row_object.uri[i]
-						const label		= el.label || "URI"
-						const uri_text	= '<a class="icon_link info_value" href="' + el.value + '" target="_blank"> ' + el.label  + '</a>'
+					const el		= row_object.uri[i]
+					const label		= el.label || "URI"
+					const uri_text	= '<a class="icon_link info_value" href="' + el.value + '" target="_blank"> ' + label  + '</a>'
 
-						common.create_dom_element({
-							element_type	: "span",
-							inner_html		: uri_text,
-							parent			: line
-						})
-
-					}
+					common.create_dom_element({
+						element_type	: "span",
+						inner_html		: uri_text,
+						parent			: line
+					})
 				}
+			}
 
 		// container final add
 		container.appendChild(fragment)

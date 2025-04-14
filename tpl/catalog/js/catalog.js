@@ -28,6 +28,9 @@ var catalog = {
 	// errors
 	errors : [],
 
+	// ar_gropper_nodes. Used for print to group the first type node with its own groupers to avoid page break inside it
+	ar_gropper_nodes : [],
+
 
 
 	/**
@@ -1759,14 +1762,19 @@ var catalog = {
 
 		const self = this
 
-		const row_object 	= ar_rows.find(item => item.section_id==section_id)
+		const row_object = ar_rows.find(item => item.section_id==section_id)
 
 		if (row_object) {
-			const row_node 	= self.render_rows(row_object, ar_rows)
+
+			// draw_item
+			const row_node = self.render_rows(row_object, ar_rows)
+
 			parent_node.appendChild( row_node )
 
 			if(row_object.children){
+
 				self.get_children(ar_rows, row_object, row_node)
+
 				row_node.addEventListener('mouseup', (event) => {
 					event.preventDefault()
 					const target = event.target.tagName === 'SPAN'
@@ -1777,7 +1785,6 @@ var catalog = {
 						const children_node = row_node.querySelector('.children_contanier')
 						children_node.classList.toggle("hide")
 					}
-
 				}, false);
 			}
 
@@ -1792,6 +1799,7 @@ var catalog = {
 
 	render_rows : function(row_object, ar_rows){
 
+		const self = this
 		// Build dom row
 		// item row_object
 			// const row_object = ar_rows[i]
@@ -1804,7 +1812,7 @@ var catalog = {
 			catalog_row_fields.ar_rows = ar_rows
 
 		// catalog_row_fields set
-			const node = catalog_row_fields.draw_item(row_object)
+			const node = catalog_row_fields.draw_item(row_object, self)
 
 		return node
 	},

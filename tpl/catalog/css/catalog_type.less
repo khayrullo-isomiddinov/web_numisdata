@@ -10,7 +10,8 @@
 	&.types {
 		border-top: 1px solid #ddd;
 		display: grid;
-		page-break-inside: avoid;
+		// page-break-inside: avoid;
+		// break-inside: avoid;
 
 		span {
 			margin-right: 1em;
@@ -28,6 +29,11 @@
 				font-weight: 300;
 				margin: 0;
 			}
+		}
+
+		// grouper_print (used in mint print) Hide by default
+		.grouper_print {
+			display: none;
 		}
 
 		.ref_type_averages_weight, .ref_type_averages_diameter{
@@ -179,6 +185,10 @@
 
 			@media screen and (max-width: @content_data_max_width_1280) {
 				grid-template-columns: auto 50%;
+			}
+
+			.type_info {
+				z-index: 1;
 			}
 		}
 
