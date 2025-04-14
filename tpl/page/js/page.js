@@ -1041,7 +1041,7 @@ var page = {
 		if(SHOW_DEBUG===true) {
 			if (!options.section_id) {
 				if(SHOW_DEBUG===true) {
-					console.warn('options:', options);
+					console.warn('Empty section_id. options:', options);
 					// alert("Missing section_id !!!");
 				}
 			}

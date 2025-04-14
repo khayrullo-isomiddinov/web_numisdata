@@ -14,7 +14,17 @@ var catalog_row_fields = {
 
 
 
-	draw_item : function(item) {
+	/**
+	* DRAW_ITEM
+	* Renders the catalog nodes (usually types, but also periods, and groupers)
+	* @param object item
+	* 	database parsed catalog row
+	* @param object catalog
+	* 	full catalog.js instance/pointer
+	* @return HTMLElement node
+	* 	Catalog row node rendered
+	*/
+	draw_item : function(item, catalog) {
 
 		const self 		 = this
 		const term_table = item.term_table
@@ -31,7 +41,6 @@ var catalog_row_fields = {
 				image.src = hires
 			}, 1600)
 		}
-
 
 		switch(term_table){
 
@@ -279,7 +288,6 @@ var catalog_row_fields = {
 					self.node_factory(item, "ref_coins_auction", collection_auction, null, null)
 				}
 				break;
-
 
 			case "mints":
 				common.create_dom_element({

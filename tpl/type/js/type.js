@@ -52,6 +52,9 @@ var type =  {
 						section_id : self.section_id
 					})
 					.then(function(response){
+						if(SHOW_DEBUG===true) {
+							console.log('set_up get_row_data response:', self.section_id, response);
+						}
 
 						// container. clean container div
 							const container	= document.getElementById('row_detail')
@@ -60,13 +63,13 @@ var type =  {
 							}
 
 						// combi request split results
-							const type		= response.result.find(item => item.id==='type')
-							const catalog	= response.result.find(item => item.id==='catalog')
+							const type_response		= response.result.find(item => item.id==='type')
+							const catalog_response	= response.result.find(item => item.id==='catalog')
 
-						if (typeof type.result[0]!=="undefined") {
+						if (typeof type_response.result[0]!=="undefined") {
 
-							const row			= type.result[0]
-							const catalog_rows	= page.parse_catalog_data(catalog.result)[0] || null
+							const row			= type_response.result[0]
+							const catalog_rows	= page.parse_catalog_data(catalog_response.result)[0] || null
 
 							// app property catalog with all catalog rows result
 								row.catalog = catalog_rows
