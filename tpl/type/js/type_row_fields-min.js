@@ -1108,14 +1108,18 @@ var type_row_fields_min = (function (exports) {
 			});
 
 			// design_obverse
-				obverse_wrapper.appendChild(
-					self.default(item, "design_obverse")
-				);
+				if (item.design_obverse_data) {
+					obverse_wrapper.appendChild(
+						self.default(item, "design_obverse")
+					);
+				}
 
 			// symbol_obverse
-				obverse_wrapper.appendChild(
-					self.default(item, "symbol_obverse")
-				);
+				if (item.symbol_obverse_data) {
+					obverse_wrapper.appendChild(
+						self.default(item, "symbol_obverse")
+					);
+				}
 
 			// legend_obverse
 				// fragment.appendChild(
@@ -1137,9 +1141,11 @@ var type_row_fields_min = (function (exports) {
 				// }
 
 			// legend_obverse_transcription
-				obverse_wrapper.appendChild(
-					self.default(item, "legend_obverse_transcription")
-				);
+				if (item.legend_obverse_transcription) {
+					obverse_wrapper.appendChild(
+						self.default(item, "legend_obverse_transcription")
+					);
+				}
 
 			// reverse_info_wrapper
 			const reverse_wrapper = common.create_dom_element({
@@ -1149,14 +1155,18 @@ var type_row_fields_min = (function (exports) {
 			});
 
 			// design_reverse
-				reverse_wrapper.appendChild(
-					self.default(item, "design_reverse")
-				);
+				if (item.design_reverse_data) {
+					reverse_wrapper.appendChild(
+						self.default(item, "design_reverse")
+					);
+				}
 
 			// symbol_reverse
-				reverse_wrapper.appendChild(
-					self.default(item, "symbol_reverse")
-				);
+				if (item.symbol_reverse_data) {
+					reverse_wrapper.appendChild(
+						self.default(item, "symbol_reverse")
+					);
+				}
 
 			// legend_reverse
 				// fragment.appendChild(
@@ -1172,9 +1182,11 @@ var type_row_fields_min = (function (exports) {
 				}
 
 			// legend_reverse_transcription
-				reverse_wrapper.appendChild(
-					self.default(item, "legend_reverse_transcription")
-				);
+				if (item.legend_reverse_transcription) {
+					reverse_wrapper.appendChild(
+						self.default(item, "legend_reverse_transcription")
+					);
+				}
 
 			// public_info
 				fragment.appendChild(

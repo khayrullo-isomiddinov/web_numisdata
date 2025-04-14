@@ -91,9 +91,31 @@ var type =  {
 								// append final rendered node
 									container.appendChild(row_wrapper)
 
+								// children case (only variants)
+									const children = catalog_rows.children || null
+									if (children && children.length>0) {
+										const children_container = common.create_dom_element({
+											element_type	: 'div',
+											class_name		: 'children_container gallery',
+											parent			: container
+										})
+										children.forEach(child_row => {
+											const node = catalog_row_fields.draw_item(child_row, catalog)
+											children_container.appendChild(node)
+										})
+									}
+
 								// newGallery
 									requestAnimationFrame(
 										() => {
+											// activate images light box
+											const images_gallery_containers = container.querySelectorAll('.gallery')
+											if (images_gallery_containers) {
+												for (let i = 0; i < images_gallery_containers.length; i++) {
+													page.activate_images_gallery(images_gallery_containers[i])
+												}
+											}
+
 											const embeddedGallery = row_wrapper.querySelectorAll('a')
 											if (embeddedGallery && embeddedGallery.length>0) {
 												// hide default images div
@@ -111,14 +133,6 @@ var type =  {
 											}
 										}
 									)
-
-								// activate images light box
-									const images_gallery_containers = row_wrapper.querySelectorAll('.gallery')
-									if (images_gallery_containers) {
-										for (let i = 0; i < images_gallery_containers.length; i++) {
-											page.activate_images_gallery(images_gallery_containers[i])
-										}
-									}
 
 								// show export buttons
 									self.export_data_container.classList.remove('hide')
@@ -191,9 +205,9 @@ var type =  {
 			})
 
 		// catalog call
-			const ar_fields = ["section_id","term","term_data","term_table","term_section_tipo","parents",
-							   'ref_mint_number', 'full_coins_reference_calculable', 'full_coins_reference_discard', 'full_coins_reference_diameter_max',
-							   'full_coins_reference_weight', 'full_coins_reference_axis']
+			const ar_fields = ['section_id', 'term', 'term_data', 'term_table', 'term_section_tipo', 'parents', 'children',
+							   'ref_mint_number', 'full_coins_reference_calculable', 'full_coins_reference_discard',
+							   'full_coins_reference_diameter_max', 'full_coins_reference_weight', 'full_coins_reference_axis']
 			ar_calls.push({
 				id		: "catalog",
 				options	: {
@@ -204,11 +218,29 @@ var type =  {
 					count					: false,
 					sql_filter				: "term_data='[\"" + parseInt(section_id) + "\"]' AND term_table='types'",
 					resolve_portals_custom	: {
-						"parents" : "catalog"
+						'parents'	: 'catalog',
+						'children'	: 'catalog'
 					}
 				}
 			})
 
+		// catalog children call (Unnecessary because already resolved from resolve_portals_custom->children)
+			// ar_calls.push({
+			// 	id		: "catalog_children",
+			// 	options	: {
+			// 		dedalo_get	: 'records',
+			// 		table		: "catalog",
+			// 		ar_fields	: ['*'],
+			// 		lang		: lang,
+			// 		count		: false,
+			// 		order		: 'norder ASC',
+			// 		sql_filter	: "term_data='[\"" + parseInt(section_id) + "\"]' AND term_table='types'",
+			// 		process_result	: {
+			// 			fn		: 'process_result::add_parents_and_children_recursive',
+			// 			columns	: [{name : "parents"}]
+			// 		}
+			// 	}
+			// })
 
 		// request
 			const js_promise = data_manager.request({
