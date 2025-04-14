@@ -589,7 +589,17 @@ page.parse_catalog_data = function(data) {
 			}
 
 			row.term_section_id	= row.term_data ? row.term_data[0] : null
-			row.children		= row.children ? JSON.parse(row.children) : null
+			// row.children		= row.children ? JSON.parse(row.children) : null
+			row.children			= row.children
+				? (
+					Array.isArray(row.children)
+						? (function(children_array){
+							// portal resolved case
+							return page.parse_catalog_data(children_array)
+						})(row.children)
+						: JSON.parse(row.children)
+				)
+				: null
 			row.parent			= row.parent
 				? (
 					Array.isArray(row.parent)
