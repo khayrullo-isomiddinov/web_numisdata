@@ -609,7 +609,14 @@ var biblio_row_fields = {
 
 
 
-	render_row_bibliography : function(row) {
+	render_row_bibliography : function(row, options={}) {
+
+		// options
+		const add_pages											= options.add_pages ?? true
+		const add_sheet											= options.add_sheet ?? true
+		const add_reference										= options.add_reference ?? true
+		const add_link											= options.add_link ?? true
+		const add_ref_publications_pages_physical_description	= options.add_ref_publications_pages_physical_description ?? false
 
 		// let biblio_object = this.biblio_object
 		let biblio_object = row
@@ -774,61 +781,85 @@ var biblio_row_fields = {
 				parent			: line
 			})
 
+		// ref_publication_pages_physical_description (not reference pages)
+			if (add_ref_publications_pages_physical_description) {
+				const pages = (biblio_object.ref_publications_pages_physical_description)
+					? ', p. ' +biblio_object.ref_publications_pages_physical_description
+					: ''
+				common.create_dom_element({
+					element_type	: 'span',
+					class_name		: 'bib_page',
+					inner_html		: pages,
+					parent			: line
+				})
+			}
+
 		// pages
-			const pages = (biblio_object.pages)
-				? ", p. " +biblio_object.pages
-				: ""
-			common.create_dom_element({
-				element_type	: "span",
-				inner_html		: pages,
-				parent			: line
-			})
+			if (add_pages) {
+				const pages = (biblio_object.pages)
+					? ', p. ' +biblio_object.pages
+					: ''
+				common.create_dom_element({
+					element_type	: 'span',
+					class_name		: 'bib_page',
+					inner_html		: pages,
+					parent			: line
+				})
+			}
 
 		// sheet
-			const sheet = (biblio_object.sheet)
-				? ", "+ biblio_object.sheet
-				: ""
-			common.create_dom_element({
-				element_type	: "span",
-				inner_html		: sheet,
-				parent			: line
-			})
+			if (add_sheet) {
+				const sheet = (biblio_object.sheet)
+					? ", "+ biblio_object.sheet
+					: ""
+				common.create_dom_element({
+					element_type	: "span",
+					inner_html		: sheet,
+					parent			: line
+				})
+			}
 
 		// reference
-			const reference = (biblio_object.reference)
-				? ", n. " +biblio_object.reference
-				: ""
-			common.create_dom_element({
-				element_type	: "span",
-				inner_html		: reference,
-				parent			: line
-			})
+			if (add_reference) {
+				const reference = (biblio_object.reference)
+					? ", n. " +biblio_object.reference
+					: ""
+				common.create_dom_element({
+					element_type	: "span",
+					inner_html		: reference,
+					parent			: line
+				})
+			}
 
 		// final point
-			common.create_dom_element({
-				element_type	: "span",
-				inner_html		: '.',
-				parent			: line
-			})
+			if (biblio_object.ref_publications_title) {
+				common.create_dom_element({
+					element_type	: "span",
+					inner_html		: '.',
+					parent			: line
+				})
+			}
 
 		// URI
-			const url_title = (biblio_object.ref_publications_url)
-				?  biblio_object.ref_publications_url.split(", ")[0]
-				: ''
+			if (add_link) {
+				const url_title = (biblio_object.ref_publications_url)
+					?  biblio_object.ref_publications_url.split(", ")[0]
+					: ''
 
-			const url = (biblio_object.ref_publications_url)
-				? biblio_object.ref_publications_url.split(", ")[1]
-				: ''
+				const url = (biblio_object.ref_publications_url)
+					? biblio_object.ref_publications_url.split(", ")[1]
+					: ''
 
-			const link = (url)
-				// ? " | <a href=\"" + url +"\">"+url_title+" </a> "
-				? ` | <a href="${url}" target="_blank">${url_title}</a> `
-				: ''
-			common.create_dom_element({
-				element_type	: "span",
-				inner_html		: link,
-				parent			: line
-			})
+				const link = (url)
+					// ? " | <a href=\"" + url +"\">"+url_title+" </a> "
+					? ` | <a href="${url}" target="_blank">${url_title}</a> `
+					: ''
+				common.create_dom_element({
+					element_type	: "span",
+					inner_html		: link,
+					parent			: line
+				})
+			}
 
 		// parse bibliography data with Zenon references for extract only the first one
 			function parse_zenon_bibliography(data){

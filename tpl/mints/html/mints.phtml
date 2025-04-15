@@ -19,15 +19,24 @@
 				<div class="inner">
 
 					<!-- title -->
-						<h1><?php echo $title ?></h1>
-						<div class="golden-separator"></div>
+						<h1 class="no_print"><?php echo $title ?></h1>
+						<div class="golden-separator no_print"></div>
 
 					<!-- Form -->
-						<div id="form_container"></div>
+						<div id="form_container" class="form_container no_print"></div>
 
 					<!-- Result -->
-						<section id="rows_container" class="result"></section>
+						<section id="rows_container" class="result no_print"></section>
 
+					<!-- biblio_print -->
+						<div id="biblio_print" class="biblio_print"></div>
+
+					<!-- export_data -->
+					<div id="export_data" class="export_data_container no_print">
+						<div class="export_container">
+							<input class="btn primary button_print hidden" type="button" value="<?php echo tstring('print') .' '. tstring('bibliographic_references') ?>">
+						</div>
+					</div>
 				</div>
 			</div>
 

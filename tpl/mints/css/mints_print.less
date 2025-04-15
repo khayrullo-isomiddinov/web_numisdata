@@ -1,0 +1,31 @@
+// import mint print to render bibliography in the same way
+@import '../mint/css/mint_print';
+
+// print specifics for mint
+@media print {
+
+	// hide elements
+		#header,
+		#menu,
+		#footer,
+		#export_data,
+		#rows_container,
+		#form_container,
+		.no_print,
+		.go_to_dedalo {
+			display: none !important;
+		}
+
+	// @usable_width: 160mm;
+
+	// @page {
+	// 	size: 210mm 297mm;
+	// 	margin: 25mm 10mm 20mm 25mm;
+	// }
+
+	.info_text_block {
+		// column-count: 2;
+		// column-fill: auto;
+	}
+
+}
