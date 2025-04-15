@@ -188,7 +188,21 @@
 		font-weight: 300 !important;
 	}
 
+	.clickable {
+		cursor: pointer;
 
+		&:hover {
+			outline: 1px dotted #dec4b0;
+			// box-shadow: 0px 2px 0 0px #dec4b0;
+		}
+		&:active {
+			opacity: 0.5;
+		}
+	}
+
+	.hidden {
+		visibility: hidden;
+	}
 
 // page_lang_selector
 	#menu .lang_globe {
@@ -1345,12 +1359,17 @@
 		opacity: 1;
 		transition: opacity 0.3s;
 
+		&:hover {
+			background-color: #f5f5f5;
+		}
+
+		&:active {
+			opacity: 0.5;
+		}
+
 		&.unactive {
 			opacity: 0.4;
 			pointer-events: none;
-		}
-		&.share_search{
-			 background-image: url(../../assets/images/icon_shared_white.svg);
 		}
 	}
 
