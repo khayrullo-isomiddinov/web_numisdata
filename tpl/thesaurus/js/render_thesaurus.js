@@ -758,7 +758,9 @@ thesaurus.render_info_block = async function(row) {
 				text_content	: tstring.authorship || 'Authorship',
 				parent			: content
 			})
-			page.render_authorship(row, content)
+			const authorship_node = page.render_authorship(row)
+			content.appendChild(authorship_node)
+
 		}
 
 

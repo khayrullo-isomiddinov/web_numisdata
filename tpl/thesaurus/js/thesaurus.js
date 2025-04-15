@@ -142,7 +142,9 @@ var thesaurus =  {
 					const data	= page.parse_term(row)
 
 					if(data.authorship_names && data.authorship_names.length>0) {
-						page.render_authorship(data, authorship_text)
+						const authorship_node = page.render_authorship(data)
+						authorship_text.appendChild(authorship_node)
+
 						if (body_text) {
 							body_text.classList.remove('hide_opacity')
 						}

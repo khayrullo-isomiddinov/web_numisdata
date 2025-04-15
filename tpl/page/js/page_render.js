@@ -842,14 +842,14 @@ page.render_cite_record = async (row, container, title) => {
 
 /**
 * RENDER_AUTHORSHIP
-* Renders row authorship info and append it to container
+* Renders row authorship info in a normalized way
 * @param object row
 * 	Database record parsed
-* @param HTMLElement container
-* 	Target node where place the result nodes
-* @return void
+* @return DocumentFragment
 */
-page.render_authorship = async (row, container) => {
+page.render_authorship = (row) => {
+
+	const fragment = new DocumentFragment()
 
 	const ar_names = row.authorship_names
 		? row.authorship_names.split('|')
@@ -912,7 +912,10 @@ page.render_authorship = async (row, container) => {
 			element_type	: 'div',
 			class_name		: 'authorship item',
 			text_content	: authorship_value,
-			parent			: container
+			parent			: fragment
 		})
 	}
+
+
+	return fragment
 }//end render_authorship

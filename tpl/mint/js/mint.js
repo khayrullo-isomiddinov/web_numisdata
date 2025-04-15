@@ -738,7 +738,8 @@ var mint = {
 
 				// authorship
 					if(row_object.authorship_names && row_object.authorship_names.length>0) {
-						page.render_authorship(row_object, lineTittleWrap)
+						const authorship_node = page.render_authorship(row_object)
+						lineTittleWrap.appendChild(authorship_node)
 					}
 			}//end if (row_object.name && row_object.name.length>0)
 
@@ -921,7 +922,8 @@ var mint = {
 					class_name		: 'authorship_print_container hide',
 					parent			: line
 				})
-				page.render_authorship(row_object, authorship_print_container)
+				const authorship_node = page.render_authorship(row_object)
+				authorship_print_container.appendChild(authorship_node)
 			}
 
 		// container final add
