@@ -82,6 +82,7 @@
 		.link_mint,
 		.mint_relations,
 		.authorship,
+		.related,
 		.icon_link,
 		.bibliography_container,
 		.go_to_dedalo {
@@ -183,6 +184,18 @@
 							letter-spacing: 0.2pt;
 							word-spacing: -0.2pt;
 							line-height: 14pt;
+						}
+					}
+
+					// authorship_print_container
+					.authorship_print_container {
+						display: block !important;
+
+						>.authorship {
+							display: block !important;
+							text-align: right;
+							margin-top: 1.5em;
+							font-size: 9px;
 						}
 					}
 				}
@@ -570,6 +583,8 @@
 				padding-top: 0.5em !important;
 				overflow: unset !important;
 				max-height: unset !important;
+				column-count: 2;
+				column-gap: 12pt;
 			}
 
 			.big_label {
@@ -578,12 +593,25 @@
 		}
 
 		.bibliographic_reference {
-			margin-top: 0.5em !important;
+			margin-top: 0px !important;
+			margin-bottom: 0.5em !important;
 			line-height: 1.25em !important;
 			font-size: 7pt !important;
 			text-indent: -3em;
 			padding-left: 3em;
 			text-align: justify;
+
+			>.info_line {
+				text-wrap: pretty;
+				// hyphens: auto;
+
+				>span {
+
+					&.bib_page {
+
+					}
+				}
+			}
 		}
 	}//end biblio_print
 

@@ -174,7 +174,7 @@ var mint = {
 
 	/**
 	* GET_ROW_DATA
-	* Get dabase mint row from table mints and catalog
+	* Get database mint row from table mints and catalog
 	* @return promise
 	*/
 	get_row_data : function(options) {
@@ -788,7 +788,7 @@ var mint = {
 				//create the tittle block inside a red background
 				common.create_dom_element({
 					element_type	: "div",
-					class_name		: "authorship",
+					class_name		: "related",
 					text_content	: tstring.change_to || "Change to",
 					parent			: line
 				})
@@ -811,7 +811,7 @@ var mint = {
 				//create the tittle block inside a red background
 				common.create_dom_element({
 					element_type	: "div",
-					class_name		: "authorship",
+					class_name		: "related",
 					text_content	: tstring.related_to || "Related to",
 					parent			: line
 				})
@@ -912,6 +912,16 @@ var mint = {
 						parent			: line
 					})
 				}
+			}
+
+		// authorship PRINT ONLY
+			if(row_object.authorship_names && row_object.authorship_names.length>0) {
+				const authorship_print_container = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'authorship_print_container hide',
+					parent			: line
+				})
+				page.render_authorship(row_object, authorship_print_container)
 			}
 
 		// container final add
