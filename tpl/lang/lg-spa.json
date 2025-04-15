@@ -184,5 +184,6 @@
     "weight": "Peso",
     "whiskers": "Bigotes",
     "work_in_progress": "Versión en pruebas. Numeración provisional. No referenciar",
-    "xticklabel_angle": "Ángulo de las etiquetas (eje X)"
+    "xticklabel_angle": "Ángulo de las etiquetas (eje X)",
+    "print": "Imprimir"
 }
