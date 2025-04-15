@@ -637,7 +637,7 @@ var biblio_row_fields = {
 		// line
 			const line = common.create_dom_element({
 				element_type 	: "div",
-				class_name 		: "info_line row_title"
+				class_name 		: "info_line row_title " + row.section_id
 			})
 
 		// authors

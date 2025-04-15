@@ -1245,8 +1245,6 @@ var type_row_fields_min = (function (exports) {
 					});
 				}
 
-
-
 			// bibliography
 				const ar_references = item.bibliography_data;
 					fragment.appendChild(

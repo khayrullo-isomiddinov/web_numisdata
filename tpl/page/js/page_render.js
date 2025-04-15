@@ -587,7 +587,12 @@ page.handleForm = function(currentUrl){
 /**
 * RENDER_LEGEND
 * Generic unified legend render
-* @return promise : DOM node
+* @param object options
+* {
+* 	value : string|null
+* 	style: string|null
+* }
+* @return HTMLElement legend_node
 */
 page.render_legend = function(options) {
 
@@ -612,8 +617,8 @@ page.render_legend = function(options) {
 		// });
 
 	const legend_node = common.create_dom_element({
-		element_type	: "div",
-		class_name		: "legend_box " + style,
+		element_type	: 'div',
+		class_name		: 'legend_box ' + style,
 		inner_html		: value.trim()
 	})
 	// while (parsed_node.hasChildNodes()) {

@@ -384,7 +384,7 @@ var page = {
 		$(elements).each(function() {
 			new Tooltip($(this), {
 				placement	: 'top'
-	    	});
+			});
 		});
 	},//end activate_tooltips
 
@@ -663,15 +663,15 @@ var page = {
 			return string
 		}
 
-	    while(string.charAt(0)==charToRemove) {
-	        string = string.substring(1);
-	    }
+		while(string.charAt(0)==charToRemove) {
+			string = string.substring(1);
+		}
 
-	    while(string.charAt(string.length-1)==charToRemove) {
-	        string = string.substring(0,string.length-1);
-	    }
+		while(string.charAt(string.length-1)==charToRemove) {
+			string = string.substring(0,string.length-1);
+		}
 
-	    return string;
+		return string;
 	},//end trim_char
 
 
@@ -1076,7 +1076,7 @@ var page = {
 		} else {
 			// window.requestAnimationFrame(callback)
 			// Fallback for browsers without requestIdleCallback support like Safari
-	        setTimeout(callback, 1);
+			setTimeout(callback, 1);
 		}
 	},//end dd_request_idle_callback
 
@@ -1158,7 +1158,156 @@ var page = {
 		})
 
 		return true
-	}//end render_banner_ans
+	},//end render_banner_ans
+
+
+
+	/**
+	* TOGGLE_MEDIA_TYPE
+	* Forces a new media CSS style in the page
+	* Used by mint print actions
+	* @param string media_type
+	* 	print|screen
+	* @return bool
+	*/
+	toggle_media_type : function (media_type) {
+
+		const screenRules = [];
+		const printRules = [];
+
+		function simulatePrintMediaQuery(rules) {
+			for ( const rule of rules.screenRules ) {
+				rule.media.mediaText = 'disabled';
+			}
+
+			for ( const rule of rules.printRules) {
+				rule.media.mediaText = 'screen';
+			}
+		}
+
+		function restorePrintMediaQuery(rules) {
+			for ( const rule of rules.screenRules ) {
+				rule.media.mediaText = 'screen';
+			}
+
+			for ( const rule of rules.printRules) {
+				rule.media.mediaText = 'print';
+			}
+		}
+
+		function simulatePrintLink(sheet) {
+			if (sheet.media === 'screen') {
+				sheet.disabled = true;
+			}
+			if (sheet.media === 'print') {
+				sheet.title = 'print-disabled';
+				sheet.media = '';
+			}
+		}
+
+		function restoreScreenLink(sheet) {
+			if (sheet.media === 'screen') {
+				  sheet.disabled = false;
+			}
+			if (sheet.title === 'print-disabled') {
+				sheet.title = '';
+				sheet.media = 'print';
+			}
+		}
+
+		function identifyCssRules() {
+			const styleSheets = document.styleSheets;
+
+			for ( const sheet of styleSheets ) {
+				const rules = sheet.cssRules || sheet.rules; // IE <= 8 use "rules" property
+
+				for ( const rule of rules ) {
+					if ( rule.type == CSSRule.MEDIA_RULE ) {
+						const media = rule.media;
+
+						if ( rule.conditionText === 'print' ) {
+							printRules.push(rule);
+						} else if ( rule.conditionText === 'screen' ) {
+							screenRules.push(rule);
+						}
+					}
+				}
+			}
+			return {
+				printRules,
+				screenRules
+			}
+		}
+
+		function simulatePrintMedia() {
+			screenRules.length = 0;
+			printRules.length = 0;
+			const rules = identifyCssRules();
+			simulatePrintMediaQuery(rules);
+			for ( const sheet of document.getElementsByTagName("link")) {
+				simulatePrintLink(sheet);
+			}
+		}
+
+		function restoreScreenMedia() {
+			const rules = { screenRules, printRules };
+			restorePrintMediaQuery(rules);
+			for ( const sheet of document.getElementsByTagName("link")) {
+				restoreScreenLink(sheet);
+			}
+		}
+
+		// set new media style
+		if (media_type==='print') {
+			simulatePrintMedia()
+		}else{
+			restoreScreenMedia()
+		}
+
+		return true
+	},//end toggle_media_type
+
+
+
+	/**
+	* LOAD_STYLE
+	* @param string src
+	* @return promise
+	* 	resolve/reject src
+	*/
+	load_style : function (src, media_type='screen') {
+
+		return new Promise(function(resolve, reject) {
+
+			// check already loaded
+				const links 	= document.getElementsByTagName('link');
+				const links_len = links.length
+				for (let i = links_len - 1; i >= 0; i--) {
+					if(links[i].getAttribute('href')===src) {
+						resolve(src)
+						return
+					}
+				}
+
+			// DOM tag
+				const element		= document.createElement('link')
+					  element.rel	= 'stylesheet'
+					  element.media = media_type
+
+				element.addEventListener('load', function(e) {
+					resolve(src);
+				})
+
+				element.addEventListener('error', function(e) {
+					reject(src);
+				})
+
+				element.href = src
+
+				document.getElementsByTagName('head')[0].appendChild(element)
+		})
+		.catch(err => { console.error(err) });
+	},//end load_style
 
 
 

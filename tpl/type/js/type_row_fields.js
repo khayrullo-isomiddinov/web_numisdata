@@ -257,8 +257,6 @@ export const type_row_fields = {
 				})
 			}
 
-
-
 		// bibliography
 			const ar_references = item.bibliography_data
 				fragment.appendChild(
