@@ -62,12 +62,15 @@ var mint = {
 				// map draw
 					if (typeof mint.result[0]!=="undefined") {
 						if (mint_data.georef_geojson) {
+							const public_info = mint_data.public_info
+								? mint_data.public_info.trim()
+								: ''
 							self.draw_map({
 								mint_map_data	: mint_data.georef_geojson,
 								mint_popup_data	: {
 									section_id	: mint_data.section_id,
 									title		: mint_data.name,
-									description	: mint_data.public_info.trim()
+									description	: public_info
 								},
 								types			: mint_data.relations_types
 							})

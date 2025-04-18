@@ -182,11 +182,15 @@ var render_hoard = {
 		// const map_data_clean = self.map_data(map_data) // prepares data to used in map
 		let map_data_clean
 		if (row.georef_geojson) {
+
+			const public_info = row.public_info
+				? row.public_info.trim()
+				: ''
 			// from geojson
 			const popup_data = {
 				section_id	: row.section_id,
 				title		: row.name,
-				description	: row.public_info.trim(),
+				description	: public_info,
 				type		: row.table==='findspots'
 					? 'findspot'
 					: 'hoard'

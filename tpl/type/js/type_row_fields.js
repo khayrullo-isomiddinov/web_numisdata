@@ -549,7 +549,7 @@ export const type_row_fields = {
 				const prompt_label = common.create_dom_element({
 					element_type	: "a",
 					class_name		: "info_value underline-text",
-					inner_html 		: item_text.trim(),
+					inner_html 		: item_text ? item_text.trim() : '',
 					href			: catalog_url,
 					parent 			: line
 				})
@@ -558,7 +558,7 @@ export const type_row_fields = {
 				common.create_dom_element({
 					element_type	: "span",
 					class_name		: "info_value",
-					inner_html		: item_text.trim(),
+					inner_html		: item_text ? item_text.trim() : '',
 					parent			: line
 				})
 			}

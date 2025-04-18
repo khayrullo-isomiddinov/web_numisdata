@@ -685,7 +685,10 @@ var biblio =  {
 			const term_length = terms.length
 			for (let k = 0; k < term_length; k++) {
 
-				const term_name = terms[k].trim()
+				const term_name = terms[k]
+					? terms[k].trim()
+					: ''
+
 				const found = result_final.find(el => el.value===term_name)
 				if (!found && term_name.length > 0) {
 					result_final.push({
