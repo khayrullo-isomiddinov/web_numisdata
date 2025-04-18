@@ -1708,23 +1708,29 @@ export const type_row_fields = {
 		// countermark_obverse
 			if (data.countermark_obverse && data.countermark_obverse.length>0){
 
-				common.create_dom_element({
+				const node = common.create_dom_element({
 					element_type	: "span",
 					class_name		: "countermark_obverse",
 					inner_html		: data.countermark_obverse,
 					parent			: countermarks
 				})
+
+				// make images clickable to open thesaurus record
+				page.make_images_links(node)
 			}
 
 		// countermark_reverse
 			if (data.countermark_reverse && data.countermark_reverse.length>0){
 
-				common.create_dom_element({
+				const node = common.create_dom_element({
 					element_type	: "span",
 					class_name		: "countermark_reverse",
 					inner_html		: data.countermark_reverse,
 					parent			: countermarks
 				})
+
+				// make images clickable to open thesaurus record
+				page.make_images_links(node)
 			}
 
 		// bibliography

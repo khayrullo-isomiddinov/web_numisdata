@@ -627,37 +627,53 @@ page.render_legend = function(options) {
 
 	// add click event to the legend images
 	if (value) {
-
-		const images = legend_node.querySelectorAll('img.svg')
-
-		try {
-
-			const images_length = images.length
-			for (let i = 0; i < images_length; i++) {
-				const image = images[i]
-				if (image.dataset && image.dataset.data) {
-					const locator = JSON.parse( image.dataset.data.replaceAll('\'', '"') )
-					if (locator) {
-						const click_handler = (e) => {
-							e.stopPropagation()
-
-							const url = `${page_globals.__WEB_ROOT_WEB__}/ts_node/${locator.section_tipo}_${locator.section_id}`
-							window.open(url, '_blank');
-						}
-						image.classList.add('clickable')
-						image.addEventListener('click', click_handler)
-						image.title = (tstring.open_symbol || 'Open symbol') + ` ${locator.section_tipo}_${locator.section_id}`
-					}
-				}
-			}
-		} catch (error) {
-			console.error(error)
-		}
+		page.make_images_links(legend_node)
 	}
 
 
 	return legend_node
 }//end render_legend
+
+
+
+/**
+* MAKE_IMAGES_LINKS
+* Add node content images click event to open thesaurus symbol window
+* @param HTMLElement node
+* 	Usually a div with HTML parsed text from component_text_area
+* 	containing images as <img src="..." data-data:"{psedo-locator}"
+* @return bool
+*/
+page.make_images_links = function (node) {
+
+	const images = node.querySelectorAll('img.svg')
+
+	try {
+
+		const images_length = images.length
+		for (let i = 0; i < images_length; i++) {
+			const image = images[i]
+			if (image.dataset && image.dataset.data) {
+				const locator = JSON.parse( image.dataset.data.replaceAll('\'', '"') )
+				if (locator) {
+					const click_handler = (e) => {
+						e.stopPropagation()
+
+						const url = `${page_globals.__WEB_ROOT_WEB__}/ts_node/${locator.section_tipo}_${locator.section_id}`
+						window.open(url, '_blank');
+					}
+					image.classList.add('clickable')
+					image.addEventListener('click', click_handler)
+					image.title = (tstring.open_symbol || 'Open symbol') + ` ${locator.section_tipo}_${locator.section_id}`
+				}
+			}
+		}
+	} catch (error) {
+		console.error(error)
+	}
+
+	true
+}//end make_images_links
 
 
 
