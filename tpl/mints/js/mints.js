@@ -84,6 +84,46 @@ var mints =  {
 				self.form_submit()
 			}
 
+		// activate print bibliography
+			const button_print = document.querySelector('.button_print')
+			if (button_print) {
+				button_print.classList.remove('hidden')
+				const click_handler = async (e) => {
+					e.stopPropagation()
+
+					button_print.classList.add('loading')
+
+					const biblio_data = await self.get_biblio_data()
+
+					// render references
+					const bibliography_container = self.render_bibliography(biblio_data)
+
+					// biblio_print add rendered node
+					const biblio_print = document.getElementById('biblio_print')
+					while (biblio_print.hasChildNodes()) {
+						biblio_print.removeChild(biblio_print.lastChild);
+					}
+					biblio_print.appendChild(bibliography_container)
+
+					window.scrollTo(0, document.body.scrollHeight);
+
+					setTimeout(()=>{
+						const is_chrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+						const msg = is_chrome
+							? (tstring.print || 'Print') + '?\n'
+							: (tstring.print || 'Print') + '?\n' + ' WARNING: ' + (tstring.use_chrome_for_print || 'Preferably use \'Chrome\' for printing')
+						if (confirm(msg)) {
+							window.print()
+						}
+
+					}, 200)
+
+
+					button_print.classList.remove('loading')
+				}
+				button_print.addEventListener('click', click_handler)
+			}
+
 
 		return true
 	},//end set_up
@@ -314,9 +354,13 @@ var mints =  {
 						while (rows_container.hasChildNodes()) {
 							rows_container.removeChild(rows_container.lastChild);
 						}
-						rows_container.classList.remove("loading")
+						rows_container.classList.remove('loading')
+						rows_container.classList.remove('hide')
 
 						const biblio_print = document.getElementById('biblio_print')
+						while (biblio_print.hasChildNodes()) {
+							biblio_print.removeChild(biblio_print.lastChild);
+						}
 					})()
 
 				// render
@@ -360,45 +404,6 @@ var mints =  {
 					ar_id_promise.then(function(){
 						// console.log("********** ar_id:",ar_id);
 					})
-
-				// activate print bibliography
-					const button_print = document.querySelector('.button_print')
-					if (button_print) {
-						button_print.classList.remove('hidden')
-						const click_handler = async (e) => {
-							e.stopPropagation()
-
-							const biblio_data = await self.get_biblio_data()
-
-							// render references
-							const bibliography_container = self.render_bibliography(biblio_data)
-
-							// hide rows_container / form_container
-							// self.form_container.classList.add('hide')
-							self.rows_container.classList.add('hide')
-							button_print.classList.add('hide')
-
-							// biblio_print add rendered node
-							const biblio_print = document.getElementById('biblio_print')
-							biblio_print.appendChild(bibliography_container)
-
-							// change media type
-							// page.toggle_media_type('print')
-
-							// window.addEventListener("beforeprint", (e) => {
-							// 	e.preventDefault()
-							// 	// page.toggle_media_type('screen')
-							// });
-							requestAnimationFrame(
-								() => {
-									if (confirm('Print?')) {
-										window.print()
-									}
-								}
-							)
-						}
-						button_print.addEventListener('click', click_handler)
-					}
 			})
 
 			// scroll to head result
