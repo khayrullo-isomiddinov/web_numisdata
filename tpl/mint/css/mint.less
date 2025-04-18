@@ -181,14 +181,42 @@
 	}//end #types
 }
 
-// types_print. Default is hidden
+.biblio_print {
+	font-family: ".SF UI Text Condensed Regular", serif;
+}
+
+// types_print. Default is hidden (forces load font before print)
 .types_print {
-	display: none;
+	font-family: ".SF UI Text Regular", sans-serif;
+	font-size: 8pt;
+	visibility: hidden;
+	height: 1px;
+	width: 1px;
+	display: block;
+	overflow: hidden;
 }
 
 .print-info {
 	visibility: hidden;
 	display: none;
+}
+
+#print_font {
+	>.regular {
+		font-family: ".SF UI Text Regular", sans-serif;
+	}
+
+	>.bold {
+		font-family: ".SF UI Text Bold", sans-serif;
+	}
+
+	>.condensed_regular {
+		font-family: ".SF UI Text Condensed Regular", serif;
+	}
+
+	>.condensed_light {
+		font-family: ".SF UI Text Condensed Light", sans-serif;
+	}
 }
 
 // print specifics import

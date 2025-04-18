@@ -24,39 +24,6 @@
 		// 	src: url('../../assets/fonts/BarlowCondensed/BarlowCondensed-Regular.ttf') format('woff');
 		// }
 
-	// san francisco Condensed Regular
-		@font-face {
-			font-family: '.SF UI Text Condensed Regular';
-			font-style: normal;
-			font-weight: normal;
-			src: local('.SF UI Text Condensed Regular'), url('../../assets/fonts/SFUITextCondensed/SFUITextCondensed-Regular.woff') format('woff');
-		}
-
-	// san francisco Condensed Light
-		@font-face {
-			font-family: '.SF UI Text Condensed Light';
-			font-style: normal;
-			font-weight: normal;
-			src: local('.SF UI Text Condensed Light'), url('../../assets/fonts/SFUITextCondensed/SFUITextCondensed-Light.woff') format('woff');
-		}
-
-	// san francisco Display Regular
-		@font-face {
-			font-family: '.SF UI Text Regular';
-			font-style: normal;
-			font-weight: normal;
-			src: local('.SF UI Text Regular'), url('../../assets/fonts/sf-pro-display/SFUIProDisplay-Regular.otf') format('opentype');
-		}
-
-	// san francisco Display Bold
-		@font-face {
-			font-family: '.SF UI Text Bold';
-			font-style: normal;
-			font-weight: normal;
-			src: local('.SF UI Text Bold'), url('../../assets/fonts/sf-pro-display/SFUIProDisplay-Bold.otf') format('opentype');
-		}
-
-
 	@usable_width: 160mm;
 
 	@page {
@@ -141,6 +108,8 @@
 							font-family: "Times New Roman", Times, serif;
 							display: flex;
 							flex-flow: column;
+							margin-bottom: 15mm;
+							margin-top: 25mm;
 
 							.line-tittle {
 								font-size: 18pt;
@@ -153,7 +122,7 @@
 							.info_value {
 								font-size: 10pt;
 								text-align: center;
-								margin-bottom: 6em;
+								// margin-bottom: 6em;
 								margin-left: 0px;
 								font-variant-caps: small-caps;
 
@@ -190,12 +159,13 @@
 					// authorship_print_container
 					.authorship_print_container {
 						display: block !important;
+						margin-top: 1.5em;
 
 						>.authorship {
 							display: block !important;
 							text-align: right;
-							margin-top: 1.5em;
-							font-size: 9px;
+							font-size: 7pt;
+							margin: 0px;
 						}
 					}
 				}
@@ -312,8 +282,14 @@
 
 	// types list for print
 	.types_print {
-		display: block;
+		font-family: ".SF UI Text Regular", sans-serif;
 		font-size: 8pt;
+		display: block;
+		visibility: visible;
+		height: unset;
+		width: unset;
+		overflow: unset;
+
 
 		.children_contanier {
 			margin-left: 10pt;
@@ -393,7 +369,7 @@
 			}
 
 			.coins_images {
-				zoom: 0.55;
+				// zoom: 0.55;
 			}
 
 			span {
@@ -432,7 +408,7 @@
 			.ref_type_averages_diameter,
 			.ref_type_total_diameter_items {
 				font-family: ".SF UI Text Condensed Light", sans-serif;
-				word-spacing: -1.5pt;
+				// word-spacing: -1.5pt;
 			}
 
 			.ref_type_averages_weight,
@@ -540,6 +516,8 @@
 			>.collection_auction {
 				font-family: ".SF UI Text Condensed Light", sans-serif;
 				font-size: 5.5pt;
+				line-height: 6.5pt;
+				margin-top: 2pt;
 			}
 
 			>.coins_images_container {
@@ -554,6 +532,7 @@
 
 	// biblio_print
 	.biblio_print {
+		display: block !important;
 		margin: 0px;
 		page-break-before: always;
 
@@ -600,6 +579,7 @@
 			text-indent: -3em;
 			padding-left: 3em;
 			text-align: justify;
+			break-inside: avoid;
 
 			>.info_line {
 				text-wrap: pretty;
@@ -609,6 +589,9 @@
 
 					&.bib_page {
 
+						&.nowrap {
+							white-space: nowrap;
+						}
 					}
 				}
 			}
