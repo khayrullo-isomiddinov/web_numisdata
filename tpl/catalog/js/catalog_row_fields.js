@@ -385,7 +385,7 @@ var catalog_row_fields = {
 
 				case "ref_type_total_weight_items":
 				case "ref_type_total_diameter_items":
-					current_value = '('+item[name]+')'
+					current_value = '('+item[name]+').'
 					break;
 
 				case "ref_type_averages_weight":
