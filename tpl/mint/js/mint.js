@@ -1372,19 +1372,36 @@ var mint = {
 		// options
 			const mint_map_data		= options.mint_map_data
 			const mint_popup_data	= options.mint_popup_data
-			const types				= options.types
+			const types				= options.types || null
+
+		// popup parser
+			const parse_popup_data = (data) => {
+				return {
+					section_id	: data.section_id,
+					title		: data.name,
+					description	: ""
+				}
+			}
 
 		self.get_findspot_hoards({
 			types : types
 		})
 		.then(function(response){
+			if(SHOW_DEBUG===true) {
+				console.log('draw_map API response:', response);
+			}
+
+			if (!response || !response.result) {
+				console.warn('Warning! Empty API response from hoard data. types:', types);
+				return
+			}
 
 			const container	= self.map_container // document.getElementById("map_container")
 
-			if (response && response.result) {
-				container.classList.remove('hide')
-			}
+			// show map (default is hidden)
+			container.classList.remove('hide')
 
+			// map factory init
 			self.map = self.map || new map_factory() // creates / get existing instance of map
 			self.map.init({
 				map_container	: container,
@@ -1395,7 +1412,8 @@ var mint = {
 				legend			: page.render_map_legend
 			})
 
-			const map_data_points = self.map_data(mint_map_data, mint_popup_data) // prepares data to used in map
+			// prepares data to be used in map
+			const map_data_points = self.map_data(mint_map_data, mint_popup_data)
 
 			// findspots to map
 				const findspots_map_data = response.result[0].result;
@@ -1442,19 +1460,7 @@ var mint = {
 					container.classList.remove("hide_opacity")
 					return true
 				})
-
 		})
-
-		function parse_popup_data(data){
-			const popup_data = {
-				section_id	: data.section_id,
-				title		: data.name,
-				description	: ""
-			}
-			return popup_data;
-		}
-
-
 	},//end draw_map
 
 
@@ -1463,9 +1469,13 @@ var mint = {
 	* GET_PLACE_DATA
 	* Search findspots and hoards data with same place_data
 	*/
-	get_findspot_hoards : function(data){
+	get_findspot_hoards : async function(data){
 
-		const types = data.types
+		const types = data.types || []
+
+		if (!types || types.length<1) {
+			return null
+		}
 
 		const ar_filter = []
 
@@ -1505,14 +1515,16 @@ var mint = {
 				}
 			})
 
-			const js_promise = data_manager.request({
+		// api request
+			const api_response = await data_manager.request({
 				body : {
 					dedalo_get	: 'combi',
 					ar_calls	: ar_calls
 				}
 			})
 
-			return js_promise
+
+		return api_response
 	},//end get_place_data
 
 
@@ -1555,7 +1567,7 @@ var mint = {
 
 
 		return map_points
-	}//end map_data
+	},//end map_data
 
 
 
