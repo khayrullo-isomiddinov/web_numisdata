@@ -781,30 +781,59 @@ var biblio_row_fields = {
 				parent			: line
 			})
 
+		// format pages
+			const format_pages = (pages) => {
+
+				const fragment = new DocumentFragment()
+
+				const ar_chars = pages ? pages.split(' ') : []
+				if (ar_chars[0]) {
+
+					common.create_dom_element({
+						element_type	: 'span',
+						class_name		: 'bib_page',
+						inner_html		: ', ',
+						parent			: fragment
+					})
+
+					const first_page = 'p. ' + ar_chars[0]
+
+					common.create_dom_element({
+						element_type	: 'span',
+						class_name		: 'bib_page nowrap',
+						inner_html		: first_page,
+						parent			: fragment
+					})
+
+					// remove first item
+					ar_chars.shift()
+
+					if (ar_chars.length) {
+						const chars_string = ar_chars.join(' ')
+						if (chars_string.length>0 && chars_string!==' ') {
+							common.create_dom_element({
+								element_type	: 'span',
+								class_name		: 'bib_page',
+								inner_html		: ' '  + chars_string,
+								parent			: fragment
+							})
+						}
+					}
+				}
+
+				return fragment
+			}
+
 		// ref_publication_pages_physical_description (not reference pages)
 			if (add_ref_publications_pages_physical_description) {
-				const pages = (biblio_object.ref_publications_pages_physical_description)
-					? ', p. ' +biblio_object.ref_publications_pages_physical_description
-					: ''
-				common.create_dom_element({
-					element_type	: 'span',
-					class_name		: 'bib_page',
-					inner_html		: pages,
-					parent			: line
-				})
+				const pages_node = format_pages( biblio_object.ref_publications_pages_physical_description )
+				line.appendChild( pages_node )
 			}
 
 		// pages
 			if (add_pages) {
-				const pages = (biblio_object.pages)
-					? ', p. ' +biblio_object.pages
-					: ''
-				common.create_dom_element({
-					element_type	: 'span',
-					class_name		: 'bib_page',
-					inner_html		: pages,
-					parent			: line
-				})
+				const pages_node = format_pages( biblio_object.pages )
+				line.appendChild( pages_node )
 			}
 
 		// sheet
