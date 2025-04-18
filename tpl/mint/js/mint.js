@@ -362,7 +362,7 @@ var mint = {
 						? row.parents.find(el => el==mint_section_id)
 						: false
 					if (!is_mint_child) {
-						console.log("Excluded row:",row);
+						console.log("Excluded row:", row, 'mint_section_id:', mint_section_id);
 						continue;
 					}
 
@@ -1361,6 +1361,9 @@ var mint = {
 
 	/**
 	* DRAW_MAP
+	*
+	* @param object options
+	* @return void
 	*/
 	draw_map : function(options) {
 
@@ -1416,7 +1419,6 @@ var mint = {
 
 			// hoards to map
 				const hoards_map_data = response.result[1].result;
-
 				if (hoards_map_data && hoards_map_data.length>0){
 					for (let i=0;i<hoards_map_data.length;i++){
 

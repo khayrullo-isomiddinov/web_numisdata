@@ -266,9 +266,9 @@ var mint_row = {
 		//ONLY PRINT INFO
 		//obverse
 		const obverse_warpper = common.create_dom_element({
-			element_type 	: "div",
-			class_name 		: "sides-wrapper",
-			parent 			: row_type
+			element_type	: "div",
+			class_name		: "sides-wrapper",
+			parent			: row_type
 		})
 
 		const ob_label = tstring.obverse.charAt(0) || "O"

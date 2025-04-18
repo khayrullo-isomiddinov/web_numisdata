@@ -179,7 +179,6 @@ page.parse_mint_data = function(data) {
 		? JSON.parse(row.relations_coins)
 		: null
 
-
 	row.relations_types = (row.relations_types)
 		? JSON.parse(row.relations_types)
 		: null

@@ -1434,11 +1434,6 @@ export const type_row_fields = {
 				element_type	: "img",
 				src				: data.image_obverse_thumb,
 				title 			: data.section_id,
-				/*
-				dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
-				*/
 				loading			: "lazy",
 				parent			: image_link_obverse
 			})
@@ -1456,11 +1451,6 @@ export const type_row_fields = {
 				element_type	: "img",
 				src				: data.image_reverse_thumb,
 				title 			: data.section_id,
-				/*
-				dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
-				*/
 				loading			: "lazy",
 				parent			: image_link_reverse
 			})

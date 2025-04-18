@@ -1614,7 +1614,6 @@ var catalog = {
 	* DRAW_ROWS
 	*/
 	draw_rows : function(options) {
-		// console.log("draw_rows options:",options);
 
 		const self = this
 

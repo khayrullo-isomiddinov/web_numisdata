@@ -34,4 +34,3 @@
 		$abstract  		= $this->get_element_from_template_map('abstract', $template_map->{$mode});
 		$body  			= $this->get_element_from_template_map('body', $template_map->{$mode});
 		$ar_image  		= $this->get_element_from_template_map('image', $template_map->{$mode});
-

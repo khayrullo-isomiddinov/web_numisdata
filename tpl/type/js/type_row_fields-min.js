@@ -1537,7 +1537,7 @@ var type_row_fields_min = (function (exports) {
 					common.create_dom_element({
 						element_type	: "a",
 						class_name		: "info_value underline-text",
-						inner_html 		: item_text.trim(),
+						inner_html 		: item_text ? item_text.trim() : '',
 						href			: catalog_url,
 						parent 			: line
 					});
@@ -1546,7 +1546,7 @@ var type_row_fields_min = (function (exports) {
 					common.create_dom_element({
 						element_type	: "span",
 						class_name		: "info_value",
-						inner_html		: item_text.trim(),
+						inner_html		: item_text ? item_text.trim() : '',
 						parent			: line
 					});
 				}
@@ -2420,11 +2420,6 @@ var type_row_fields_min = (function (exports) {
 					element_type	: "img",
 					src				: data.image_obverse_thumb,
 					title 			: data.section_id,
-					/*
-					dataset 		: {
-										caption: self.type +' | '+self.equivalents
-									},
-					*/
 					loading			: "lazy",
 					parent			: image_link_obverse
 				});
@@ -2442,11 +2437,6 @@ var type_row_fields_min = (function (exports) {
 					element_type	: "img",
 					src				: data.image_reverse_thumb,
 					title 			: data.section_id,
-					/*
-					dataset 		: {
-										caption: self.type +' | '+self.equivalents
-									},
-					*/
 					loading			: "lazy",
 					parent			: image_link_reverse
 				});
@@ -2704,23 +2694,29 @@ var type_row_fields_min = (function (exports) {
 			// countermark_obverse
 				if (data.countermark_obverse && data.countermark_obverse.length>0){
 
-					common.create_dom_element({
+					const node = common.create_dom_element({
 						element_type	: "span",
 						class_name		: "countermark_obverse",
 						inner_html		: data.countermark_obverse,
 						parent			: countermarks
 					});
+
+					// make images clickable to open thesaurus record
+					page.make_images_links(node);
 				}
 
 			// countermark_reverse
 				if (data.countermark_reverse && data.countermark_reverse.length>0){
 
-					common.create_dom_element({
+					const node = common.create_dom_element({
 						element_type	: "span",
 						class_name		: "countermark_reverse",
 						inner_html		: data.countermark_reverse,
 						parent			: countermarks
 					});
+
+					// make images clickable to open thesaurus record
+					page.make_images_links(node);
 				}
 
 			// bibliography

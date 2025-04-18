@@ -404,6 +404,9 @@
   display: grid;
   page-break-inside: avoid;
 }
+.row_node.types .type_container_deep {
+  display: contents;
+}
 .row_node.mints .mint {
   display: inline-block;
   font-size: 1.4em;

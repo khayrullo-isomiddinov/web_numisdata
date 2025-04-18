@@ -132,38 +132,35 @@
   max-height: 1em;
   width: auto;
 }
+.biblio_print {
+  font-family: ".SF UI Text Condensed Regular", serif;
+}
 .types_print {
-  display: none;
+  font-family: ".SF UI Text Regular", sans-serif;
+  font-size: 8pt;
+  visibility: hidden;
+  height: 1px;
+  width: 1px;
+  display: block;
+  overflow: hidden;
 }
 .print-info {
   visibility: hidden;
   display: none;
 }
+#print_font > .regular {
+  font-family: ".SF UI Text Regular", sans-serif;
+}
+#print_font > .bold {
+  font-family: ".SF UI Text Bold", sans-serif;
+}
+#print_font > .condensed_regular {
+  font-family: ".SF UI Text Condensed Regular", serif;
+}
+#print_font > .condensed_light {
+  font-family: ".SF UI Text Condensed Light", sans-serif;
+}
 @media print {
-  @font-face {
-    font-family: '.SF UI Text Condensed Regular';
-    font-style: normal;
-    font-weight: normal;
-    src: local('.SF UI Text Condensed Regular'), url('../../assets/fonts/SFUITextCondensed/SFUITextCondensed-Regular.woff') format('woff');
-  }
-  @font-face {
-    font-family: '.SF UI Text Condensed Light';
-    font-style: normal;
-    font-weight: normal;
-    src: local('.SF UI Text Condensed Light'), url('../../assets/fonts/SFUITextCondensed/SFUITextCondensed-Light.woff') format('woff');
-  }
-  @font-face {
-    font-family: '.SF UI Text Regular';
-    font-style: normal;
-    font-weight: normal;
-    src: local('.SF UI Text Regular'), url('../../assets/fonts/sf-pro-display/SFUIProDisplay-Regular.otf') format('opentype');
-  }
-  @font-face {
-    font-family: '.SF UI Text Bold';
-    font-style: normal;
-    font-weight: normal;
-    src: local('.SF UI Text Bold'), url('../../assets/fonts/sf-pro-display/SFUIProDisplay-Bold.otf') format('opentype');
-  }
   @page {
     size: 210mm 297mm;
     margin: 25mm 10mm 20mm 25mm;
@@ -233,6 +230,8 @@
     font-family: "Times New Roman", Times, serif;
     display: flex;
     flex-flow: column;
+    margin-bottom: 15mm;
+    margin-top: 25mm;
   }
   #wrapper #main > .inner .result > .row_detail .line-tittle-wrap .line-tittle {
     font-size: 18pt;
@@ -244,7 +243,6 @@
   #wrapper #main > .inner .result > .row_detail .line-tittle-wrap .info_value {
     font-size: 10pt;
     text-align: center;
-    margin-bottom: 6em;
     margin-left: 0px;
     font-variant-caps: small-caps;
   }
@@ -270,16 +268,22 @@
   }
   #wrapper #main > .inner .result .authorship_print_container {
     display: block !important;
+    margin-top: 1.5em;
   }
   #wrapper #main > .inner .result .authorship_print_container > .authorship {
     display: block !important;
     text-align: right;
-    margin-top: 1.5em;
-    font-size: 9px;
+    font-size: 7pt;
+    margin: 0px;
   }
   .types_print {
-    display: block;
+    font-family: ".SF UI Text Regular", sans-serif;
     font-size: 8pt;
+    display: block;
+    visibility: visible;
+    height: unset;
+    width: unset;
+    overflow: unset;
   }
   .types_print .children_contanier {
     margin-left: 10pt;
@@ -324,9 +328,6 @@
   .types_print .row_node.types .grouper_print {
     display: block;
   }
-  .types_print .row_node.types .coins_images {
-    zoom: 0.55;
-  }
   .types_print .row_node.types span {
     margin-right: 0.5em;
   }
@@ -357,7 +358,6 @@
   .types_print .row_node.types .ref_type_averages_diameter,
   .types_print .row_node.types .ref_type_total_diameter_items {
     font-family: ".SF UI Text Condensed Light", sans-serif;
-    word-spacing: -1.5pt;
   }
   .types_print .row_node.types .ref_type_averages_weight,
   .types_print .row_node.types .ref_type_averages_diameter {
@@ -431,8 +431,11 @@
   .types_print .type_container > .collection_auction {
     font-family: ".SF UI Text Condensed Light", sans-serif;
     font-size: 5.5pt;
+    line-height: 6.5pt;
+    margin-top: 2pt;
   }
   .biblio_print {
+    display: block !important;
     margin: 0px;
     page-break-before: always;
   }
@@ -469,9 +472,13 @@
     text-indent: -3em;
     padding-left: 3em;
     text-align: justify;
+    break-inside: avoid;
   }
   .biblio_print .bibliographic_reference > .info_line {
     text-wrap: pretty;
+  }
+  .biblio_print .bibliographic_reference > .info_line > span.bib_page.nowrap {
+    white-space: nowrap;
   }
 }
 /*# sourceMappingURL=mint.css.map */
