@@ -32,6 +32,10 @@ var mint = {
 			self.map_container			= options.map_container
 			self.map 					= null
 
+		// print button
+			const print_button = self.render_print_button()
+			self.export_data_container.appendChild(print_button)
+
 		// export_data_buttons added once
 			const export_data_buttons = page.render_export_data_buttons()
 			self.export_data_container.appendChild(export_data_buttons)
@@ -48,7 +52,9 @@ var mint = {
 				section_id : self.section_id
 			})
 			.then(function(response){
-				// console.log("--> set_up get_row_data API response:",response.result);
+				if(SHOW_DEBUG===true) {
+					console.log("--> set_up get_row_data API response:", response.result);
+				}
 
 				// mint draw
 					const mint = response.result.find( el => el.id==='mint')
@@ -75,25 +81,25 @@ var mint = {
 								types			: mint_data.relations_types
 							})
 
-							window.addEventListener('beforeprint', async function(e) {
+							// window.addEventListener('beforeprint', async function(e) {
 
-								self.map_container.style.width = '210mm'
-								self.map_container.style.height = '120mm'
+							// 	self.map_container.style.width = '210mm'
+							// 	self.map_container.style.height = '120mm'
 
-								await self.map.map.invalidateSize()
-								await self.map.map.fitBounds(self.map.feature_group.getBounds())
+							// 	await self.map.map.invalidateSize()
+							// 	await self.map.map.fitBounds(self.map.feature_group.getBounds())
 
-							})
+							// })
 
-							window.addEventListener('afterprint', async function(e) {
+							// window.addEventListener('afterprint', async function(e) {
 
-								self.map_container.style.width	= null
-								self.map_container.style.height	= null
+							// 	self.map_container.style.width	= null
+							// 	self.map_container.style.height	= null
 
-								await self.map.map.invalidateSize()
-								await self.map.map.fitBounds(self.map.feature_group.getBounds())
+							// 	await self.map.map.invalidateSize()
+							// 	await self.map.map.fitBounds(self.map.feature_group.getBounds())
 
-							})
+							// })
 						}
 					}
 
@@ -169,6 +175,12 @@ var mint = {
 			// 		if (button) button.click()
 			// 	}
 			// }
+
+		// beforeprint event. Forces the page to scroll to the bottom and load all coin images
+		window.addEventListener('beforeprint', (e) => {
+			window.scrollTo(0, document.body.scrollHeight);
+		});
+
 
 		return true
 	},//end set_up
@@ -1568,6 +1580,44 @@ var mint = {
 
 		return map_points
 	},//end map_data
+
+
+
+	/**
+	* RENDER_PRINT_BUTTON
+	* @return HTMLElement export_container
+	*/
+	render_print_button : function () {
+
+		const export_container = common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'export_container'
+		})
+
+		// print_button
+		const print_button = common.create_dom_element({
+			element_type	: 'input',
+			type			: 'button',
+			class_name		: 'btn primary button_print',
+			value			: tstring.print || 'Print',
+			parent			: export_container
+		})
+		const click_handler = (e) => {
+			e.stopPropagation()
+
+			const is_chrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+			const msg = is_chrome
+				? (tstring.print || 'Print') + '?\n'
+				: (tstring.print || 'Print') + '?\n' + ' WARNING: ' + (tstring.use_chrome_for_print || 'Preferably use \'Chrome\' for printing')
+			if (confirm(msg)) {
+				window.print()
+			}
+		}
+		print_button.addEventListener('click', click_handler)
+
+
+		return export_container
+	},//end render_print_button
 
 
 
