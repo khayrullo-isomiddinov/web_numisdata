@@ -161,6 +161,11 @@ page.parse_mint_data = function(data) {
 		return row
 	}
 
+	if (row.public_info) {
+		// remove double br from publication
+		row.public_info = row.public_info.replaceAll('<br> <br>','<br><br>')
+	}
+
 	row.georef_geojson = row.georef_geojson
 		? JSON.parse(row.georef_geojson)
 		: null
