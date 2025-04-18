@@ -29,6 +29,7 @@ var catalog_row_fields = {
 		const self 		 = this
 		const term_table = item.term_table
 		const fragment	 = new DocumentFragment()
+		const print_mode = catalog?.print_mode ?? false
 
 		// load_hires. When thumb is loaded, this event is triggered
 		function load_hires() {
@@ -65,7 +66,9 @@ var catalog_row_fields = {
 						self.node_factory(item, "ref_type_averages_diameter", term_line, null, null)
 						self.node_factory(item, "ref_type_total_diameter_items", term_line, null, null)
 
-					catalog.ar_gropper_nodes.push(term_line);
+					if (catalog) {
+						catalog.ar_gropper_nodes.push(term_line);
+					}
 				}else{
 					// i.e.
 						// children: null
@@ -118,7 +121,7 @@ var catalog_row_fields = {
 							element_type	: "div",
 							class_name		: "type_container_deep"
 						})
-						const ar_gropper_nodes_len = catalog.ar_gropper_nodes.length
+						const ar_gropper_nodes_len = catalog?.ar_gropper_nodes.length || 0
 						if( ar_gropper_nodes_len > 0 ){
 
 							fragment.appendChild(type_container_deep)
@@ -264,8 +267,12 @@ var catalog_row_fields = {
 							})
 							img_obverse.style.width = (diameter * 2 ) + 'mm'
 							img_obverse.hires = item.ref_coins_image_obverse
-							img_obverse.loading="lazy"
-							img_obverse.addEventListener("load", load_hires, false)
+							if (print_mode) {
+								img_obverse.src = img_obverse.hires
+							}else{
+								img_obverse.loading = "lazy"
+								img_obverse.addEventListener("load", load_hires, false)
+							}
 
 						// img_reverse
 							const image_link_reverse = common.create_dom_element({
@@ -284,8 +291,12 @@ var catalog_row_fields = {
 							})
 							img_reverse.style.width = (diameter * 2 ) + 'mm'
 							img_reverse.hires = item.ref_coins_image_reverse
-							img_reverse.loading="lazy"
-							img_reverse.addEventListener("load", load_hires, false)
+							if (print_mode) {
+								img_reverse.src = img_reverse.hires
+							}else{
+								img_reverse.loading = "lazy"
+								img_reverse.addEventListener("load", load_hires, false)
+							}
 
 						if (window.matchMedia) {
 							window.matchMedia('print').addListener(function(mql) {
@@ -339,7 +350,9 @@ var catalog_row_fields = {
 					parent			: fragment
 				})
 
-				catalog.ar_gropper_nodes.push(groupper);
+				if (catalog) {
+					catalog.ar_gropper_nodes.push(groupper);
+				}
 				break;
 		}//end switch
 

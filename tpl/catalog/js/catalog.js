@@ -31,6 +31,9 @@ var catalog = {
 	// ar_gropper_nodes. Used for print to group the first type node with its own groupers to avoid page break inside it
 	ar_gropper_nodes : [],
 
+	// print_mode
+	print_mode : false,
+
 
 
 	/**
