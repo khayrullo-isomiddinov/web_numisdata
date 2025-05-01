@@ -553,7 +553,7 @@ page.parse_catalog_data = function(data) {
 				row.ref_type_symbol_reverse = row.ref_type_symbol_reverse
 					? self.parse_legend_svg(row.ref_type_symbol_reverse)
 					: null
-			
+
 			if (IsJson(row.term_data)){
 				row.term_data = JSON.parse(row.term_data)
 			}
@@ -566,7 +566,7 @@ page.parse_catalog_data = function(data) {
 				}
 				return true
 			}
-			
+
 			row.term_section_id	= row.term_data ? row.term_data[0] : null
 			row.children		= row.children ? JSON.parse(row.children) : null
 			row.parent			= row.parent
@@ -685,7 +685,7 @@ page.parse_catalog_data = function(data) {
 					: null
 				*/
 				//
-	
+
 			row.term_section_label = row.term_section_label
 				? JSON.parse(row.term_section_label)
 				: null
@@ -705,7 +705,7 @@ page.parse_catalog_data = function(data) {
 			row.p_territory = row.p_territory
 				? JSON.parse(row.p_territory)
 				: null
-			
+
 			row.parents = row.parents
 				? (
 					IsJson(row.parents)
@@ -713,7 +713,7 @@ page.parse_catalog_data = function(data) {
 						: row.parents
 				)
 				: null
-			
+
 			row.parents_text = row.parents_text
 				? JSON.parse(row.parents_text)
 				: null
@@ -738,7 +738,7 @@ page.parse_catalog_data = function(data) {
 			row.full_coins_reference_axis = row.full_coins_reference_axis
 				? JSON.parse(row.full_coins_reference_axis)
 				: null
-				
+
 			new_data.push(row)
 		}
 
@@ -1092,8 +1092,11 @@ page.parse_ts_web = function(rows) {
 * PARSE_TREE_DATA
 * Parse rows data to use in tree_factory (thesaurus tables)
 * Table ts_thematic, ts_technique, ts_onomastic, ts_material
+* @param array ar_rows
+* @param array|undefined hilite_terms
+* @param array|null root_term = []
 */
-page.parse_tree_data = function(ar_rows, hilite_terms) {
+page.parse_tree_data = function(ar_rows, hilite_terms, root_term=[]) {
 
 	const data = []
 
@@ -1237,17 +1240,9 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 
 			const row = data[i]
 
-			// skip root terms
-				// if(root_term) {
-				// 	if ( root_term.includes( row.term_id+'' ) ) {
-				// 		// console.log("row.term_id:",row.term_id, root_term);
-				// 		// console.log("/////////////////////////////////////////// row:",row);
-				// 		row.parent = ['hierarchy1_262']
-				// 	}
-				// }
-
+			// skip empty parents except for root terms
 			const parent_term_id = (row.parent && row.parent[0]) ? row.parent[0] : false
-			if (!parent_term_id) {
+			if (!parent_term_id && !root_term.includes(row.term_id)) {
 				console.warn("Ignored undefined parent_term_id:", row.term_id, row);
 				// set to remove
 				term_id_to_remove.push(row.term_id)
