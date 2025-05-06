@@ -25,6 +25,11 @@
 			font-weight: 500;
 			color: #b7996d; //GOLDEN COLOR
 
+			@media screen and (max-width: @movil_max_width) { // 842px
+				// regression v3
+				display: inline-block;
+			}
+
 			.keyword {
 				font-weight: 300;
 				margin: 0;
@@ -73,6 +78,12 @@
 			/* justify-items: center; */
 			/* align-items: center; */
 			justify-content: center;
+
+			@media screen and (max-width: @movil_max_width) { // 842px
+				// regression v3
+				grid-column-start: 1;
+			}
+			// background-color: burlywood;
 		}
 
 		.ref_type_design_obverse{
@@ -162,6 +173,12 @@
 			align-items: center;
 			justify-content: center;
 			display: grid;
+
+			@media screen and (max-width: @movil_max_width) { // 842px
+				// regression v3
+				grid-column-start: 1;
+			}
+			// background-color: aquamarine;
 		}
 
 		.image_obverse{
@@ -187,7 +204,12 @@
 				grid-template-columns: auto 50%;
 			}
 
+			@media screen and (max-width: @movil_max_width) { // 842px
+				// regression v3
+				grid-template-columns: 100%;
+			}
 			.type_info {
+				// background-color: antiquewhite;
 				z-index: 1;
 			}
 		}
