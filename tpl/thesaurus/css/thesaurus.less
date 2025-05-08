@@ -190,16 +190,18 @@
 
 			&.big {
 				transform: scale(11);
-				position: relative;
 				z-index: 99999;
 				box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 				padding-top: 0.25rem;
 				// mix-blend-mode: unset !important;
 
-				// alter
-				position: absolute;
-				left: 40%;
-				top: 40%;
+				// center position
+				position: fixed;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				margin: auto;
 
 				&.thumb_image {
 					padding-top: 0px;
