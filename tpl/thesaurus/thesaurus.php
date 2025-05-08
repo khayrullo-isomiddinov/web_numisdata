@@ -269,7 +269,9 @@
 						$options->ar_fields		= ['term_id'];
 						$options->lang			= WEB_CURRENT_LANG_CODE;
 						$options->limit			= 0;
-						$options->sql_filter 	= 'parent_term_id = \'["hierarchy1_262"]\'';
+						// $options->sql_filter	= 'parent_term_id = \'["hierarchy1_262"]\'';
+						$options->sql_filter	= 'parent_term_id = \'["hierarchy1_262"]\' OR parent_term_id = \'["numisdata665_7100"]\'';
+						// $options->sql_filter	= 'parent_term_id = \'["numisdata665_7100"]\'';
 					# HTTP request in php to the API
 					$web_data = json_web_data::get_data($options);
 						// dump($web_data, ' web_data ++ '.to_string());
