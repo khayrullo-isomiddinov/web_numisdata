@@ -301,9 +301,9 @@ var catalog_row_fields = {
 						if (window.matchMedia) {
 							window.matchMedia('print').addListener(function(mql) {
 								if (mql.matches) {
-									coins_images.style.width	= (diameter * 2 ) + 'mm'
-									img_obverse.style.width		= (diameter * 1 ) + 'mm'
-									img_reverse.style.width		= (diameter * 1 ) + 'mm'
+									coins_images.style.width	= (diameter * 2.08) + 'mm'
+									img_obverse.style.width		= (diameter * 1.04) + 'mm'
+									img_reverse.style.width		= (diameter * 1.04) + 'mm'
 								}
 								if (!mql.matches) {
 									coins_images.style.width 	= (diameter * 4 ) + 'mm'
