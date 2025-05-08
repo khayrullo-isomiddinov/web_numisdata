@@ -1238,8 +1238,6 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 			// 	item.dd_relations = JSON.parse(item.dd_relations)
 			// }
 
-
-
 		// parsed
 			item.parsed = true
 

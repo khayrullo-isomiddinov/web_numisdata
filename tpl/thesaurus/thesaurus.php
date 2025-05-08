@@ -142,7 +142,7 @@
 						'ts_countermarks'
 					],
 					'root_term'	=> [
-						'sccmk1_1'
+						'sccmk1_1' // sccmk1_1
 					],
 					'term_id' => $term_id, // options request term_id add
 					'ar_fields' => ['*']
@@ -264,11 +264,11 @@
 				];
 				// dynamic root_term
 					$options = new stdClass();
-						$options->dedalo_get 	= 'records';
-						$options->table  	 	= 'catalog';
-						$options->ar_fields  	= ['term_id'];
-						$options->lang  	 	= WEB_CURRENT_LANG_CODE;
-						$options->limit 		= 0;
+						$options->dedalo_get	= 'records';
+						$options->table			= 'catalog';
+						$options->ar_fields		= ['term_id'];
+						$options->lang			= WEB_CURRENT_LANG_CODE;
+						$options->limit			= 0;
 						$options->sql_filter 	= 'parent_term_id = \'["hierarchy1_262"]\'';
 					# HTTP request in php to the API
 					$web_data = json_web_data::get_data($options);

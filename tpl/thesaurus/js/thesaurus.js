@@ -309,7 +309,7 @@ var thesaurus =  {
 
 		// debug
 			if(SHOW_DEBUG===true) {
-				// console.log("--- load_tree_data parsed sql_filter:")
+				console.log("--- load_tree_data parsed sql_filter:", sql_filter)
 				// console.log(sql_filter)
 			}
 
