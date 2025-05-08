@@ -265,6 +265,11 @@
   font-weight: 500;
   color: #b7996d;
 }
+@media screen and (max-width: 842px) {
+  .row_node.types .term {
+    display: inline-block;
+  }
+}
 .row_node.types .term .keyword {
   font-weight: 300;
   margin: 0;
@@ -306,6 +311,11 @@
   /* justify-items: center; */
   /* align-items: center; */
   justify-content: center;
+}
+@media screen and (max-width: 842px) {
+  .row_node.types .collection_auction {
+    grid-column-start: 1;
+  }
 }
 .row_node.types .ref_type_design_obverse {
   grid-column-start: 1;
@@ -377,6 +387,11 @@
   justify-content: center;
   display: grid;
 }
+@media screen and (max-width: 842px) {
+  .row_node.types .coins_images_container {
+    grid-column-start: 1;
+  }
+}
 .row_node.types .image_obverse {
   max-width: 100%;
   height: auto;
@@ -395,6 +410,11 @@
 @media screen and (max-width: 1280px) {
   .row_node.types .type_container {
     grid-template-columns: auto 50%;
+  }
+}
+@media screen and (max-width: 842px) {
+  .row_node.types .type_container {
+    grid-template-columns: 100%;
   }
 }
 .row_node.types .type_container .type_info {
