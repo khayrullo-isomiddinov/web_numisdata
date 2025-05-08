@@ -1162,8 +1162,9 @@ page.parse_ts_web = function(rows) {
 * Table ts_thematic, ts_technique, ts_onomastic, ts_material
 * @param array ar_rows
 * @param array|undefined hilite_terms
+* @param array|null root_term = []
 */
-page.parse_tree_data = function(ar_rows, hilite_terms) {
+page.parse_tree_data = function(ar_rows, hilite_terms, root_term=[]) {
 
 	const data = []
 
@@ -1300,17 +1301,9 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 
 			const row = data[i]
 
-			// skip root terms
-				// if(root_term) {
-				// 	if ( root_term.includes( row.term_id+'' ) ) {
-				// 		// console.log("row.term_id:",row.term_id, root_term);
-				// 		// console.log("/////////////////////////////////////////// row:",row);
-				// 		row.parent = ['hierarchy1_262']
-				// 	}
-				// }
-
+			// skip empty parents except for root terms
 			const parent_term_id = (row.parent && row.parent[0]) ? row.parent[0] : false
-			if (!parent_term_id) {
+			if (!parent_term_id && !root_term.includes(row.term_id)) {
 				console.warn("Ignored undefined parent_term_id:", row.term_id, row);
 				// set to remove
 				term_id_to_remove.push(row.term_id)
