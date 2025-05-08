@@ -435,7 +435,7 @@
     margin-top: 2pt;
   }
   .biblio_print {
-    display: block;
+    display: block !important;
     margin: 0px;
     page-break-before: always;
   }
