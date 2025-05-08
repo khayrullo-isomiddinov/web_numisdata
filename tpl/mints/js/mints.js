@@ -86,7 +86,7 @@ var mints =  {
 
 		// activate print bibliography
 			const button_print = document.querySelector('.button_print')
-			if (button_print) {
+			if (button_print && dedalo_logged===true) {
 				button_print.classList.remove('hidden')
 				const click_handler = async (e) => {
 					e.stopPropagation()

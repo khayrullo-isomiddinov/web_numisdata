@@ -33,8 +33,10 @@ var mint = {
 			self.map 					= null
 
 		// print button
-			const print_button = self.render_print_button()
-			self.export_data_container.appendChild(print_button)
+			if (dedalo_logged===true) {
+				const print_button = self.render_print_button()
+				self.export_data_container.appendChild(print_button)
+			}
 
 		// export_data_buttons added once
 			const export_data_buttons = page.render_export_data_buttons()
@@ -179,7 +181,33 @@ var mint = {
 		// beforeprint event. Forces the page to scroll to the bottom and load all coin images
 		window.addEventListener('beforeprint', (e) => {
 			window.scrollTo(0, document.body.scrollHeight);
+
+			// hide types and bibliography
+			if (dedalo_logged!==true) {
+				['types_print','biblio_print','row_detail'].forEach(el => {
+					const node = document.getElementById(el)
+					if (node) {
+						node.style.visibility = 'hidden'
+						node.classList.add('print_hide')
+					}
+				})
+			}
 		});
+
+		// afterprint
+		window.addEventListener("afterprint", (e) => {
+
+			// show types and bibliography
+			if (dedalo_logged!==true) {
+				['types_print','biblio_print','row_detail'].forEach(el => {
+					const node = document.getElementById(el)
+					if (node) {
+						node.style.visibility = ''
+						node.classList.remove('print_hide')
+					}
+				})
+			}
+		})
 
 
 		return true
