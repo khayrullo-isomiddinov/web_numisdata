@@ -163,11 +163,11 @@ export const type_row_fields = {
 		const reverse_wrapper = common.create_dom_element({
 			element_type	: "div",
 			class_name		: "reverse_wrapper",
-			parent				: sides_wrapper
+			parent			: sides_wrapper
 		})
 
 		// design_reverse
-			if (item.design_reverse_data) {
+			if (item.design_reverse) {
 				reverse_wrapper.appendChild(
 					self.default(item, "design_reverse")
 				)
