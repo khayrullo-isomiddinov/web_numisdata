@@ -462,6 +462,11 @@
 				.legend_obverse,
 				.legend_reverse {
 
+					// correct span margin heritage issue (print)
+					span {
+						margin: unset;
+					}
+
 					.ref_type_legend_transcription_obverse,
 					.ref_type_legend_transcription_reverse {
 						font-family: ".SF UI Text Condensed Light", sans-serif;
@@ -475,6 +480,7 @@
 
 					img {
 						height: 8pt;
+						vertical-align: middle; // fix case S as svg (mint/48 Carteia)
 					}
 				}
 			}

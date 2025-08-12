@@ -90,7 +90,7 @@ export const analysis =  {
 	 * Call the Dedalo API and obtain colors for the different denominations
 	 */
 	load_denomination_colors : function() {
-		
+
 		const self = this
 
 		const request_body = {
@@ -226,7 +226,7 @@ export const analysis =  {
 					})
 				}
 			})
-	
+
 		// iconography_obverse
 			self.form.item_factory({
 				id				: "iconography_obverse",
@@ -248,7 +248,7 @@ export const analysis =  {
 					})
 				}
 			})
-		
+
 		// iconography_reverse
 			self.form.item_factory({
 				id				: "iconography_reverse",
@@ -270,7 +270,7 @@ export const analysis =  {
 					})
 				}
 			})
-		
+
 		// range slider date (range_slider) (!) WORKING HERE
 			self.form.item_factory({
 				id			: "range_slider",
@@ -474,7 +474,9 @@ export const analysis =  {
 				}
 			})
 			.then((parsed_data)=>{
-				// console.log(parsed_data)
+				if(SHOW_DEBUG===true) {
+					console.log(parsed_data)
+				}
 
 				event_manager.publish('form_submit', parsed_data)
 
@@ -556,7 +558,7 @@ export const analysis =  {
 						}
 					}
 				)
-				
+
 				// Diameters
 				const diameters = data.filter( (ele) => ele.diameter_max ).map(
 					(ele) => {
@@ -761,7 +763,7 @@ export const analysis =  {
 /**
  * Callback for tooptip in violin-boxplot
  * @param {{id: string, type_number: string, mint: string}} options
- * @returns {Promise<Element>} the html element to add to the tooltip 
+ * @returns {Promise<Element>} the html element to add to the tooltip
  */
 async function type_tooltip_callback(options) {
 
