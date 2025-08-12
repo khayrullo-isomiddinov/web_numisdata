@@ -1,0 +1,607 @@
+// Variables
+
+// print specifics for mint
+@media print {
+
+	// HelveticaNeue-CondensedRegular
+		// @font-face {
+		// 	font-family: 'HelveticaNeue-CondensedRegular';
+		// 	src: url('../../assets/fonts/HelveticaNeue/HelveticaNeue-CondensedRegular.eot');
+		// 	src: url('../../assets/fonts/HelveticaNeue/HelveticaNeue-CondensedRegular.eot?#iefix') format('embedded-opentype'),
+		// 		 //url('../../assets/fonts/HelveticaNeue/HelveticaNeue-CondensedRegular.woff2') format('woff2'),
+		// 		 url('../../assets/fonts/HelveticaNeue/HelveticaNeue-CondensedRegular.woff') format('woff'),
+		// 		 url('../../assets/fonts/HelveticaNeue/HelveticaNeue-CondensedRegular.ttf') format('truetype');
+		// 		 // url('../../assets/fonts/HelveticaNeue/HelveticaNeue-CondensedRegular..svg#san_francisco_displayregular') format('svg');
+		// 	font-weight: normal;
+		// 	font-style: normal;
+		// }
+
+	// BarlowCondensed-Regular
+		// @font-face {
+		// 	font-family: 'BarlowCondensed';
+		// 	font-style: normal;
+		// 	font-weight: normal;
+		// 	src: url('../../assets/fonts/BarlowCondensed/BarlowCondensed-Regular.ttf') format('woff');
+		// }
+
+	@usable_width: 160mm;
+
+	@page {
+		size: 210mm 297mm;
+		margin: 25mm 10mm 20mm 25mm;
+	}
+
+	// hide elements
+		#header,
+		#menu,
+		#footer,
+		#export_data,
+		#map_container,
+		#types,
+		.inner > h1,
+		.form,
+		nav,
+		.leaflet-control-container,
+		.golden-separator,
+		.text-block-separator,
+		.export_data_container,
+		.mint,
+		.link_mint,
+		.mint_relations,
+		.authorship,
+		.related,
+		.icon_link,
+		.bibliography_container,
+		.go_to_dedalo {
+			display: none !important;
+		}
+
+	a {
+		color: black !important;
+		border: none;
+	}
+
+	body {
+		background-color: transparent;
+		// background-color: #dfe033;
+		margin: 0px !important;
+		padding: 0px !important;
+		color: black !important;
+		// margin-left: auto;
+		// margin-right: auto;
+	}
+
+	#wrapper {
+		// font-family: "HelveticaNeue-CondensedRegular", sans-serif;
+		// font-family: "BarlowCondensed", sans-serif;
+		font-family: ".SF UI Text Condensed Regular", serif;
+		background-color: transparent;
+		background: none;
+		margin: 0px !important;
+		padding: 0px !important;
+		// font-size: 3.39mm;
+		width: @usable_width !important;
+		height: auto;
+
+		#main {
+			width: 100%;
+			padding-bottom: 0px;
+			margin: 0px !important;
+			padding: 0px !important;
+
+			>.inner {
+				margin: 0px !important;
+				padding: 0px !important;
+
+				.result {
+					margin: 0px !important;
+					padding: 0px !important;
+					width: @usable_width;
+
+					// main text
+					>.row_detail {
+						margin-bottom: 30pt;
+
+						// page title
+						.line-tittle-wrap {
+							margin: 0px;
+							font-family: "Times New Roman", Times, serif;
+							display: flex;
+							flex-flow: column;
+							margin-bottom: 15mm;
+							margin-top: 25mm;
+
+							.line-tittle {
+								font-size: 18pt;
+								text-align: center;
+								color: black;
+								text-transform: uppercase;
+								margin-left: 0px;
+							}
+
+							.info_value {
+								font-size: 10pt;
+								text-align: center;
+								// margin-bottom: 6em;
+								margin-left: 0px;
+								font-variant-caps: small-caps;
+
+								// hide first letter: |
+								&::first-letter {
+									font-size: 0px;
+								}
+							}
+						}
+
+						// main text block
+						.contracted-block {
+							max-height: unset;
+							overflow: visible;
+							transition: none;
+						}
+
+						// main text block
+						.info_text_block {
+							margin: 0px !important;
+							padding: 0px !important;
+							max-height: unset;
+							overflow: unset;
+							text-align: justify;
+							// text-indent: 2em;
+							font-family: ".SF UI Text Regular", sans-serif;
+							font-size: 10pt;
+							letter-spacing: 0.2pt;
+							word-spacing: -0.2pt;
+							line-height: 14pt;
+						}
+					}
+
+					// authorship_print_container
+					.authorship_print_container {
+						display: block !important;
+						margin-top: 1.5em;
+
+						>.authorship {
+							display: block !important;
+							text-align: right;
+							font-size: 7pt;
+							margin: 0px;
+						}
+					}
+				}
+
+				// OLD
+					// .ts_period {
+					// 	padding-left: 0px;
+					// }
+
+					// .item_wrapper {
+					// 	padding-left: 0 !important;
+
+					// 	.type_group {
+					// 		//font-size: 120% !important;
+					// 		font-weight: inherit !important;
+					// 	}
+
+					// 	.container {
+					// 		padding-left:1em;
+					// 	}
+
+					// 	.unit {
+					// 	// 	padding-left: 1em !important;
+					// 	// 	width: 100% !important;
+					// 	// 	margin-bottom: 1em;
+
+					// 	// 	.type_wrap {
+					// 	// 		display: grid;
+					// 	// 		grid-template-columns: auto auto;
+					// 	// 		grid-template-rows: repeat(6,auto);
+					// 	// 		grid-column-gap: 1em;
+					// 	// 		border-bottom: 1px solid #ddd;
+					// 	// 		padding: 0 !important;
+					// 	// 	}
+
+					// 	// 	.type_number {
+					// 	// 		white-space: normal !important;
+					// 	// 	}
+
+					// 	// 	.type_info {
+
+					// 	// 	}
+
+					// 	// 	.types_img{
+					// 	// 		grid-column-start:2;
+					// 	// 		grid-row-start: 1;
+					// 	// 		grid-row-end: 6;
+					// 	// 		text-align: right;
+					// 	// 		margin: inherit !important;
+					// 	// 	}
+
+					// 	// 	.info_wrap {
+					// 	// 		grid-row-start: 2;
+					// 	// 		.type_info {
+					// 	// 			text-align: left !important;
+					// 	// 		}
+					// 	// 	}
+
+					// 	// 	.design-info {
+					// 	// 		display: inline-block;
+					// 	// 		text-align: left !important;
+					// 	// 		grid-column-start: 1;
+					// 	// 	}
+
+					// 	// 	.sides-wrapper {
+					// 	// 		display: flex;
+					// 	// 		flex-flow: row;
+					// 	// 	}
+
+					// 	// 	.legend-info {
+					// 	// 		display: inline-block;
+					// 	// 		text-align: left;
+					// 	// 		line-height: inherit;
+					// 	// 		margin-left: 1em;
+					// 	// 	}
+
+					// 	// 	.equivalents {
+					// 	// 		grid-row-start: 5;
+					// 	// 		text-align: left !important;
+					// 	// 	}
+
+					// 	// 	.coins-info{
+					// 	// 		text-align: right;
+					// 	// 		color: #888 !important;;
+					// 	// 		margin: 0 !important;
+					// 	// 		grid-column-start: 2;
+					// 	// 	}
+
+					// 	// 	.public-info {
+					// 	// 		display: flex;
+					// 	// 		grid-row-start: 6;
+
+					// 	// 		img {
+					// 	// 			line-height: 1em;
+					// 	// 			display: inline;
+					// 	// 			width: 1em !important;
+					// 	// 			height: 2em !important;
+					// 	// 			margin: 0 1em;
+					// 	// 		}
+					// 	// 	}
+					// 	// }
+					// }
+
+					// .info_line {
+
+					// 	.big_label {
+					// 		background-color: unset;
+					// 		color: #777777;
+					// 	}
+					// }
+			}
+		}
+	}
+
+	// types list for print
+	.types_print {
+		font-family: ".SF UI Text Regular", sans-serif;
+		font-size: 8pt;
+		display: block;
+		visibility: visible;
+		height: unset;
+		width: unset;
+		overflow: unset;
+
+
+		.children_contanier {
+			margin-left: 10pt;
+		}
+
+		>.children_contanier {
+			margin-left: 0px;
+		}
+
+		.row_node.mints {
+
+			>.children_contanier {
+				margin-left: 0px;
+
+				>.row_node {
+					margin-top: 0.5em;
+				}
+			}
+		}
+
+		// .children_contanier {
+		// 	>.row_node {
+		// 		>.term_grouper {
+		// 			// background-color: #fe4b00;
+		// 			margin-top: 0.5em;
+		// 		}
+		// 	}
+		// }
+
+		.row_node {
+
+			// display term_grouper are hidden for print only
+			.term_grouper {
+				display: none;
+			}
+
+			.grouper_value {
+				font-family: ".SF UI Text Regular", sans-serif;
+				// background-color: #fbca33;
+				font-size: 10pt;
+			}
+
+			.grouper_print {
+				// background-color: #ebea89;
+			}
+
+			.type_container_deep {
+				display: inline-block;
+				-webkit-column-break-inside: avoid; /* Chrome, Safari, Opera */
+				page-break-inside: avoid; /* Firefox */
+					break-inside: avoid; /* IE 10+ */
+
+				.grouper_value:first-of-type {
+					margin-top: 0.25em;
+				}
+			}
+		}
+
+		// nested row_node.types remove border
+		.row_node.types .children_contanier {
+
+			>.row_node.types {
+				&:last-of-type {
+					border: none;
+				}
+			}
+		}
+
+		.row_node.types {
+			width: @usable_width;
+			overflow: visible;
+			border-top: none;
+			border-bottom: 1px solid #ddd;
+
+			.grouper_print {
+				display: block;
+			}
+
+			.coins_images {
+				// zoom: 0.55;
+			}
+
+			span {
+				margin-right: 0.5em;
+			}
+
+			.term_line {
+				word-spacing: -1pt;
+
+				span {
+					margin-right: 0.25em;
+				}
+
+				>.term {
+					font-family: ".SF UI Text Bold", sans-serif;
+					display: inline-block;
+					padding-top: 1em;
+
+					>.no_bold {
+						font-family: ".SF UI Text Regular", sans-serif;
+					}
+				}
+			}
+
+			.legend_box.small,
+			.ref_type_averages_weight,
+			.ref_type_total_weight_items,
+			.ref_type_averages_diameter,
+			.ref_type_total_diameter_items,
+			.descriptions {
+				font-size: unset !important;
+			}
+
+			.ref_type_averages_weight,
+			.ref_type_total_weight_items,
+			.ref_type_averages_diameter,
+			.ref_type_total_diameter_items {
+				font-family: ".SF UI Text Condensed Light", sans-serif;
+				// word-spacing: -1.5pt;
+			}
+
+			.ref_type_averages_weight,
+			.ref_type_averages_diameter {
+				margin-right: 0.25em;
+			}
+
+			.ref_type_material {
+
+				&::after {
+					content: ".";
+				}
+			}
+
+			.ref_type_denomination {
+
+				&::after {
+					content: ".";
+				}
+			}
+
+			.term {
+				display: block;
+				line-height: 1em;
+				padding-top: 0.25em;
+
+				.a_term {
+					font-family: ".SF UI Text Bold", sans-serif;
+
+					>span {
+						font-family: ".SF UI Text Regular", sans-serif;
+						margin-right: 0px;
+
+						&.keyword {
+							font-family: ".SF UI Text Condensed Light", sans-serif;
+						}
+					}
+				}
+			}
+
+			.descriptions {
+				padding-top: 0.3em;
+				letter-spacing: 0.01pt;
+				row-gap: 0.3em;
+
+				.ref_type_design_obverse,
+				.ref_type_design_reverse {
+					line-height: 10pt;
+				}
+
+				.legend_obverse,
+				.legend_reverse {
+
+					// correct span margin heritage issue (print)
+					span {
+						margin: unset;
+					}
+
+					.ref_type_legend_transcription_obverse,
+					.ref_type_legend_transcription_reverse {
+						font-family: ".SF UI Text Condensed Light", sans-serif;
+						font-size: 7pt;
+						margin-right: 0px;
+					}
+				}
+
+				.legend_box.small {
+					line-height: unset;
+
+					img {
+						height: 8pt;
+						vertical-align: middle; // fix case S as svg (mint/48 Carteia)
+					}
+				}
+			}
+		}
+
+		.type_container {
+			// background-color: #fcf9f5;
+			width: @usable_width;
+			overflow: visible;
+			-webkit-column-break-inside: avoid; /* Chrome, Safari, Opera */
+				page-break-inside: avoid; /* Firefox */
+					break-inside: avoid; /* IE 10+ */
+
+			.type_info {
+				grid-row-start: initial;
+				grid-column-start: initial;
+				z-index: 1;
+				letter-spacing: 0.2pt;
+				font-size: 8pt;
+
+				>.term {
+
+				}
+
+				>.ref_type_material {
+
+				}
+
+				>.ref_type_denomination {
+
+				}
+
+				.ref_type_design_reverse {
+					padding-right: 2em;
+				}
+			}
+
+			>.ref_type_equivalents,
+			>.collection_auction {
+				font-family: ".SF UI Text Condensed Light", sans-serif;
+				font-size: 5.5pt;
+				line-height: 6.5pt;
+				margin-top: 2pt;
+			}
+
+			>.coins_images_container {
+
+			}
+
+			>.collection_auction {
+
+			}
+		}
+	}
+
+	// biblio_print
+	.biblio_print {
+		display: block !important;
+		margin: 0px;
+		page-break-before: always;
+
+		>.bibliography_container_print {
+
+			.info_line.separator {
+				margin-top: 0px !important;
+				margin-bottom: 32pt;
+				border: none !important;
+
+				.big_label {
+					background-color: unset;
+					color: #000000;
+					margin: 0px !important;
+					font-family: "Times New Roman", Times, serif;
+					text-align: center;
+					width: 100%;
+					font-size: 10pt;
+				}
+			}
+		}
+
+		.bibliography_container_print {
+
+			>.info_text_block {
+				padding: 0px !important;
+				padding-top: 0.5em !important;
+				overflow: unset !important;
+				max-height: unset !important;
+				column-count: 2;
+				column-gap: 12pt;
+			}
+
+			.big_label {
+				padding-left: 0px !important;
+			}
+		}
+
+		.bibliographic_reference {
+			margin-top: 0px !important;
+			margin-bottom: 0.5em !important;
+			line-height: 1.25em !important;
+			font-size: 7pt !important;
+			text-indent: -3em;
+			padding-left: 3em;
+			text-align: justify;
+			break-inside: avoid;
+
+			>.info_line {
+				text-wrap: pretty;
+				// hyphens: auto;
+
+				>span {
+
+					&.bib_page {
+
+						&.nowrap {
+							white-space: nowrap;
+						}
+					}
+				}
+			}
+		}
+	}//end biblio_print
+
+}//end @media print

@@ -4,7 +4,7 @@
 	@page_path : "../../page";
 
 // Usage library
-	@import "@{page_path}/css/library.less";
+	@import "@{page_path}/css/vars.less";
 
 
 
@@ -39,7 +39,7 @@
 			flex-wrap: wrap;
 			flex-flow: column;
 
-			@media screen and (min-width: 960px){
+			@media screen and (min-width: @content_medium2_max_width){
 				flex-flow: row;
 			}
 		}
@@ -52,11 +52,10 @@
 			width: 100%;
 			flex-flow: row;
 			display: flex;
-			@media screen and (min-width: 960px){
+			@media screen and (min-width: @content_medium2_max_width){
 				flex-flow: column;
 				width: 30%;
 			}
-			//border-right: 1px solid #cccccc;
 
 			>a.image_link {
 
@@ -72,15 +71,13 @@
 					margin-right: 0;
 					object-fit: contain;
 					background-position: center;
-					@media screen and (max-width: 960px){
+					@media screen and (max-width: @content_medium2_max_width){
 						width: 100%;
 					}
 				}
-
-
 			}
 
-			@media screen and (max-width: 736px){
+			@media screen and (max-width: @content_medium_max_width){
 				float:inherit;
 				display:flex;
 			}
@@ -93,10 +90,18 @@
 			grid-column-gap: 1em;
 			// grid-row-gap: 0.2em;
 
+			img.svg {
+				height: 28px;
+			}
 
-			@media screen and (max-width: 960px){
+
+			@media screen and (max-width: @content_medium2_max_width){
 				width: 100%;
 				grid-template-columns: 100%;
+			}
+
+			a {
+				padding: unset !important;
 			}
 
 			.left-labels {
@@ -105,7 +110,7 @@
 				grid-column: 1;
 				margin: 0;
 				font-size: unset;
-				@media screen and (max-width: 960px){
+				@media screen and (max-width: @content_medium2_max_width){
 					text-align: left;
 				}
 			}
@@ -114,7 +119,7 @@
 				// width: 65%;
 				text-align: left;
 				grid-column: 2;
-				@media screen and (max-width: 960px){
+				@media screen and (max-width: @content_medium2_max_width){
 					grid-column: 1;
 				}
 				border-bottom: none;
@@ -187,7 +192,7 @@
 				justify-content: flex-end;
 				// margin-bottom: 1em;
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					flex-flow: column;
 
 					.separator{
@@ -211,7 +216,7 @@
 				flex-flow: row;
 				// margin-bottom: 1em;
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					flex-flow: column;
 
 					.separator{
@@ -350,7 +355,7 @@
 
 	#footer, #header, #export_data {
 		display: none;
-		
+
 	}
 
 	#wrapper {

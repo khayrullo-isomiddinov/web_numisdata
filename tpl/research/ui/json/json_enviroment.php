@@ -20,7 +20,8 @@
 
 	# basePath
 		# Path where will be maded the calls (json trigger base path)
-		$json_content->basePath = '/dedalo/lib/dedalo/publication/server_api/v1/json/';
+		// $json_content->basePath = '/dedalo/lib/dedalo/publication/server_api/v1/json/';
+		$json_content->basePath = '/dedalo_publication_server/';
 
 	# Protocols
 		# Create protocols selector based on current protocol

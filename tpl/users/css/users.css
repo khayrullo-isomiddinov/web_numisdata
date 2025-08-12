@@ -1,3 +1,8 @@
+/*
+* vars
+* Global less vars
+* (file included from vars.less)
+*/
 .button_icon_simple {
   background-repeat: no-repeat;
   background-position: center center;
@@ -15,6 +20,15 @@
 }
 .content {
   padding-top: 1rem;
+}
+.images {
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+.images .image_big {
+  height: 28rem;
+  width: 100%;
+  object-fit: contain;
 }
 .main_container {
   position: relative;

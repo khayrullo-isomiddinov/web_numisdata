@@ -1,7 +1,7 @@
 <?php
 /**
 * COMMON
-* 
+*
 *
 */
 class common {
@@ -10,7 +10,7 @@ class common {
 	# Version. Important!
 	static $version = "1.0.0"; // 14-09-2017
 
-	
+
 
 	// /**
 	// * TRIGGER_MANAGER
@@ -21,7 +21,7 @@ class common {
 
 	// 	$options = new stdClass();
 	// 		$options->test_login = false;
-	
+
 
 	// 	# Set JSON headers for all responses
 	// 	header('Content-Type: application/json');
@@ -36,14 +36,14 @@ class common {
 	// 			$response->msg 		= "Error on read php://input data";
 	// 		echo json_encode($response);
 	// 		exit();
-	// 	}		
-		
-		
+	// 	}
+
+
 	// 	#dump($json_data, ' json_data ++ '.to_string());
 
 	// 	# MODE Verify
 	// 	if(empty($json_data->mode)) exit( json_encode("<span class='error'> Trigger: Error Need mode..</span>") );
-		
+
 	// 	# CALL FUNCTION
 	// 	if ( function_exists($json_data->mode) ) {
 	// 		$response = (object)call_user_func($json_data->mode, $json_data);
@@ -71,7 +71,7 @@ class common {
 
 		$options = new stdClass();
 			$options->test_login = false;
-	
+
 
 		# Set JSON headers for all responses
 		header('Content-Type: application/json');
@@ -87,13 +87,13 @@ class common {
 			echo json_encode($response, JSON_UNESCAPED_UNICODE);
 			exit();
 		}
-		
-		
+
+
 		#dump($json_data, ' json_data ++ '.to_string());
 
 		# MODE Verify
 		if(empty($json_data->mode)) exit( json_encode("<span class='error'> Trigger: Error Need mode..</span>", JSON_UNESCAPED_UNICODE) );
-		
+
 		# CALL FUNCTION
 		if ( function_exists($json_data->mode) ) {
 			$response = (object)call_user_func($json_data->mode, $json_data);
@@ -120,10 +120,10 @@ class common {
 	public static function setVarData($name, $data_obj, $default=false) {
 
 		if($name==='name') throw new Exception("Error Processing Request [setVarData]: Name 'name' is invalid", 1);
-		
-		$$name = $default; 
+
+		$$name = $default;
 		if(isset($data_obj->{$name})) $$name = $data_obj->{$name};
-		
+
 		if(isset($$name))
 			return $$name;
 
@@ -136,19 +136,19 @@ class common {
 	* SETVAR
 	*/
 	public static function setVar($name,$default=false) {
-		
-		$$name = $default; 
+
+		$$name = $default;
 		if(isset($_REQUEST["$name"])) {
-			
+
 			$$name = $_REQUEST["$name"];
-			
+
 		}else if(isset($GLOBALS["$name"])) {
-			
-			$$name = $GLOBALS["$name"];	
+
+			$$name = $GLOBALS["$name"];
 		}
 
 		$$name = common::safe_xss($$name);
-		
+
 		return $$name ;
 	}//end setVar
 
@@ -163,7 +163,7 @@ class common {
 		if (is_string($value)) {
 			$value = strip_tags($value,'<br><strong><em>');
 			$value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-		}	
+		}
 
 		return $value;
 	}//end safe_xss
@@ -172,10 +172,10 @@ class common {
 
 	/**
 	* GENERATE_URL
-	* @return 
+	* @return
 	*/
 	public static function generate_url($string) {
-		
+
 		return urlencode($string);
 	}//end generate_url
 
@@ -186,10 +186,10 @@ class common {
 	* @return bool
 	*/
 	public static function validate_area_name($area_name) {
-		if (strpos($area_name, '\'')!==false || 
-			strpos($area_name, '"')!==false || 
+		if (strpos($area_name, '\'')!==false ||
+			strpos($area_name, '"')!==false ||
 			strpos($area_name, ';')!==false ||
-			strpos($area_name, ',')!==false   
+			strpos($area_name, ',')!==false
 		) {
 			return false;
 		}else{
@@ -206,10 +206,10 @@ class common {
 	* @return object $date_obj
 	*/
 	public static function date_to_object($request_options) {
-		
+
 
 		$options = new stdClass();
-			$options->date 		 = false; 
+			$options->date 		 = false;
 			$options->lang 		 = WEB_CURRENT_LANG_CODE;
 			$options->set_locale = true;
 			foreach ($request_options as $key => $value) {if (property_exists($options, $key)) $options->$key = $value;}
@@ -217,7 +217,7 @@ class common {
 		if ($options->date===false) {
 			return false;
 		}
-		
+
 		if ($options->set_locale===true) {
 			switch ($options->lang) {
 				case 'lg-spa':
@@ -235,8 +235,8 @@ class common {
 		}
 
 		# Parse date
-		$date_time = strtotime($options->date);		
-		
+		$date_time = strtotime($options->date);
+
 		$date_obj = new stdClass();
 			$date_obj->day_name 		= utf8_encode(strftime("%A",$date_time)); // Optional: utf8_encode()
 			$date_obj->day_name_abb 	= utf8_encode(strftime("%a",$date_time));
@@ -257,7 +257,7 @@ class common {
 	* @return string $base_links
 	*/
 	public static function get_base_links() {
-		
+
 		$url_path  = pathinfo($_SERVER['PHP_SELF'], PATHINFO_DIRNAME);
 		$ar_path   = explode('/', $url_path);
 		$base_path = $ar_path[1];
@@ -269,7 +269,7 @@ class common {
 
 		$base_links = '/'.$base_path.'/';
 
-		return $base_links;		
+		return $base_links;
 	}//end get_base_links
 
 
@@ -293,11 +293,11 @@ class common {
 			$ipaddress = $_SERVER['REMOTE_ADDR'];
 		else
 			$ipaddress = 'UNKNOWN';
-		
+
 		return $ipaddress;
 	}//end get_client_ip
 
-	
+
 
 }//end common
 
@@ -320,8 +320,8 @@ class common {
 function dump($val, $var_name=NULL, $arguments=array()){
 
 	$html = '';
-	
-	
+
+
 	// Backtrace info of current execution
 	$bt = debug_backtrace(); #print_r($bt);
 
@@ -334,11 +334,11 @@ function dump($val, $var_name=NULL, $arguments=array()){
 		# FUNCTION
 		if (isset($bt[1]['function']))
 			$html .= PHP_EOL . " Inside method: ".$bt[1]['function'];
-								
+
 		# VAR_NAME
 		if(isset($var_name))
-			$html .= PHP_EOL . " name: <strong>".$var_name."</strong>";	
-		
+			$html .= PHP_EOL . " name: <strong>".$var_name."</strong>";
+
 		# EXPECTED
 		if(isset($expected))
 			$html .= PHP_EOL . " val expected: <em> $expected </em>";
@@ -349,16 +349,16 @@ function dump($val, $var_name=NULL, $arguments=array()){
 		}
 
 		# arguments (optional)
-		if(isset($arguments) && is_array($arguments)) foreach ($arguments as $key => $value) {			
+		if(isset($arguments) && is_array($arguments)) foreach ($arguments as $key => $value) {
 			$html .= PHP_EOL . " $key: <em> $value </em>";
 		}
-		
+
 		# VALUE
 		$value_html='';
 		$html .= PHP_EOL . " value: " ;
 		switch (true) {
 			case is_array($val):
-				$value_html .= print_r($val, true);								
+				$value_html .= print_r($val, true);
 				break;
 			case is_object($val):
 				$value_html .= print_r($val,true);
@@ -369,14 +369,14 @@ function dump($val, $var_name=NULL, $arguments=array()){
 				}
 				$value_html .= var_export($val,true);
 				break;
-		}	
-	
+		}
+
 		$html .= trim($value_html);
 
 		# TYPE
 		$html .= PHP_EOL . " type: ".gettype($val)."";
 
-	
+
 	# NIVEL 2
 
 		# CALLER FUNCTION
@@ -390,13 +390,13 @@ function dump($val, $var_name=NULL, $arguments=array()){
 
 	# PRINT
 	if(SHOW_DEBUG===true) {
-		
-		// print wrap_pre($html);		
+
+		// print wrap_pre($html);
 		// echo "<script>console.log('PHP: ".$html."');</script>";
 
 		$str_json = file_get_contents('php://input');
 		#error_log("++++>>>> ".to_string($str_json));
-		if (!$str_json) {			
+		if (!$str_json) {
 			// not exists call php://input
 			print wrap_pre($html);
 		}
@@ -420,14 +420,14 @@ function debug_log($info, $level='DEBUG') {
 	/* level ref
 	const DEBUG 	= 100;
 	const INFO 		= 75;
-	const NOTICE 	= 50; 
+	const NOTICE 	= 50;
 	const WARNING 	= 25;
 	const ERROR 	= 10;
 	const CRITICAL 	= 5;
 	*/
-	
+
 	$msg = "DEBUG_LOG [".$level."] $info";
-	error_log($msg);	
+	error_log($msg);
 }//end debug_log
 
 
@@ -438,7 +438,7 @@ function debug_log($info, $level='DEBUG') {
 function wrap_pre($string, $add_header_html=true) {
 	$html='';
 	#$html .= "\n<html xmlns=\"http://www.w3.org/1999/xhtml\" ><body>";
-	if ($add_header_html) {			
+	if ($add_header_html) {
 		$html .= '<!DOCTYPE html>';
 		$html .= '<html lang="en">';
 		$html .= '<head>';
@@ -450,7 +450,7 @@ function wrap_pre($string, $add_header_html=true) {
 	$html .= "<div class=\"icon_warning\"></div>";
 	$html .= stripslashes($string);
 	$html .= "</pre>";
-	if ($add_header_html) {	
+	if ($add_header_html) {
 		$html .= '</body></html>';
 	}
 	return $html;
@@ -465,10 +465,10 @@ function exec_time_unit($start, $unit='ms', $round=3) {
 	$end = start_time();
 	$total = $end - $start;
 	if($unit==='ms') {
-		$total = $total*1000; 
+		$total = $total*1000;
 	}else if($unit==='sec') {
-		$total = $total; 
-	}  
+		$total = $total;
+	}
 	return round($total,3);
 }//end exec_time_unit
 
@@ -495,8 +495,8 @@ function to_string($var=null) {
 	}
 
 	if (is_array($var)) {
-		if ( is_string(current($var)) || is_numeric(current($var)) ) {			
-			return implode('|', $var);	
+		if ( is_string(current($var)) || is_numeric(current($var)) ) {
+			return implode('|', $var);
 		}else if( is_object( current($var) ) ){
 			foreach ($var as $obj) {
 				$ar_ob[] = $obj;
@@ -506,15 +506,15 @@ function to_string($var=null) {
 		}else if( empty($var)){
 			return 'Array(empty)';
 		}
-		return print_r($var,true);	
-			
-	}else if (is_object($var)) {		
+		return print_r($var,true);
+
+	}else if (is_object($var)) {
 		$var = json_encode($var);
 		$var = json_decode($var);
 		return '<pre>'.print_r($var,true).'</pre>';
 	}else if (is_bool($var)) {
 		$var = (int)$var;
-	}	
+	}
 	return "$var";
 }//end to_string
 
@@ -530,18 +530,18 @@ function lang2iso3($lang) {
 	if(!empty($output_array[0])) return $output_array[0];
 
 	switch($lang) {
-		
+
 		case 'es':
 		case 'esp':
 		case 'espn':
 		case 'spa':
-			$lang_iso3 = 'lg-spa'; 
+			$lang_iso3 = 'lg-spa';
 			break;
 
 		case 'ca':
 		case 'va':
 		case 'cat':
-			$lang_iso3 = 'lg-cat'; 
+			$lang_iso3 = 'lg-cat';
 			break;
 
 		case 'en':
@@ -569,7 +569,7 @@ function lang2iso3($lang) {
 		case 'pt':
 			$lang_iso3 = 'lg-por';
 			break;
-		
+
 		default	:
 			$lang_iso3 = WEB_DEFAULT_LANG_CODE;
 	}
@@ -593,16 +593,54 @@ function encodeURIComponent($str) {
 * ARRAY_FIND
 * Equivalent of javascript find
 */
-function array_find($xs, $f) {
+	// function array_find($xs, $f) {
 
-	if (is_array($xs)) {	
-		foreach ($xs as $x) {
-			if (call_user_func($f, $x) === true)
-			return $x;
+	// 	if (is_array($xs)) {
+	// 		foreach ($xs as $x) {
+	// 			if (call_user_func($f, $x) === true)
+	// 			return $x;
+	// 		}
+	// 	}
+
+	// 	return null;
+	// }//end find
+
+
+
+/**
+* ARRAY_FIND
+* Equivalent of JAVASCRIPT find
+* @param array|null $ar_value = null
+* @param callable $n
+* @return mixed
+* Return null when nothing is found
+*/
+if (!function_exists('array_find')) {
+	// < 8.4
+	function array_find(array $ar_value, callable $fn) : mixed {
+
+		if (is_array($ar_value)) {
+			// foreach ($ar_value as $x) {
+			$ar_value_length = sizeof($ar_value);
+			for ($i=0; $i < $ar_value_length ; $i++) {
+
+				// error case
+					if (!isset($ar_value[$i])) {
+						dump($ar_value, ' ar_value ++ '.to_string());
+						$db = debug_backtrace();
+						dump($db, ' db ++ '.to_string());
+						// throw new Exception("Error Processing Request", 1);
+						continue;
+					}
+
+				$x = $ar_value[$i];
+				if (call_user_func($fn, $x)===true)
+				return $x;
+			}
 		}
-	}
 
-	return null;
-}//end find
+		return null;
+	}//end find
+}
 
 

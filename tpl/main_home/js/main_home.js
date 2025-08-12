@@ -12,11 +12,19 @@ var main_home =  {
 	/**
 	* VARS
 	*/
-		form			: null,
+		// object form (filled with form_factory item)
+		form : null,
 		// DOM items ready from page html
-		image_wrapper	: null,
-		form_container	: null,
-		ar_images		: [],
+		// HTMLElement image_wrapper
+		image_wrapper : null,
+		// HTMLElement form_container
+		form_container : null,
+		// array ar_images
+		ar_images : [],
+		// HTMLElement banner
+		banner : null,
+		// object|null banner_row
+		banner_row : null,
 
 
 
@@ -33,15 +41,22 @@ var main_home =  {
 			self.image_wrapper	= options.image_wrapper
 			self.form_container	= options.form_container
 			self.ar_images		= options.ar_images || []
-
+			// self.banner		= options.banner
+			// self.banner_row	= options.banner_row
 
 		// form
 			self.form		= new form_factory()
 			self.form_node	= self.render_form()
 			self.form_container.appendChild(self.form_node)
 
-		//render main image
+		// render main image
 			self.main_coin_image()
+
+		// render banner generic
+			// if (self.banner) {
+			// 	self.render_banner( self.banner_row )
+			// }
+
 
 		return true
 	},//end set_up
@@ -333,30 +348,119 @@ var main_home =  {
 							src				: thumb_url,
 							parent			: image_wrapper
 						})
-						const img_loader = document.createElement('img')
-						img_loader.addEventListener("load", function(){
+
+						const load_handler = () => {
+
 							image_big.src = image_url
-							img_loader.remove()
 
 							// coin text
-								common.create_dom_element({
-									element_type	: "p",
-									class_name		: "img-text",
-									text_content	: item_text + denomination,
-									parent			: image_wrapper
-								})
-						})
-						img_loader.src = image_url
+							common.create_dom_element({
+								element_type	: "p",
+								class_name		: "img-text",
+								text_content	: item_text + denomination,
+								parent			: image_wrapper
+							})
 
-
+							img_loader.remove()
+						}
+						const img_loader = document.createElement('img')
+						img_loader.addEventListener('load', load_handler)
+						// set image URL
+						requestAnimationFrame(
+							() => {
+								img_loader.src = image_url
+							}
+						)
 
 					spinner.remove()
 				})
 			}
-			render_coin_image(self.ar_images)
+			requestAnimationFrame(
+				() => {
+					render_coin_image(self.ar_images)
+				}
+			)
+
 
 		return true
-	}//end main_coin_image
+	},//end main_coin_image
+
+
+
+	/**
+	* RENDER_BANNER
+	* Creates the banner nodes for image, title, etc.
+	* @param object|null row
+	* @return HTMLElement banner_container
+	*/
+	render_banner : function (row) {
+
+		const self = this
+
+		// banner HTMLElement from page DOM
+		const banner = self.banner
+
+		const banner_container = common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'banner_container',
+			parent			: banner
+		})
+		// click event
+		const click_handler = (e) => {
+			e.stopPropagation()
+			// const url = null
+			// window.open(
+			// 	url,
+			// 	'_blank'
+			// )
+		}
+		banner_container.addEventListener('click', click_handler)
+
+		// banner_image
+			const image_container = common.create_dom_element({
+				element_type	: 'div',
+				class_name		: 'image_container',
+				parent			: banner_container
+			})
+			const image = row.imagen[0] ?? null;
+			if (image) {
+				common.create_dom_element({
+					element_type	: 'img',
+					class_name		: 'banner_image',
+					src				: page_globals.__WEB_MEDIA_BASE_URL__ + image.image,
+					title			: image.footprint,
+					parent			: image_container
+				})
+			}
+
+		// banner text
+			const text_container = common.create_dom_element({
+				element_type	: 'div',
+				class_name		: 'text_container',
+				parent			: banner_container
+			})
+			// banner_title
+			if (row.titulo) {
+				common.create_dom_element({
+					element_type	: 'h4',
+					class_name		: 'banner_title',
+					inner_html		: row.titulo,
+					parent			: text_container
+				})
+			}
+			// banner_body
+			if (row.cuerpo) {
+				common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'banner_body',
+					inner_html		: row.cuerpo,
+					parent			: text_container
+				})
+			}
+
+
+		return banner_container
+	},//end render_banner
 
 
 

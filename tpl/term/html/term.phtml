@@ -1,0 +1,48 @@
+<?php
+# REQUIRED FILES
+	$base_path = dirname(dirname(__FILE__));
+	$cwd 	   = basename($base_path); # Current dir name
+
+	// Current controller add
+	require($base_path .'/'. $cwd .'.php');
+?>
+
+<!-- Wrapper -->
+	<div id="wrapper">
+
+		<!-- header -->
+			<?php include dirname(dirname(dirname(__FILE__))) . '/page/html/header.phtml'; ?>
+
+		<!-- main -->
+			<div id="main">
+				<div class="inner">
+
+					<!-- title -->
+						<h1 id="main_title" class="main_title"><span>loading ..</span>&nbsp;<?php #echo $title ?></h1>
+						<div class="golden-separator"></div>
+
+					<!-- Result -->
+						<section class="result">
+							<div id="row_detail">  </div>
+							<div id="export_data" class="export_data_container"></div>
+						</section>
+				</div>
+			</div>
+
+		<!-- footer -->
+			<?php include dirname(dirname(dirname(__FILE__))) . '/page/html/footer.phtml'; ?>
+
+	</div>
+
+<?php echo $this->get_header_links('js', ['js_async' => 'defer']) ?>
+<script>
+dom_ready(function(){
+	term.set_up({
+		section_tipo			: '<?php echo $section_tipo ?>',
+		section_id				: '<?php echo $section_id ?>',
+		main_title				: document.getElementById('main_title'),
+		export_data_container	: document.getElementById('export_data'),
+		row_detail				: document.getElementById('row_detail')
+	})
+})
+</script>

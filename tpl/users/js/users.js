@@ -169,7 +169,14 @@ var users =  {
 			const parsed_data_length = parsed_data.length
 			for (let i = 0; i < parsed_data_length; i++) {
 
-				const row	= parsed_data[i]
+				const row = parsed_data[i]
+
+				if (!row || !row.activity || !row.activity.what) {
+					if(SHOW_DEBUG===true) {
+						console.log('Ignored empty activity what row:', row );
+					}
+					continue;
+				}
 
 				const save_data = row.activity.what.find(el => el.key==='dd700')
 				if (save_data && row.full_name) {
@@ -201,7 +208,9 @@ var users =  {
 					})
 				}
 			}
-			// console.log("editors:",editors);
+			if(SHOW_DEBUG===true) {
+				console.log("editors:",editors);
+			}
 
 			// draw_editors_list function
 				const draw_editors_list = function(list_raw) {

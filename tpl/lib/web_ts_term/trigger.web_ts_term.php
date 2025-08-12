@@ -5,28 +5,28 @@ include(dirname(dirname(__FILE__)) .'/web_ts_term/class.web_ts_term.php');
 
 # set vars
 $vars = array('mode');
-	foreach($vars as $name)	$$name = common::setVar($name);	
+	foreach($vars as $name)	$$name = common::setVar($name);
 
 
 
 if ($mode==='toggle_childrens') {
-	
+
 	$vars = array('term_id','ar_childrens','tree_mode');
 		foreach($vars as $name)	$$name = common::setVar($name);
 
 		if(!$term_id || !$ar_childrens) return 'Error: few vars';
-			
+
 
 	$html='';
 	if (!empty($ar_childrens)) {
-	
+
 		# Load childrens data from server api as json
 		$options = new stdClass();
 			$options->dedalo_get 	= 'thesaurus_term';
 			$options->ar_term_id 	= $ar_childrens;
 			$options->lang  	 	= WEB_CURRENT_LANG_CODE;
 		$ar_ts_terms = json_web_data::get_data($options);
-		
+
 		switch ($tree_mode) {
 			case 'search_combined':
 			case 'search_cumulative':
@@ -48,7 +48,7 @@ if ($mode==='toggle_childrens') {
 
 			$html .= $web_ts_term->get_html( $node_html_mode );
 		}
-	}//end if ($ar_childrens = json_decode($ar_childrens)) 
+	}//end if ($ar_childrens = json_decode($ar_childrens))
 
 
 	echo $html;
@@ -61,6 +61,9 @@ if ($mode==='toggle_indexation') {
 
 	$vars = array('term_id','ar_legends','ar_cmk');
 		foreach($vars as $name)	$$name = common::setVar($name);
+
+		dump($ar_legends, ' ))) toggle_indexation ar_legends ++ '.to_string());
+		dump($ar_cmk, ' ))) toggle_indexation ar_cmk ++ '.to_string());
 
 	$ar_api_calls = [];
 	if (!empty($ar_legends)) {
@@ -110,7 +113,7 @@ if ($mode==='toggle_indexation') {
 		$ar_api_calls[] = $api_call;
 
 			// dump($api_call, ' api_call ++ '.to_string()); die();
-		
+
 	}//end if ($ar_indexation = json_decode($ar_indexation))
 
 	if(!empty($ar_api_calls)){
@@ -124,7 +127,7 @@ if ($mode==='toggle_indexation') {
 	}else{
 		$response = new stdClass();
 			$response->result 	= false;
-			$response->msg 		= 'Error. Request failed ['.__FUNCTION__.']';	
+			$response->msg 		= 'Error. Request failed ['.__FUNCTION__.']';
 		echo json_encode($response);
 	}
 

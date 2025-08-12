@@ -48,7 +48,7 @@ page.render_map_legend = function(){
 
 /**
 * RENDER_EXPORT_DATA_BUTTONS
-* @return promise : DOM node
+* @return DocumentFragment
 */
 page.render_export_data_buttons = function() {
 
@@ -105,7 +105,6 @@ page.render_export_data_buttons = function() {
 					})
 			})
 			.then(function(rows){
-				// console.log("----> render_export_data_buttons rows:",rows);
 
 				// data_object.data. parsed rows is optional
 				data_object.data = (export_data_parser && typeof export_data_parser==='function')
@@ -114,16 +113,25 @@ page.render_export_data_buttons = function() {
 
 				return data_object
 			})
-		}
+		}//end get_data function
 
 	// event data_request_done is triggered when new search is done
 		event_manager.subscribe('data_request_done', manage_data_request_done)
 		function manage_data_request_done(options) {
-			// console.warn("data_request_done options:",options);
-			request_body		= options.request_body
-			result				= options.result
-			export_data_parser	= options.export_data_parser || null
-			filter 				= options.filter
+
+			// fill vars values
+				request_body		= options.request_body
+				result				= options.result
+				export_data_parser	= options.export_data_parser || null
+				filter 				= options.filter
+
+			//export_nomisma_rdf check
+				const exists_nomisma_rdf = result && (result.nomisma_rdf || result[0]?.nomisma_rdf)
+				if (exists_nomisma_rdf) {
+					button_export_nomisma_rdf_container.classList.remove('hide')
+				}else{
+					button_export_nomisma_rdf_container.classList.add('hide')
+				}
 		}
 
 
@@ -185,9 +193,6 @@ page.render_export_data_buttons = function() {
 										  '/' +WEB_AREA+
 										  '/?psqo=' + encoded_psqo;
 
-					// console.log("encoded_psqo", encoded_psqo);
-					// console.log("uri", uri);
-
 					const shared_uri_encoded = common.create_dom_element({
 						element_type	: "div",
 						class_name		: "shared_uri_encoded",
@@ -222,9 +227,8 @@ page.render_export_data_buttons = function() {
 			class_name		: "btn primary button_download json",
 			parent			: button_export_json_container
 		})
-		button_export_json.addEventListener("click", function(){
-			// console.log("request_body:",request_body);
-			// console.log("result:",result);
+		button_export_json.addEventListener("click", function(e){
+			e.stopPropagation()
 
 			const button = this
 
@@ -237,7 +241,6 @@ page.render_export_data_buttons = function() {
 				})
 
 			get_data().then(function(data){
-				// console.log("data:",data);
 
 				const file_name	= 'mib_export_data.json'
 
@@ -291,11 +294,10 @@ page.render_export_data_buttons = function() {
 				})
 
 			get_data().then(function(data){
-				// console.log("data:",data);
 
 				const file_name	= 'mib_export_data.csv'
 
-				// Convert json obj to csv
+				// Convert JSON obj to csv
 					const csv = page.convert_json_to_csv(data.data)
 
 				// Blob data
@@ -322,10 +324,77 @@ page.render_export_data_buttons = function() {
 			})
 		})
 
+	// button_export_nomisma_rdf
+		const button_export_nomisma_rdf_container = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "export_container hide", // default is hidden. Activated on manage_data_request_done event check
+			parent			: fragment
+		})
+		const button_export_nomisma_rdf = common.create_dom_element({
+			element_type	: "input",
+			type			: "button",
+			value			: tstring.export_nomisma_rdf || 'Nomisma RDF',
+			class_name		: "btn primary button_download rdf",
+			parent			: button_export_nomisma_rdf_container
+		})
+		button_export_nomisma_rdf.addEventListener("click", function(e){
+			e.stopPropagation()
+
+			const button = this
+
+			// spinner on
+				button.classList.add("unactive")
+				const spinner = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "spinner small",
+					parent			: button_export_nomisma_rdf_container
+				})
+
+			// row
+				const nomisma_rdf = Array.isArray(result)
+					? result[0].nomisma_rdf
+					: (result.nomisma_rdf || null)
+					if (!nomisma_rdf) {
+						alert("Error. Invalid RDF data");
+						return
+					}
+
+			// file_name
+				const file_name	= 'mib_export_data_nomisma.rdf'
+
+			// Blob data
+				const blob_data = new Blob([nomisma_rdf], {
+					type	: 'text/plain',
+					name	: file_name
+				});
+
+			// create a temporal a node and trigger click
+				const href		= URL.createObjectURL(blob_data)
+				const link_obj	= common.create_dom_element({
+					element_type	: "a",
+					href			: href,
+					download		: file_name
+				})
+				link_obj.click()
+
+			// destroy temporal node
+				link_obj.remove()
+
+			// spinner of
+				spinner.remove()
+				button.classList.remove("unactive")
+		})
+
+
 	return fragment
-};//end render_export_data_buttons
+}//end render_export_data_buttons
 
 
+
+/**
+* CREATE_SUGGESTIONS_BUTTON
+* @return DocumentFragment
+*/
 page.create_suggestions_button = function(){
 
 	let currentUrl = "";
@@ -352,8 +421,8 @@ page.create_suggestions_button = function(){
 	event_manager.subscribe('data_request_done', manage_data_request_done)
 
 	function manage_data_request_done(options) {
-		// console.warn("data_request_done options:",options);
-		const filter 				= options.filter
+
+		const filter = options.filter
 
 		if (filter != null){
 			const min_psqo = psqo_factory.build_safe_psqo(filter)
@@ -432,10 +501,6 @@ page.create_suggestions_button = function(){
 
 		})
 
-		// fmail.querySelector("#fmail").addEventListener("blur",function(){
-		// 	console.log("entra")
-		// })
-
 		form.firstElementChild.appendChild(fname)
 		form.firstElementChild.appendChild(fmail)
 		form.firstElementChild.appendChild(fmessage)
@@ -448,20 +513,21 @@ page.create_suggestions_button = function(){
 	}//end createForm
 
 	return fragment
-};
+}
 
 
 
 page.removeForm = function(){
 	document.querySelector(".cancel-button").removeEventListener("click",page.removeForm)
 	document.querySelector("#popup-container").remove()
-};
+}
+
+
 
 page.handleForm = function(currentUrl){
 	//event.preventDefault()
 	document.querySelector('#error-msn').textContent = ""
 	const currentForm = document.querySelector('#contact-form')
-	// console.log(currentForm.querySelector('#fname').value)
 	// currentForm.reset()
 
 	// short vars
@@ -501,7 +567,9 @@ page.handleForm = function(currentUrl){
 				body	: body
 			})
 			.then((api_response)=>{
-				console.log("--- sendmail api_response:", api_response);
+				if(SHOW_DEBUG===true) {
+					console.log("--- sendmail api_response:", api_response);
+				}
 				if (api_response.result){
 					alert (success_msn)
 					currentForm.reset()
@@ -512,14 +580,19 @@ page.handleForm = function(currentUrl){
 				}
 			})
 		})
-};//end handleForm
+}//end handleForm
 
 
 
 /**
 * RENDER_LEGEND
 * Generic unified legend render
-* @return promise : DOM node
+* @param object options
+* {
+* 	value : string|null
+* 	style: string|null
+* }
+* @return HTMLElement legend_node
 */
 page.render_legend = function(options) {
 
@@ -535,7 +608,6 @@ page.render_legend = function(options) {
 		// 	  parsed_node.innerHTML	= value
 
 		// const textNodes = Array.from(parsed_node.childNodes).filter(node => node.nodeType===3 && node.textContent.trim().length > 0)
-		// 		console.log("textNodes:",textNodes);
 
 		// textNodes.forEach(node => {
 		// 	// node.textContent = node.textContent.replace(regex, '&nbsp;')
@@ -543,35 +615,83 @@ page.render_legend = function(options) {
 		// 	node.after(span);
 		// 	span.appendChild(node);
 		// });
-		// console.log("parsed_node:",parsed_node);
 
 	const legend_node = common.create_dom_element({
-		element_type	: "div",
-		class_name		: "legend_box " + style,
+		element_type	: 'div',
+		class_name		: 'legend_box ' + style,
 		inner_html		: value.trim()
 	})
 	// while (parsed_node.hasChildNodes()) {
 	// 	legend_node.appendChild(parsed_node.firstChild);
 	// }
 
+	// add click event to the legend images
+	if (value) {
+		page.make_images_links(legend_node)
+	}
+
 
 	return legend_node
-};//end render_legend
+}//end render_legend
+
+
+
+/**
+* MAKE_IMAGES_LINKS
+* Add node content images click event to open thesaurus symbol window
+* @param HTMLElement node
+* 	Usually a div with HTML parsed text from component_text_area
+* 	containing images as <img src="..." data-data:"{psedo-locator}"
+* @return bool
+*/
+page.make_images_links = function (node) {
+
+	const images = node.querySelectorAll('img.svg')
+
+	try {
+
+		const images_length = images.length
+		for (let i = 0; i < images_length; i++) {
+			const image = images[i]
+			if (image.dataset && image.dataset.data) {
+				const locator = JSON.parse( image.dataset.data.replaceAll('\'', '"') )
+				if (locator) {
+					const click_handler = (e) => {
+						e.stopPropagation()
+
+						const url = `${page_globals.__WEB_ROOT_WEB__}/ts_node/${locator.section_tipo}_${locator.section_id}`
+						window.open(url, '_blank');
+					}
+					image.classList.add('clickable')
+					image.addEventListener('click', click_handler)
+					image.title = (tstring.open_symbol || 'Open symbol') + ` ${locator.section_tipo}_${locator.section_id}`
+				}
+			}
+		}
+	} catch (error) {
+		console.error(error)
+	}
+
+	true
+}//end make_images_links
 
 
 
 /**
 * RENDER_TYPE_LABEL
-* @return
+* @param object row
+* @return string current_value
 */
 page.render_type_label = function(row) {
 
 	let current_value
 
 	const mint_number = (row.ref_mint_number)
-		? row.ref_mint_number+'/'
+		? row.ref_mint_number // +'/'
 		: ''
-	if (row.term_section_id && !row.children) {
+
+	// if (row.term_section_id && !row.children) {
+	if (row.term_section_id && row.term_table==='types') {
 
 		const ar		= row.term.split(", ")
 		const c_name	= ar[0]
@@ -586,43 +706,262 @@ page.render_type_label = function(row) {
 			})()
 
 		const section_id = row.term_section_id && row.term_section_id.section_id
-				? row.term_section_id.section_id
-				: row.term_section_id
+			? row.term_section_id.section_id
+			: row.term_section_id
+
+		const type_string = page.compose_catalog_id({
+			archive		: page_globals.OWN_CATALOG_ACRONYM,
+			section_id	: section_id,
+			mint_number	: mint_number,
+			type		: c_name
+		})
+
+		const title = page.compose_catalog_id({
+			archive		: page_globals.OWN_CATALOG_ACRONYM,
+			section_id	: section_id,
+			mint_number	: mint_number,
+			type		: ar.join(", ").trim()
+		})
 
 		const a_term = common.create_dom_element({
 			element_type	: "a",
 			class_name		: "a_term",
 			href			: page_globals.__WEB_ROOT_WEB__ + '/type/' + section_id,
 			target			: "_blank",
-			title			: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + (ar.join(", ").trim()),
-			inner_html		: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + keyword
+			// title		: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + (ar.join(", ").trim()),
+			title			: title,
+			// inner_html	: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name + keyword
+			inner_html		: type_string + keyword
 		})
 		current_value = a_term.outerHTML
 	}else{
-		current_value = page_globals.OWN_CATALOG_ACRONYM +" " + mint_number + row.term
+
+		const section_id = (typeof row.term_section_id==='string')
+			? row.term_section_id
+			: row.term_section_id?.section_id || ''
+
+		const type_string = page.compose_catalog_id({
+			archive		: page_globals.OWN_CATALOG_ACRONYM,
+			section_id	: section_id,
+			mint_number	: mint_number,
+			type		: row.term
+		})
+
+		current_value = type_string
 	}
 
+
 	return current_value
-};//end render_type_label
+}//end render_type_label
 
 
 
 /**
 * RENDER_WEIGHT_VALUE
-* @return
+* @param object row
+* @return string
 */
 page.render_weight_value = function(row) {
+
 	const weight = row.ref_type_averages_weight.toFixed(2).replace(/\.?0+$/, "");
 	return weight.replace('.',',') + ' g'
-};//end render_weight_value
+}//end render_weight_value
 
 
 
 /**
 * RENDER_DIAMETER_VALUE
-* @return
+* @param object row
+* @return string
 */
 page.render_diameter_value = function(row) {
+
 	const diameter = row.ref_type_averages_diameter.toFixed(2).replace(/\.?0+$/, "");
 	return diameter.replace('.',',') + ' mm'
-};//end render_diameter_value
+}//end render_diameter_value
+
+
+
+/**
+* RENDER_CITE_RECORD
+* Renders cite nodes and append it to container
+* @param object row
+* @param HTMLElement container
+* @return HTMLElement cite
+*/
+page.render_cite_record = async (row, container, title) => {
+
+	const click_handler = async function(e) {
+		e.stopPropagation()
+
+		// cite_data_node
+			const main_catalog_data	= await page.load_main_catalog()
+			const cite_data			= main_catalog_data.result[0];
+			const publication_data	= cite_data.publication_data[0];
+			cite_data.autors				= {
+				authorship_data		: row.authorship_data || null,
+				authorship_names	: row.authorship_names || null,
+				authorship_surnames	: row.authorship_surnames || null,
+				authorship_roles	: row.authorship_roles || null,
+			}
+			cite_data.catalog			= null
+			cite_data.title				= title || row.name || 'Untitled'
+			cite_data.publication_data	= publication_data
+			cite_data.uri_location		= window.location
+
+		// render cite. Note that is rendered using 'biblio_row_fields'
+			const cite_data_node = biblio_row_fields.render_cite_this(cite_data)
+
+		// popUpContainer
+			const popUpContainer = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "float-cite",
+				parent			: document.body
+			})
+			popUpContainer.addEventListener('mouseup', function() {
+
+				popUpContainer.classList.add('copy')
+				cite_data_node.classList.add('copy')
+
+				const selection = window.getSelection();
+				//create a selection range
+				const copy_range = document.createRange();
+				//choose the element we want to select the text of
+				copy_range.selectNodeContents(cite_data_node);
+				//select the text inside the range
+				selection.removeAllRanges();
+   				selection.addRange( copy_range );
+
+   				//copy the text to the clipboard
+				document.execCommand("copy");
+
+				//remove our selection range
+				window.getSelection().removeAllRanges();
+			})
+
+		// title
+			common.create_dom_element({
+				element_type	: "div",
+				class_name		: "float-label",
+				text_content	: tstring.cite_this_record || 'Cite this record',
+				parent			: popUpContainer
+			})
+
+		// close button
+		const close_button = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "close-button",
+			parent			: popUpContainer
+		})
+		close_button.addEventListener("click",function(){
+			// popUpContainer.remove()
+		})
+		document.body.addEventListener("click",function(event_cite){
+			document.body.removeEventListener("click", function(event_cite){})
+			popUpContainer.remove()
+		})
+
+		popUpContainer.appendChild(cite_data_node)
+
+		const click_to_copy = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "float-text_copy",
+			text_content	: tstring.click_to_copy || 'Click to copy',
+			parent			: popUpContainer
+		})
+	}
+
+	// cite span button
+	const cite = common.create_dom_element({
+		element_type	: 'span',
+		class_name		: 'cite_this_record',
+		text_content	: tstring.cite_this_record || 'cite this record',
+		parent			: container
+	})
+	cite.addEventListener('click', click_handler)
+
+
+	return cite
+}//end render_cite_record
+
+
+
+/**
+* RENDER_AUTHORSHIP
+* Renders row authorship info in a normalized way
+* @param object row
+* 	Database record parsed
+* @return DocumentFragment
+*/
+page.render_authorship = (row) => {
+
+	const fragment = new DocumentFragment()
+
+	const ar_names = row.authorship_names
+		? row.authorship_names.split('|')
+		: []
+
+	const ar_surnames = row.authorship_surnames
+		? row.authorship_surnames.split('|')
+		: []
+
+	const ar_roles = row.authorship_roles
+		? row.authorship_roles.split('|')
+		: []
+
+	const ar_dates = row.authorship_date
+		? row.authorship_date
+		: []
+
+	const authorship_length = ar_names.length
+	for (let i = 0; i < authorship_length; i++) {
+
+		const authorship_value_parts = []
+
+		// name
+			const name_parts = []
+
+			if (ar_names[i]) {
+				name_parts.push(ar_names[i].trim().toUpperCase())
+			}
+
+			if (ar_surnames[i]) {
+				name_parts.push(ar_surnames[i].trim().toUpperCase())
+			}
+
+		// full name add
+			authorship_value_parts.push(
+				name_parts.join(' ')
+			)
+
+		// role add
+			if (ar_roles[i]) {
+				authorship_value_parts.push( ar_roles[i].trim() )
+			}
+
+		// date
+			if (ar_dates[i]) {
+
+				// sample 2022-00-00 00:00:00,2024-00-00 00:00:00
+				const compose_date = ar_dates[i]
+
+				const dates = compose_date.split(',').map(el => {
+					return page.parse_date(el)
+				})
+
+				authorship_value_parts.push( dates.join(' <> ') )
+			}
+
+		const authorship_value = authorship_value_parts.join(' | ')
+
+		common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'authorship item',
+			text_content	: authorship_value,
+			parent			: fragment
+		})
+	}
+
+
+	return fragment
+}//end render_authorship

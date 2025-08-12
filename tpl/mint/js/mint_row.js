@@ -26,18 +26,19 @@ var mint_row = {
 			case 'types':
 
 				if (row.children && row.children.length>0) {
-					// case type whith subtypes
+					// case type with sub-types
 
-					const type_number_value = page.render_type_label(row)
+					const type_label = page.render_type_label(row)
 
-					const type_group_text = type_number_value.split(",")
+					// const ar_type_label_text	= type_label.split(",")
+					// const type_group_text	= '<b>'+ar_type_label_text[0]+'</b>, '+(ar_type_label_text[1] ?? '')
 
 					// term_line
 						common.create_dom_element({
 							element_type	: "div",
 							class_name		: "term_line bold type_group",
-							// inner_html	: row.term,
-							inner_html		: "<b>"+type_group_text[0]+"</b>, "+type_group_text[1],
+							// inner_html	: type_group_text,
+							inner_html		: type_label, // normalized type label
 							parent			: wrapper
 						})
 					// container
@@ -183,11 +184,19 @@ var mint_row = {
 
 			const diameter = row.ref_type_averages_diameter
 
+			const type_string = page.compose_catalog_id({
+				archive		: page_globals.OWN_CATALOG_ACRONYM,
+				section_id	: row.term_section_id,
+				mint_number	: mint_number,
+				type		: c_name
+			})
+
 			const img_obverse = common.create_dom_element({
 				element_type	: "img",
 				src				: row.ref_coins_image_obverse_thumb,
-				title 			: row.section_id,
-				dataset 		: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+				title			: row.section_id,
+				// dataset		: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+				dataset			: { caption : type_string },
 				parent			: img_link_ob
 			})
 			img_obverse.style.width = (diameter + (diameter * 8/100)) + 'mm'
@@ -205,10 +214,11 @@ var mint_row = {
 
 			const img_reverse = common.create_dom_element({
 				element_type	: "img",
-				src 			: row.ref_coins_image_reverse_thumb,
-				title 			: row.section_id,
-				dataset 		: {caption: page_globals.OWN_CATALOG_ACRONYM +" " + mint_number + c_name  },
-				parent 			: img_link_re
+				src				: row.ref_coins_image_reverse_thumb,
+				title			: row.section_id,
+				// dataset		: {caption: page_globals.OWN_CATALOG_ACRONYM +" " + mint_number + c_name  },
+				dataset			: { caption : type_string },
+				parent			: img_link_re
 			})
 			img_reverse.style.width = (diameter + (diameter * 8/100)) + 'mm'
 			img_reverse.style.height = (diameter + (diameter * 8/100)) + 'mm'
@@ -256,9 +266,9 @@ var mint_row = {
 		//ONLY PRINT INFO
 		//obverse
 		const obverse_warpper = common.create_dom_element({
-			element_type 	: "div",
-			class_name 		: "sides-wrapper",
-			parent 			: row_type
+			element_type	: "div",
+			class_name		: "sides-wrapper",
+			parent			: row_type
 		})
 
 		const ob_label = tstring.obverse.charAt(0) || "O"
@@ -410,8 +420,34 @@ var mint_row = {
 		// page.activate_images_gallery(img_wrap)
 
 		return row_type
-	}//end create_type_element
+	},//end create_type_element
 
+
+
+	/**
+	* RENDER_TYPE_PRINT
+	*
+	* @param array ar_rows
+	* 	type rows list
+	* @return DocumentFragment
+	*/
+	render_type_print : async function (ar_rows) {
+
+		const fragment = new DocumentFragment();
+
+		// set catalog properties temporally
+		catalog.print_mode = true
+
+		const node = await catalog.draw_rows({
+			ar_rows	: ar_rows,
+			target	: fragment
+		})
+
+		// set catalog properties temporally
+		catalog.print_mode = false
+
+		return fragment
+	}//end render_type_print
 
 
 

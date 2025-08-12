@@ -40,9 +40,31 @@ var thesaurus =  {
 		// root_term (array)
 		root_term : [],
 
-
 		// term_id (from url get request)
 		term_id : null,
+
+		// utf_models. Used by epigraphy
+		utf_models : [
+			'scell2_3', // ts_greek Signo estándar UTF
+			'scxpu2_3',	 // ts_punic Signo estándar UTF
+			'scxibo2_3', // ts_northern_palaeohispanic Signo estándar UTF
+			'scxibm2_3', // ts_southern_palaeohispanic Signo estándar UTF
+			'sctxr2_3', // ts_south_palaeohispanic Signo estándar UTF
+			'sclat2_3', // ts_latinSigno estándar UTF
+		],
+
+		// sign_group_models. Used by epigraphy
+		sign_group_models : [
+			'scell2_2', // ts_greek Signo estándar UTF
+			'scxpu2_2',	 // ts_punic Signo estándar UTF
+			'scxibo2_2', // ts_northern_palaeohispanic Signo estándar UTF
+			'scxibm2_2', // ts_southern_palaeohispanic Signo estándar UTF
+			'sctxr2_2', // ts_south_palaeohispanic Signo estándar UTF
+			'sclat2_2', // ts_latinSigno estándar UTF
+		],
+
+		// thesaurus_area_tables. correspondence between tables and areas
+		// @see page.thesaurus_area_tables
 
 
 
@@ -55,11 +77,13 @@ var thesaurus =  {
 		const self = this
 
 		// options
-			self.table		= options.table; // self table (array)
-			self.root_term	= options.root_term; // self root_term (array)
-			self.term_id	= options.term_id
-			self.ar_fields	= options.ar_fields
-			const rows_list	= options.rows_list
+			self.table				= options.table; // self table (array)
+			self.root_term			= options.root_term; // self root_term (array)
+			self.term_id			= options.term_id
+			self.ar_fields			= options.ar_fields
+			const rows_list			= options.rows_list
+			const authorship_text	= options.authorship_text
+			const body_text			= options.body_text || null
 
 		// root_term catalog
 			// if (WEB_AREA==='mints_hierarchy') {
@@ -82,6 +106,56 @@ var thesaurus =  {
 			// 	}) ()
 			// }
 
+		// authorship
+			if (self.root_term && self.root_term.length) {
+				const root_term_id = self.root_term[0]
+
+				const body = {
+					dedalo_get	: 'records',
+					db_name		: page_globals.WEB_DB,
+					table		: self.table,
+					ar_fields	: [
+						'authorship_data',
+						'authorship_date',
+						'authorship_names',
+						'authorship_surnames',
+						'authorship_roles'
+					],
+					lang		: page_globals.WEB_CURRENT_LANG_CODE,
+					sql_filter	: `term_id = '${root_term_id}'`,
+					limit		: 1,
+					count		: false
+				}
+				data_manager.request({
+					body : body
+				})
+				.then(function(response){
+
+					if (!response.result || !response.result.length) {
+						if (body_text) {
+							body_text.classList.remove('hide_opacity')
+						}
+						return
+					}
+
+					const row	= response.result[0]
+					const data	= page.parse_term(row)
+
+					if(data.authorship_names && data.authorship_names.length>0) {
+						const authorship_node = page.render_authorship(data)
+						authorship_text.appendChild(authorship_node)
+
+						if (body_text) {
+							body_text.classList.remove('hide_opacity')
+						}
+					}
+
+					if (body_text) {
+						body_text.classList.remove('hide_opacity')
+					}
+				})
+			}
+
 		// set view_mode default
 			self.view_mode = 'tree'
 
@@ -102,7 +176,7 @@ var thesaurus =  {
 		// tree. load tree data and render tree nodes
 			self.load_tree_data({})
 			.then(function(response){
-				// console.log("/// load_tree_data response:",response);
+				console.log("/// set_up load_tree_data response:", response);
 
 				// result check
 					if (!response.result) {
@@ -117,14 +191,15 @@ var thesaurus =  {
 						const found = response.result.find(el => el.term_id===term_id)
 						if (!found) {
 							console.error(`ERROR: Broken tree branch. Root term '${term_id}' not found! Check if it is published`);
-							common.create_dom_element({
-								element_type	: 'div',
-								class_name		: 'broken_branch no_results_found',
-								inner_html		: `Sorry. Broken branch <b>${term_id}</b>. Tree it is not available.`,
-								parent			: rows_list
-							})
-							spinner.remove()
-							return false
+							// common.create_dom_element({
+							// 	element_type	: 'div',
+							// 	class_name		: 'broken_branch no_results_found',
+							// 	inner_html		: `Sorry. Broken branch <b>${term_id}</b>. Tree it is not available.`,
+							// 	parent			: rows_list
+							// })
+							// spinner.remove()
+							// return false
+							continue
 						}
 					}
 
@@ -171,8 +246,8 @@ var thesaurus =  {
 			// 	'space',
 			// 	'time',
 			// 	'tld',
-			// 	'mib_bibliography'
-			// 	// 'relations'
+			// 	'mib_bibliography',
+			// 	'dd_relations'
 			// ]
 
 		// options
@@ -234,7 +309,7 @@ var thesaurus =  {
 
 		// debug
 			if(SHOW_DEBUG===true) {
-				// console.log("--- load_tree_data parsed sql_filter:")
+				console.log("--- load_tree_data parsed sql_filter:", sql_filter)
 				// console.log(sql_filter)
 			}
 
@@ -349,652 +424,11 @@ var thesaurus =  {
 
 
 	/**
-	* RENDER_TREE_NODE
-	* @return DOM node tree_node
-	*/
-	render_tree_node : function(row) {
-
-		const self = this // is 'tree_factory' instance
-
-		// node wrapper
-			const tree_node = common.create_dom_element({
-				element_type	: "div",
-				class_name		: "tree_node",
-				id				: row.term_id
-			})
-			// add properties to node
-			tree_node.term_id	= row.term_id
-			tree_node.parent	= row.parent
-
-		// term
-			const term_value	= row.term //+ " <small>[" + row.term_id + "]</small>"
-			const to_hilite		= (row.hilite && row.hilite===true)
-			const term_css		= to_hilite===true ? " hilite" : ""
-			const term = common.create_dom_element({
-				element_type	: "span",
-				class_name		: "term" + term_css,
-				inner_html		: term_value,
-				parent			: tree_node
-			})
-
-		// links based on WEB_AREA value (mints_hierarchy, symbols, iconography, countermarks)
-			switch (WEB_AREA) {
-				case 'mints_hierarchy':
-					// link to mint
-					if (row.term_table && row.term_table==='mints' && row.term_data && row.term_data[0]) {
-
-						const link = common.create_dom_element({
-							element_type	: "a",
-							class_name		: "icon_link",
-							parent			: term
-						})
-						link.addEventListener("click", function(){
-
-							const url = 'mint/' + row.term_data[0]
-							// const windowFeatures = "popup";
-							window.open(url, "mint", null);
-						})
-					}
-					break;
-
-				case 'symbols':
-					// catalog
-					if (row.illustration && row.illustration.length>0) {
-						// ref_type_symbol_obverse_data
-						// ref_type_symbol_reverse_data
-
-						// set node only when it is in DOM (to save browser resources)
-							const observer = new IntersectionObserver(function(entries) {
-								const entry = entries[1] || entries[0]
-								if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
-									observer.disconnect();
-
-									// delegates chek task to worker. When finish, show link button if target result exists
-										const current_worker = new Worker(__WEB_TEMPLATE_WEB__ + '/thesaurus/js/worker.js');
-										const body = {
-											code		: page_globals.API_WEB_USER_CODE,
-											lang		: page_globals.WEB_CURRENT_LANG_CODE,
-											db_name		: page_globals.WEB_DB,
-											dedalo_get	: 'records',
-											table		: 'catalog',
-											ar_fields	: ['section_id'],
-											limit		: 1,
-											count		: false,
-											order		: 'lang ASC',
-											sql_filter	: `(ref_type_symbol_obverse_data LIKE '%"${row.section_id}"%' OR ref_type_symbol_reverse_data LIKE '%"${row.section_id}"%')`
-										}
-										current_worker.postMessage({
-											url		: page_globals.JSON_TRIGGER_URL,
-											body	: body
-										});
-										current_worker.onmessage = function(e) {
-											current_worker.terminate()
-
-											const api_response = e.data
-											if (api_response.result && api_response.result.length>0) {
-												const link_symbols = common.create_dom_element({
-													element_type	: "a",
-													class_name		: "icon_link",
-													parent			: term
-												})
-												link_symbols.addEventListener("click", function(){
-
-													const filter = {
-													  "$or": [
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "ref_type_symbol_obverse_data",
-																  "field": "ref_type_symbol_obverse_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														},
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "ref_type_symbol_reverse_data",
-																  "field": "ref_type_symbol_reverse_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														}
-													  ]
-													};
-													const encoded_psqo = psqo_factory.encode_psqo(filter)
-													const url = 'catalog/?psqo=' + encoded_psqo
-													// const windowFeatures = "popup";
-													window.open(url, "mint", null);
-												})
-											}
-										}
-								}
-							}, { threshold: [0] });
-							observer.observe(term);
-					}
-					break;
-
-				case 'iconography':
-					// catalog
-					// if (!row.children || row.children.length===0) {
-						// ref_type_design_obverse_iconography_data
-						// ref_type_design_reverse_iconography_data
-
-						// set node only when it is in DOM (to save browser resources)
-							const observer = new IntersectionObserver(function(entries) {
-								const entry = entries[1] || entries[0]
-								if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
-									observer.disconnect();
-
-									// delegates chek task to worker. When finish, show link button if target result exists
-										const current_worker = new Worker(__WEB_TEMPLATE_WEB__ + '/thesaurus/js/worker.js');
-										const body = {
-											code		: page_globals.API_WEB_USER_CODE,
-											lang		: page_globals.WEB_CURRENT_LANG_CODE,
-											db_name		: page_globals.WEB_DB,
-											dedalo_get	: 'records',
-											table		: 'catalog',
-											ar_fields	: ['section_id','ref_coins_image_obverse','ref_coins_image_reverse'],
-											limit		: 1,
-											count		: false,
-											order		: 'lang ASC',
-											sql_filter	: `(ref_type_design_obverse_iconography_data LIKE '%"${row.section_id}"%' OR ref_type_design_reverse_iconography_data LIKE '%"${row.section_id}"%')`
-										}
-										current_worker.postMessage({
-											url		: page_globals.JSON_TRIGGER_URL,
-											body	: body
-										});
-										current_worker.onmessage = function(e) {
-											current_worker.terminate()
-
-											const api_response = e.data
-											if (api_response.result && api_response.result.length>0) {
-												const link_iconography = common.create_dom_element({
-													element_type	: "a",
-													class_name		: "icon_link",
-													parent			: term
-												})
-												link_iconography.addEventListener("click", function(){
-
-													const filter = {
-													  "$or": [
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "ref_type_design_obverse_iconography_data",
-																  "field": "ref_type_design_obverse_iconography_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														},
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "ref_type_design_reverse_iconography_data",
-																  "field": "ref_type_design_reverse_iconography_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														}
-													  ]
-													};
-													const encoded_psqo = psqo_factory.encode_psqo(filter)
-													const url = 'catalog/?psqo=' + encoded_psqo
-													// const windowFeatures = "popup";
-													window.open(url, "mint", null);
-												})
-
-												if (api_response.result[0].ref_coins_image_obverse) {
-													const url		= api_response.result[0].ref_coins_image_obverse
-													const url_thumb	= url.replace('/1.5MB/','/thumb/')
-													const image	= common.create_dom_element({
-														element_type	: "img",
-														class_name		: 'illustration thumb_image',
-														src				: page_globals.__WEB_BASE_URL__ + url_thumb,
-														parent			: term
-													})
-													const outsideClickListener = (event) => {
-														const target = event.target;
-														if (target===image) {
-															image.classList.toggle('big')
-															image.src = page_globals.__WEB_BASE_URL__ + url
-														}else{
-															image.classList.remove('big')
-															image.src = page_globals.__WEB_BASE_URL__ + url_thumb
-														}
-													}
-													// document event click
-													document.addEventListener('click', outsideClickListener)
-												}
-												if (api_response.result[0].ref_coins_image_reverse) {
-													const url		= api_response.result[0].ref_coins_image_reverse
-													const url_thumb	= url.replace('/1.5MB/','/thumb/')
-													const image	= common.create_dom_element({
-														element_type	: "img",
-														class_name		: 'illustration thumb_image',
-														src				: page_globals.__WEB_BASE_URL__ + url_thumb,
-														parent			: term
-													})
-													const outsideClickListener = (event) => {
-														const target = event.target;
-														if (target===image) {
-															image.classList.toggle('big')
-															image.src = page_globals.__WEB_BASE_URL__ + url
-														}else{
-															image.classList.remove('big')
-															image.src = page_globals.__WEB_BASE_URL__ + url_thumb
-														}
-													}
-													// document event click
-													document.addEventListener('click', outsideClickListener)
-												}
-											}
-										}
-								}
-							}, { threshold: [0] });
-							observer.observe(term);
-					// }
-					break;
-
-				case 'countermarks':
-					// coins
-					if (row.illustration && row.illustration.length>0) {
-						// countermark_obverse_data
-						// countermark_reverse_data
-
-						// set node only when it is in DOM (to save browser resources)
-							const observer = new IntersectionObserver(function(entries) {
-								const entry = entries[1] || entries[0]
-								if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
-									observer.disconnect();
-
-									// delegates chek task to worker. When finish, show link button if target result exists
-										const current_worker = new Worker(__WEB_TEMPLATE_WEB__ + '/thesaurus/js/worker.js');
-										const body = {
-											code		: page_globals.API_WEB_USER_CODE,
-											lang		: page_globals.WEB_CURRENT_LANG_CODE,
-											db_name		: page_globals.WEB_DB,
-											dedalo_get	: 'records',
-											table		: 'coins',
-											ar_fields	: ['section_id'],
-											limit		: 1,
-											count		: false,
-											order		: 'lang ASC',
-											sql_filter	: `(countermark_obverse_data LIKE '%"${row.section_id}"%' OR countermark_reverse_data LIKE '%"${row.section_id}"%')`
-										}
-										current_worker.postMessage({
-											url		: page_globals.JSON_TRIGGER_URL,
-											body	: body
-										});
-										current_worker.onmessage = function(e) {
-											current_worker.terminate()
-
-											const api_response = e.data
-											if (api_response.result && api_response.result.length>0) {
-												const link_countermarks = common.create_dom_element({
-													element_type	: "a",
-													class_name		: "icon_link",
-													parent			: term
-												})
-												link_countermarks.addEventListener("click", function(){
-
-													const filter = {
-													  "$or": [
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "countermark_obverse_data",
-																  "field": "countermark_obverse_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														},
-														{
-														  "$and": [
-															{
-															  "$and": [
-																{
-																  "id": "countermark_reverse_data",
-																  "field": "countermark_reverse_data",
-																  "q": ""+row.section_id+"",
-																  "q_type": "q",
-																  "op": "LIKE"
-																}
-															  ]
-															}
-														  ]
-														}
-													  ]
-													};
-													const encoded_psqo = psqo_factory.encode_psqo(filter)
-													const url = 'coins/?psqo=' + encoded_psqo
-													// const windowFeatures = "popup";
-													window.open(url, "mint", null);
-												})
-											}
-										}
-								}
-							}, { threshold: [0] });
-							observer.observe(term);
-					}
-					break;
-
-				default:
-					// nothing to do
-					break;
-			}
-
-		// scroll
-			// self.scrolled = false
-			// if (to_hilite && self.scrolled===false) {
-			// 	// console.log("to_hilite:",row.term, row.term_id);
-			// 	common.when_in_dom(tree_node, function(){
-			// 		tree_node.scrollIntoView()
-			// 	})
-			// 	self.scrolled = true
-			// }
-
-		// nd (no descriptor)
-			if (row.nd && row.nd.length>0) {
-				common.create_dom_element({
-					element_type	: "span",
-					class_name		: "nd",
-					inner_html		: "[" + row.nd.join(", ") + "]",
-					parent			: tree_node
-				})
-			}
-
-		// illustration (svg)
-			if (row.illustration && row.illustration.length>0) {
-				const image = common.create_dom_element({
-					element_type	: "img",
-					class_name		: "illustration",
-					src				: page_globals.__WEB_BASE_URL__ + row.illustration,
-					parent			: tree_node
-				})
-				const outsideClickListener = (event) => {
-					const target = event.target;
-					if (target===image) {
-						image.classList.toggle('big')
-					}else{
-						image.classList.remove('big')
-					}
-				}
-				// document event click
-				document.addEventListener('click', outsideClickListener)
-			}
-
-		// buttons
-			// button scope_note
-				if (row.scope_note && row.scope_note.length>0) {
-					const btn_scope_note = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "btn_scope_note",
-						parent			: tree_node
-					})
-					btn_scope_note.addEventListener("mousedown", function(){
-						if (this.classList.contains("open")) {
-							scope_note.classList.add("hide")
-							this.classList.remove("open")
-						}else{
-							scope_note.classList.remove("hide")
-							this.classList.add("open")
-						}
-					})
-				}
-
-			// button relations
-				let btn_relations
-				if (row.relations && row.relations.length>0) {
-					btn_relations = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "btn_relations",
-						// inner_html	: "Relations",
-						parent			: tree_node
-					})
-					btn_relations.addEventListener("mousedown", function(){
-						if (this.classList.contains("open")) {
-							relations_container.classList.add("hide")
-							this.classList.remove("open")
-						}else{
-							relations_container.classList.remove("hide")
-							this.classList.add("open")
-						}
-					})
-				}
-
-			// button indexation
-				let btn_indexation
-				if (row.indexation && row.indexation.length>0) {
-					btn_indexation = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "btn_indexation",
-						// inner_html	: "indexation",
-						parent			: tree_node
-					})
-					btn_indexation.addEventListener("mousedown", function(){
-						if (this.classList.contains("open")) {
-							indexation_container.classList.add("hide")
-							this.classList.remove("open")
-						}else{
-							indexation_container.classList.remove("hide")
-							this.classList.add("open")
-						}
-					})
-				}
-
-			// button children
-				if (row.children && row.children.length>0) {
-
-					const open_style = row.state==="opened" ? " open" : ""
-					const arrow = common.create_dom_element({
-						element_type	: "span",
-						class_name		: "arrow" + open_style,
-						parent			: tree_node
-					})
-					arrow.addEventListener("mousedown", function(e){
-						e.stopPropagation()
-
-						// state  set based on current classList contains open/hide
-							let new_state
-							if (this.classList.contains("open")) {
-								branch.classList.add("hide")
-								this.classList.remove("open")
-								// new_state
-								new_state = "closed"
-							}else{
-								branch.classList.remove("hide")
-								this.classList.add("open")
-								// new_state
-								new_state = "opened"
-							}
-
-						// state update (sessionStorage)
-							const current_state = self.tree_state[row.term_id]
-							if (current_state!==new_state) {
-								// current_state.state = new_state
-								self.tree_state[row.term_id] = new_state
-								// update sessionStorage tree_state var
-								sessionStorage.setItem('tree_state_' + WEB_AREA, JSON.stringify(self.tree_state));
-							}
-					})
-				}
-
-		// scope note wrapper
-			let scope_note
-			if (row.scope_note && row.scope_note.length>0) {
-
-				const hide_style = row.state==="opened" ? "" : " hide"
-
-				// scope_note
-					const scope_note_text = row.scope_note.replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/g,'');
-					scope_note = common.create_dom_element({
-						element_type	: "div",
-						class_name		: "scope_note hide",
-						inner_html		: scope_note_text,
-						parent			: tree_node
-					})
-			}
-
-		// relations wrapper
-			let relations_container
-			if (row.relations && row.relations.length>0) {
-
-				// relations_container
-					relations_container = common.create_dom_element({
-						element_type	: "div",
-						class_name		: "relations_container hide",
-						parent			: tree_node
-					})
-
-					// Callback function to execute when mutations are observed
-					const callback = function(mutationsList, observer) {
-						// Use traditional 'for loops' for IE 11
-						for(let mutation of mutationsList) {
-							if (mutation.type==='attributes' && mutation.attributeName==='class') {
-									// console.log('The ' + mutation.attributeName + ' attribute was modified.');
-									// console.log("mutationsList:",mutationsList);
-									// console.log("mutationsList.target:",mutationsList[0].target);
-								if (!mutationsList[0].target.classList.contains("hide")) {
-
-									// draw nodes
-									self.render_relation_nodes(row, relations_container, self, false)
-
-									// Stop observing
-									observer.disconnect();
-								}
-							}
-						}
-					};
-
-					// Create an observer instance linked to the callback function
-					const observer = new MutationObserver(callback);
-
-					// Start observing the target node for configured mutations
-					observer.observe(relations_container, { attributes: true, childList: false, subtree: false });
-
-					// console.log("self.hilite_relations_limit:",self.hilite_relations_limit, self.hilite_relations_showed);
-
-					if (row.hilite===true && self.hilite_relations_showed<self.hilite_relations_limit) {
-						// relations_container.classList.remove("hide")
-						// btn_relations.click()
-						relations_container.classList.remove("hide")
-						btn_relations.classList.add("open")
-
-						// increment hilite_relations_showed until reach self.hilite_relations_limit
-						self.hilite_relations_showed++
-					}
-			}
-
-		// indexation wrapper
-			let indexation_container
-			if (row.indexation && row.indexation.length>0) {
-
-				// indexation_container
-					indexation_container = common.create_dom_element({
-						element_type	: "div",
-						class_name		: "indexation_container hide",
-						parent			: tree_node
-					})
-
-					// Callback function to execute when mutations are observed
-					const callback = function(mutationsList, observer) {
-						// Use traditional 'for loops' for IE 11
-						for(let mutation of mutationsList) {
-							if (mutation.type==='attributes' && mutation.attributeName==='class') {
-									// console.log('The ' + mutation.attributeName + ' attribute was modified.');
-									// console.log("mutationsList:",mutationsList);
-									// console.log("mutationsList.target:",mutationsList[0].target);
-								if (!mutationsList[0].target.classList.contains("hide")) {
-
-									// draw nodes
-									self.render_indexation_nodes(row, indexation_container, self)
-
-									// Stop observing
-									observer.disconnect();
-								}
-							}
-						}
-					};
-
-					// Create an observer instance linked to the callback function
-					const observer = new MutationObserver(callback);
-
-					// Start observing the target node for configured mutations
-					observer.observe(indexation_container, { attributes: true, childList: false, subtree: false });
-
-					// console.log("self.hilite_indexation_limit:",self.hilite_indexation_limit, self.hilite_indexation_showed);
-
-					if (row.hilite===true && self.hilite_indexation_showed<self.hilite_indexation_limit) {
-						// indexation_container.classList.remove("hide")
-						// btn_indexation.click()
-						indexation_container.classList.remove("hide")
-						btn_indexation.classList.add("open")
-
-						// increment hilite_indexation_showed until reach self.hilite_indexation_limit
-						self.hilite_indexation_showed++
-					}
-			}
-
-		// children wrapper
-			let branch
-			if (row.children && row.children.length>0) {
-
-				const hide_style = row.state==="opened" ? "" : " hide"
-
-				// branch
-					branch = common.create_dom_element({
-						element_type	: "div",
-						class_name		: "branch" + hide_style,
-						parent			: tree_node
-					})
-
-				tree_node.branch = branch
-
-			}else{
-
-				tree_node.branch = null
-			}
-
-
-		return tree_node
-	},//end render_tree_node
-
-
-
-	/**
 	* RENDER_FORM
-	* Create logic and view of search
+	* Create the search form
+	* @param object options
+	* @return promise
+	* 	resolve(self.form.node)
 	*/
 	render_form : function(options) {
 
@@ -1055,7 +489,7 @@ var thesaurus =  {
 					element_type	: "input",
 					type 			: "submit",
 					id 				: "submit",
-					value 			: tstring["buscar"] || "Search",
+					value 			: tstring.search || "Search",
 					class_name 		: "btn btn-light btn-block primary",
 					parent 			: submit_group
 				})
@@ -1073,7 +507,6 @@ var thesaurus =  {
 				})
 				self.form.node.appendChild(fragment)
 
-
 			// add node
 				options.container.appendChild(self.form.node)
 
@@ -1085,6 +518,9 @@ var thesaurus =  {
 
 	/**
 	* ACTIVATE_AUTOCOMPLETE
+	* Add predictive text behaviour to the input form
+	* @param HTMLElment element
+	* @return bool
 	*/
 	activate_autocomplete : function(element) {
 
@@ -1212,6 +648,8 @@ var thesaurus =  {
 
 	/**
 	* SEARCH_ROWS
+	*
+	* @param object options
 	* @return promise
 	*	resolve array of objects
 	*/
@@ -1228,7 +666,7 @@ var thesaurus =  {
 			const q_selected	= options.q_selected || null
 			const limit			= options.limit
 
-			// data . Simplifies data format (allways on data_clean)
+			// data . Simplifies data format (always on data_clean)
 			const data = self.data_clean.map(item => {
 				const element = {
 					term		: item.term,
@@ -1252,6 +690,10 @@ var thesaurus =  {
 
 					// q try
 						if (q && q.length>0) {
+
+							if(!q_column || !row[q_column]){
+								return false
+							}
 
 							// remove accents from text
 							const text_normalized = row[q_column].normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -1329,6 +771,7 @@ var thesaurus =  {
 	/**
 	* FORM_SUBMIT
 	* Form submit launch search
+	* @return promise js_promise
 	*/
 	form_submit : function() {
 
@@ -1374,7 +817,7 @@ var thesaurus =  {
 				// load_tree_data
 					self.load_tree_data({})
 					.then(function(response){
-						// console.log("/// load_tree_data response:",response);
+						console.log("/// form_submit load_tree_data response:", response);
 						// console.log("to_hilite:",to_hilite);
 
 						// const ar_rows = response.result
@@ -1400,7 +843,419 @@ var thesaurus =  {
 
 
 		return js_promise
-	}//end form_submit
+	},//end form_submit
+
+
+
+	/**
+	* LOAD_LEGENDS_DATA
+	* 	Catalog search of related legends
+	* @param object row
+	* 	Table row from API response result
+	* @param array ar_legends
+	* 	Related legends from
+	* @return object api_response
+	*/
+	load_legends_data : function(row, ar_legends) {
+
+		const self = this
+
+		// debug sample term_id
+		const debug_sample = 'scell1_165'
+
+		// utf grouper case
+		// children of utf sign_group are not calculated by related ar_legends, but from a catalog search
+		// this is more expensive, but needs to be done is this way at now
+			// const is_utf_grouper = row.term_id.includes('sclat1') && row.model && row.model.includes('sclat2_2')
+			const is_utf_grouper = !!(row.model && thesaurus.sign_group_models.includes(row.model))
+			// debug
+				if(SHOW_DEBUG===true) {
+					if (row.term_id===debug_sample) {
+						console.log('debug is_utf_grouper:', row.term_id, row.model, is_utf_grouper);
+						console.log('debug ar_legends:', ar_legends);
+					}
+				}
+			if (is_utf_grouper) {
+
+				return new Promise(function(resolve){
+
+					const ar_promise = []
+					const children = self.data_clean.filter(el => row.children && row.children.includes(el.term_id))
+					const children_length = children.length
+					for (let i = 0; i < children_length; i++) {
+
+						const child = children[i]
+
+						// get term relations with legends (where these have been used)
+						const ar_legends = child.dd_relations && child.dd_relations.length >0
+							? child.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
+							: []
+						// API call
+							const load_promise = thesaurus.load_legends_data(child, ar_legends)
+							ar_promise.push(load_promise)
+					}
+					Promise.all(ar_promise).then((values) => {
+						const data = values.flat()
+						resolve(data)
+					});
+				})
+			}
+
+		// filter
+			const legends_filter = []
+			const ar_legends_length = ar_legends.length
+			for (let i = 0; i < ar_legends_length; i++) {
+				const item = ar_legends[i]
+				// search catalog column ref_type_legend_obverse_data / ref_type_design_reverse_data the related legend section_id
+				legends_filter.push(
+					`ref_type_legend_obverse_data LIKE '%"${item.section_id}"%' OR ref_type_legend_reverse_data LIKE '%"${item.section_id}"%'`
+				)
+			}
+			// utf case. Additional search in plain text for Unicode letters
+			const is_utf = thesaurus.utf_models.includes(row.model)
+			// debug
+				if(SHOW_DEBUG===true) {
+					if (row.term_id===debug_sample) {
+						console.log('is_utf:', row.term_id, row.model, is_utf);
+					}
+				}
+			if (is_utf===true &&
+				ar_legends.length===0 &&
+				// !row.model.includes('sclat2_2') // exclude rows with model 'sclat2_2' grouper
+				!thesaurus.sign_group_models.includes(row.model)
+				) {
+				legends_filter.push(
+					`ref_type_legend_obverse_text LIKE '%${row.term}%' OR ref_type_legend_reverse_text LIKE '%${row.term}%'`
+				)
+				// debug
+					if(SHOW_DEBUG===true) {
+						// if (row.term_id===debug_sample) {
+						// 	console.log('legends_filter pushed:', row.term_id, row.model, legends_filter);
+						// }
+					}
+			}
+			const sql_filter = `term_table = 'types' AND (` + legends_filter.join(' OR ') + ')'
+
+			// debug
+				if(SHOW_DEBUG===true) {
+					// if (row.term_id==='debug_sample) {
+					// 	console.log('sclat1_96 sql_filter:', sql_filter);
+					// }
+				}
+
+		// search_rows
+			const js_promise = catalog.search_rows({
+				sql_filter		: sql_filter,
+				limit 			: 0,
+				process_result	: {
+					fn		: 'process_result::add_parents_and_children_recursive',
+					columns	: [{name : "parents"}]
+				}
+			})
+
+
+		return js_promise
+	},//end load_legends_data
+
+
+
+	/**
+	* LOAD_TYPES_DATA
+	* Catalog search of related types
+	* Used by render_thesaurus_link.render_iconography_links
+	* @param object row
+	* 	Table row from API response result
+	* @param int section_id
+	* 	Current row section_id
+	* @return object api_response
+	*/
+	load_types_data : function(row, section_id) {
+
+		const self = this
+
+		// filter
+			const sql_filter = `(ref_type_design_obverse_iconography_data LIKE '%"${section_id}"%' OR ref_type_design_reverse_iconography_data LIKE '%"${section_id}"%')`
+
+		// search_rows
+			const js_promise = catalog.search_rows({
+				sql_filter		: sql_filter,
+				limit 			: 0,
+				process_result	: {
+					fn		: 'process_result::add_parents_and_children_recursive',
+					columns	: [{name : "parents"}]
+				}
+			})
+
+
+		return js_promise
+	},//end load_types_data
+
+
+
+	/**
+	* LOAD_RELATIONS_DATA
+	* 	Coins search of related countermarks
+	* @param object row
+	* 	Table row from API response result
+	* @param array ar_relations
+	* 	Related countermarks from
+	* @return object api_response
+	*/
+	load_relations_data : async function(row, ar_relations) {
+
+		// filter
+			// const relations_filter = []
+			// const ar_relations_length = ar_relations.length
+			// for (let i = 0; i < ar_relations_length; i++) {
+			// 	const item = ar_relations[i]
+			// 	relations_filter.push(
+			// 		// `countermark_obverse_data LIKE '%"${item.section_id}"%' OR countermark_reverse_data LIKE '%"${item.section_id}"%'`
+			// 		`section_id = ${item.section_id}`
+			// 	)
+			// }
+			// const sql_filter = relations_filter.join(' OR ')
+		// filter optimized
+			const section_id_list = ar_relations.map(el => el.section_id).join(',')
+			const coins_sql_filter = `section_id IN (${section_id_list})`
+
+		const api_response = await data_manager.request({
+			body : {
+				code			: page_globals.API_WEB_USER_CODE,
+				lang			: page_globals.WEB_CURRENT_LANG_CODE,
+				db_name			: page_globals.WEB_DB,
+				dedalo_get		: 'records',
+				table			: 'coins',
+				ar_fields		: '*',
+				count			: false,
+				sql_filter		: coins_sql_filter,
+				resolve_portals_custom	: {
+					'bibliography_data'	: 'bibliographic_references'
+				}
+			}
+		})
+
+		if (!api_response.result) {
+			console.error('Invalid api_response result:', api_response);
+			return []
+		}
+
+		const data = page.parse_coin_data(api_response.result)
+
+		// parse MIB additional info about type and mint
+			const data_length = data.length
+			for (let i = 0; i < data_length; i++) {
+
+				const item = data[i]
+
+				const catalogue_type_mint = item.catalogue_type_mint || []
+				const mib_key = catalogue_type_mint.indexOf('MIB')
+				if (mib_key===-1) {
+					continue;
+				}
+
+				// additional_info
+				// Used in type_row_fields.draw_coin
+				item.additional_info = {
+					type		: item.type[mib_key],
+					mint		: item.mint_name,
+					mint_number	: item.mint_number[mib_key]
+				}
+			}
+
+
+		return data
+		/*
+			const ar_calls = []
+
+			// search types in catalog using types list
+				const ar_filter = ar_relations.map(function(item){
+					return `coin_references LIKE '%"${item.section_id}"%'`;
+				})
+				const sql_filter = 'term_table=\'types\' AND ('+ar_filter.join(' OR ')+')'
+
+				const catalog_ar_fields = ['*']
+
+				const catalog_request_options = {
+					dedalo_get	: 'records',
+					db_name		: page_globals.WEB_DB,
+					lang		: page_globals.WEB_CURRENT_LANG_CODE,
+					table		: 'catalog',
+					ar_fields	: catalog_ar_fields,
+					sql_filter	: sql_filter,
+					limit		: 0,
+					count		: false,
+					offset		: 0,
+					order		: "term ASC"
+				}
+				ar_calls.push({
+					id		: 'catalog_request',
+					options	: catalog_request_options
+				})
+
+			// search coins
+				const coins_request_options = {
+					dedalo_get	: 'records',
+					db_name		: page_globals.WEB_DB,
+					lang		: page_globals.WEB_CURRENT_LANG_CODE,
+					table		: 'coins',
+					ar_fields	: ['*'],
+					sql_filter	: coins_sql_filter,
+					limit		: 0,
+					count		: false,
+					offset		: 0,
+					order		: null,
+					resolve_portals_custom	: {
+						"bibliography_data" : "bibliographic_references"
+					}
+				}
+				ar_calls.push({
+					id		: 'coins_request',
+					options	: coins_request_options
+				})
+
+			// request
+				const api_response = await data_manager.request({
+					body : {
+						dedalo_get	: 'combi',
+						ar_calls	: ar_calls
+					}
+				})
+
+			if (!api_response.result) {
+				console.error('Invalid api_response result:', api_response);
+				return []
+			}
+
+			const catalog_response = api_response.result.find(function(el){
+				return el.id==='catalog_request'
+			})
+			const types_rows = page.parse_catalog_data(catalog_response.result)
+
+			const coins_response = api_response.result.find(function(el){
+				return el.id==='coins_request'
+			})
+			const coins_rows = page.parse_coin_data(coins_response.result)
+
+			const data = {
+				types_rows : types_rows,
+				coins_rows : coins_rows
+			}
+
+			return data
+			*/
+	},//end load_relations_data
+
+
+
+	/**
+	* LOAD_bibliography_DATA
+	* 	bibliographic_references search of related countermarks
+	* @param object row
+	* 	Table row from API response result
+	* @param array bibliography
+	* 	Related bibliographic_references from
+	* @return array data
+	*/
+	load_bibliography_data : async function(row, bibliography) {
+
+		// sql_filter
+			const section_id_list	= bibliography.join(',')
+			const sql_filter		= `section_id IN (${section_id_list})`
+
+		const api_response = await data_manager.request({
+			body : {
+				code			: page_globals.API_WEB_USER_CODE,
+				lang			: page_globals.WEB_CURRENT_LANG_CODE,
+				db_name			: page_globals.WEB_DB,
+				dedalo_get		: 'records',
+				table			: 'bibliographic_references',
+				ar_fields		: '*',
+				count			: false,
+				sql_filter		: sql_filter,
+				// resolve_portals_custom	: {
+				// 	'publications_data'	: 'publications'
+				// }
+			}
+		})
+
+		if (!api_response.result) {
+			console.error('Invalid api_response result:', api_response);
+			return []
+		}
+
+		// data don't need to parse it
+		const data = api_response.result
+
+
+		return data
+	},//end load_bibliography_data
+
+
+
+	/**
+	* GET_THESAURUS_NAME
+	* Resolves the section thesaurus name based on tld
+	* like 'Countermarks' from 'sccmk1'
+	* Uses page.thesaurus_map object
+	* @param string tld
+	* @return string|null
+	*/
+	get_thesaurus_name : (tld) => {
+
+		const map = page.thesaurus_map
+		console.log('map:', map, tld);
+
+		if (map[tld]) {
+			// like 'ts_countermarks'
+			const name = map[tld].replace('ts_', '');
+
+			return tstring[name] || name;
+		}
+
+		return null
+	},//end get_thesaurus_name
+
+
+
+	/**
+	* SHOW_LINK
+	* Determines it current row has link or not
+	* based on term model (tyoplogy)
+	* @param object row
+	* @return bool
+	*/
+	show_link : (row) => {
+
+		switch (WEB_AREA) {
+
+			// mints
+			case 'mints_hierarchy':
+				if (row.term_table && row.term_table==='mints' && row.term_data && row.term_data[0]) {
+					return true
+				}
+				break;
+
+			// other thesaurus
+			default:
+				if (!row.model) {
+					return true
+				}
+
+				try {
+					const regex			= /\d+$/;
+					const section_id	= parseInt(regex.exec(row.model))
+					if (section_id>2) {
+						return true
+					}
+				} catch (error) {
+					console.error(error)
+				}
+				break;
+		}
+
+
+		return false
+	}//end show_link
 
 
 

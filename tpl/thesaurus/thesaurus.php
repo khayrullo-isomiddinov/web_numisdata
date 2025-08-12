@@ -2,6 +2,19 @@
 
 // thesaurus
 
+	// row_fields js add
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/js/catalog'.JS_SUFFIX.'.js';
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/js/catalog_row_fields'.JS_SUFFIX.'.js';
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/type/js/type_row_fields'.JS_SUFFIX.'.js';
+		// page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/map/js/map'.JS_SUFFIX.'.js';
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/thesaurus/js/render_thesaurus'.JS_SUFFIX.'.js';
+		page::$js_ar_url[] = __WEB_TEMPLATE_WEB__ . '/thesaurus/js/render_thesaurus_links'.JS_SUFFIX.'.js';
+		// css
+		// page::$css_ar_url[] = __WEB_TEMPLATE_WEB__ . '/catalog/css/catalog.css';
+		array_unshift(page::$css_ar_url,
+			__WEB_TEMPLATE_WEB__ . '/page/css/coins_common.css'
+		);
+
 
 	// page basic vars
 		$title 			= $this->get_element_from_template_map('title', $template_map->{$mode});
@@ -9,10 +22,8 @@
 		$body  			= $this->get_element_from_template_map('body', $template_map->{$mode});
 		$ar_image  		= $this->get_element_from_template_map('image', $template_map->{$mode});
 
-
 	// body images fix url paths
 		$body = str_replace('../../../media', __WEB_BASE_URL__ . '/dedalo/media', $body);
-
 
 	// area name
 		$area_name 	= $_GET['area_name'];
@@ -69,7 +80,6 @@
 		// 	'term_id' => $term_id // options request term_id add
 		// ];
 
-
 	// ar_fields
 		$ar_fields = [
 			'section_id',
@@ -86,16 +96,32 @@
 			'parent',
 			'related',
 			'scope_note',
+			'definition',
 			'space',
 			'time',
 			'tld',
-			'mib_bibliography'
-			// 'relations'
+			'model',
+			'mib_bibliography',
+			// 'bibliography',
+			'dd_relations'
 		];
 
 
 	// switch by area_name (in url)
 		switch ($area_name) {
+
+			case 'iconography':
+				$thesaurus_options = (object)[
+					'table'	=> [
+						'ts_iconography' // Is thematic
+					],
+					'root_term'	=> [
+						'icon1_1'
+					],
+					'term_id' => $term_id, // options request term_id add
+					'ar_fields' => $ar_fields
+				];
+				break;
 
 			case 'symbols':
 				$thesaurus_options = (object)[
@@ -110,30 +136,87 @@
 				];
 				break;
 
-			case 'iconography':
-				$thesaurus_options = (object)[
-					'table'	=> [
-						'ts_iconography'
-					],
-					'root_term'	=> [
-						'icon1_1'
-					],
-					'term_id' => $term_id, // options request term_id add
-					'ar_fields' => $ar_fields
-				];
-				break;
-
 			case 'countermarks':
 				$thesaurus_options = (object)[
 					'table'	=> [
 						'ts_countermarks'
 					],
 					'root_term'	=> [
-						'sccmk1_1'
+						'sccmk1_1' // sccmk1_1
+					],
+					'term_id' => $term_id, // options request term_id add
+					'ar_fields' => ['*']
+				];
+				break;
+
+			case 'epigraphy':
+				// ts_northern_palaeohispanic,ts_south_palaeohispanic,ts_southern_palaeohispanic,ts_greek,ts_latin,ts_punic,ts_symbols
+				$thesaurus_options = (object)[
+					'table'	=> [
+						// scell1 - ts_greek | Greek | Griego
+						'ts_greek',
+
+						// scxpu1 - ts_punic | Punic | Púnico
+						'ts_punic',
+
+						// scxibo1 - ts_northern_palaeohispanic | Northern Palaeohispanic | Paleohispánico septentrional
+						'ts_northern_palaeohispanic',
+
+						// scxibm1 - ts_southern_palaeohispanic | Southern Palaeohispanic | Paleohispánico meridional
+						'ts_southern_palaeohispanic',
+
+						// sctxr1 - ts_south_palaeohispanic | South-Western | Iberico suroeste
+						'ts_south_palaeohispanic',
+
+						// sclat1 - ts_latin | Latin | Latín
+						'ts_latin',
+
+						// scsym1 - ts_symbols | Symbols | Símbolos
+						// 'ts_symbols',
+
+						// sccmk1 - ts_countermarks | Countermaks | Contramarcas
+						// 'ts_countermarks'
+					],
+					'root_term'	=> [
+						// scell1 - ts_greek | Greek | Griego
+						'scell1_1',
+
+						// scxpu1 - ts_punic | Punic | Púnico
+						'scxpu1_1',
+
+						// scxibo1 - ts_northern_palaeohispanic | Northern Palaeohispanic | Paleohispánico septentrional
+						'scxibo1_1',
+
+						// scxibo1 - ts_southern_palaeohispanic | Southern Palaeohispanic | Paleohispánico meridional
+						'scxibm1_1',
+
+						// sctxr1 - ts_south_palaeohispanic | South-Western | Iberico suroeste
+						'sctxr1_1',
+
+						// sclat1 - ts_latin | Latin | Latín
+						'sclat1_1',
+
+						// scsym1 - ts_symbols | Symbols | Símbolos
+						// 'scsym1_1',
+
+						// sccmk1 - ts_countermarks | Countermaks | Contramarcas
+						// 'sccmk1_1'
 					],
 					'term_id' => $term_id, // options request term_id add
 					'ar_fields' => $ar_fields
 				];
+				// $thesaurus_options = (object)[
+				// 	'table'	=> [
+				// 		// scell1 - ts_greek | Greek | Griego
+				// 		'ts_greek',
+				// 	],
+				// 	'root_term'	=> [
+				// 		// scell1 - ts_greek | Greek | Griego
+				// 		'scell1_1',
+				// 	],
+				// 	'term_id' => $term_id, // options request term_id add
+				// 	'ar_fields' => $ar_fields
+				// ];
 				break;
 
 			case 'mints_hierarchy':
@@ -181,13 +264,15 @@
 				];
 				// dynamic root_term
 					$options = new stdClass();
-						$options->dedalo_get 	= 'records';
-						$options->table  	 	= 'catalog';
-						$options->ar_fields  	= ['term_id'];
-						$options->lang  	 	= WEB_CURRENT_LANG_CODE;
-						$options->limit 		= 0;
-						$options->sql_filter 	= 'parent_term_id = \'["hierarchy1_262"]\'';
-					# Http request in php to the API
+						$options->dedalo_get	= 'records';
+						$options->table			= 'catalog';
+						$options->ar_fields		= ['term_id'];
+						$options->lang			= WEB_CURRENT_LANG_CODE;
+						$options->limit			= 0;
+						// $options->sql_filter	= 'parent_term_id = \'["hierarchy1_262"]\'';
+						$options->sql_filter	= 'parent_term_id = \'["hierarchy1_262"]\' OR parent_term_id = \'["numisdata665_7100"]\'';
+						// $options->sql_filter	= 'parent_term_id = \'["numisdata665_7100"]\'';
+					# HTTP request in php to the API
 					$web_data = json_web_data::get_data($options);
 						// dump($web_data, ' web_data ++ '.to_string());
 					$root_term = array_map(function($el){
@@ -197,5 +282,3 @@
 					$thesaurus_options->root_term = $root_term;
 				break;
 		}
-
-

@@ -39,7 +39,7 @@ var render_hoard = {
 					element_type	: "a",
 					class_name		: "section_id go_to_dedalo",
 					text_content	: row.section_id,
-					href			: '/dedalo/lib/dedalo/main/?t=numisdata5&id=' + row.section_id,
+					href			: '/dedalo/core/page/?tipo=numisdata5&id=' + row.section_id,
 					parent			: line
 				})
 				link.setAttribute('target', '_blank');
@@ -182,11 +182,15 @@ var render_hoard = {
 		// const map_data_clean = self.map_data(map_data) // prepares data to used in map
 		let map_data_clean
 		if (row.georef_geojson) {
+
+			const public_info = row.public_info
+				? row.public_info.trim()
+				: ''
 			// from geojson
 			const popup_data = {
 				section_id	: row.section_id,
 				title		: row.name,
-				description	: row.public_info.trim(),
+				description	: public_info,
 				type		: row.table==='findspots'
 					? 'findspot'
 					: 'hoard'

@@ -30,7 +30,11 @@ var footer =  {
 		// render
 			const footer_node = self.render_footer()
 			if (footer_node) {
-				self.footer_dynamic_wraper.appendChild(footer_node)
+				requestAnimationFrame(
+					() => {
+						self.footer_dynamic_wraper.appendChild(footer_node)
+					}
+				)
 			}
 
 			return true
@@ -90,7 +94,7 @@ var footer =  {
 			const image = row.images && row.images[0]
 				? (row.images[0].indexOf('http')===0)
 					? row.images[0]
-					: page_globals.__WEB_BASE_URL__ + row.images[0]
+					: page_globals.__WEB_MEDIA_BASE_URL__ + row.images[0]
 				: null
 			const url = (row.web_path.indexOf('http')===0)
 				? row.web_path
@@ -195,7 +199,9 @@ var footer =  {
 					const child_tipo	= children[i]
 					const child			= self.footer_data.find(el => el.term_id===child_tipo)
 					if (!child) {
-						console.log("Ignore not found children:", row, child_tipo, children);
+						if(SHOW_DEBUG===true) {
+							console.log("Ignore not found children:", row, child_tipo, children);
+						}
 						continue;
 					}
 

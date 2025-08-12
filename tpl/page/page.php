@@ -175,8 +175,6 @@
 		$page_title = $this->get_page_title();
 
 
-
-
 	# build links css/js
 		$css_links 	= $this->get_header_links('css');
 		$js_links 	= $this->get_header_links('js', ['js_async' => 'defer']);

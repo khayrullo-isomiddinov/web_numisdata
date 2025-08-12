@@ -161,6 +161,11 @@ page.parse_mint_data = function(data) {
 		return row
 	}
 
+	if (row.public_info) {
+		// remove double br from publication
+		row.public_info = row.public_info.replaceAll('<br> <br>','<br><br>')
+	}
+
 	row.georef_geojson = row.georef_geojson
 		? JSON.parse(row.georef_geojson)
 		: null
@@ -179,9 +184,16 @@ page.parse_mint_data = function(data) {
 		? JSON.parse(row.relations_coins)
 		: null
 
-
 	row.relations_types = (row.relations_types)
 		? JSON.parse(row.relations_types)
+		: null
+
+	row.change_to_uri = (row.change_to_uri)
+		? JSON.parse(row.change_to_uri)
+		: null
+
+	row.related_data = (row.related_data)
+		? JSON.parse(row.related_data)
 		: null
 
 
@@ -458,7 +470,6 @@ page.parse_coin_data = function(data) {
 				}
 			}
 
-
 		// find
 		row.find_date = self.parse_date(row.find_date)
 
@@ -466,11 +477,25 @@ page.parse_coin_data = function(data) {
 
 		row.uri = self.parse_iri_data(row.uri)
 
-
 		// bibliography (portal resolved case)
 			if (row.bibliography_data && Array.isArray(row.bibliography_data) ) {
 				row.bibliography = page.parse_publication(row.bibliography_data)
 			}
+
+		// material
+			if (row.material) {
+				const ar_values = row.material.split(' | ')
+				// set as array of unique values
+				row.material = [...new Set(ar_values)].join(' | ')
+			}
+
+		// denomination
+			if (row.denomination) {
+				const ar_values = row.denomination.split(' | ')
+				// set as array of unique values
+				row.denomination = [...new Set(ar_values)].join(' | ')
+			}
+
 
 		row.parsed = true
 
@@ -491,7 +516,7 @@ page.parse_coin_data = function(data) {
 * @return object row | array rows
 */
 page.parse_catalog_data = function(data) {
-	// console.log("------------> parse_catalog_data data:",data);
+
 	const self = this
 
 	if (!data) {
@@ -508,7 +533,6 @@ page.parse_catalog_data = function(data) {
 
 		const data_length = data.length
 		for (let i = 0; i < data_length; i++) {
-
 			// const row = JSON.parse( JSON.stringify(data[i]) )
 			const row = data[i]
 
@@ -569,18 +593,30 @@ page.parse_catalog_data = function(data) {
 			}
 
 			row.term_section_id	= row.term_data ? row.term_data[0] : null
-			row.children		= JSON.parse(row.children)
-			row.parent			= row.parent && Array.isArray(row.parent)
-				? (function(parent_array){
-					// portal resolved case
-					return page.parse_catalog_data(parent_array)
-				  })(row.parent)
-				: JSON.parse(row.parent)
-
+			// row.children		= row.children ? JSON.parse(row.children) : null
+			row.children			= row.children
+				? (
+					Array.isArray(row.children)
+						? (function(children_array){
+							// portal resolved case
+							return page.parse_catalog_data(children_array)
+						})(row.children)
+						: JSON.parse(row.children)
+				)
+				: null
+			row.parent			= row.parent
+				? (
+					Array.isArray(row.parent)
+						? (function(parent_array){
+							// portal resolved case
+							return page.parse_catalog_data(parent_array)
+						})(row.parent)
+						: JSON.parse(row.parent)
+				)
+				: null
 			row.ref_type_averages_diameter = row.ref_type_averages_diameter
 				? parseFloat( row.ref_type_averages_diameter.replace(',', '.') )
 				: null
-
 			row.ref_type_total_diameter_items = row.ref_type_total_diameter_items
 				? parseFloat( row.ref_type_total_diameter_items.replace(',', '.') )
 				: null
@@ -618,11 +654,11 @@ page.parse_catalog_data = function(data) {
 				row.ref_coins_image_reverse_data = row.ref_coins_image_reverse_data
 					? JSON.parse(row.ref_coins_image_reverse_data)
 					: null
-
+			*/
 				row.ref_type_denomination_data = row.ref_type_denomination_data
 					? JSON.parse(row.ref_type_denomination_data)
 					: null
-
+			/*
 				row.ref_type_design_obverse_data = row.ref_type_design_obverse_data
 					? JSON.parse(row.ref_type_design_obverse_data)
 					: null
@@ -706,7 +742,11 @@ page.parse_catalog_data = function(data) {
 				: null
 
 			row.parents = row.parents
-				? JSON.parse(row.parents)
+				? (
+					IsJson(row.parents)
+						? JSON.parse(row.parents)
+						: row.parents
+				)
 				: null
 
 			row.parents_text = row.parents_text
@@ -730,7 +770,24 @@ page.parse_catalog_data = function(data) {
 			row.full_coins_reference_calculable = row.full_coins_reference_calculable
 				? JSON.parse(row.full_coins_reference_calculable)
 				: null
-				
+			row.full_coins_reference_discard = row.full_coins_reference_discard
+				? JSON.parse(row.full_coins_reference_discard)
+				: null
+			row.full_coins_reference_axis = row.full_coins_reference_axis
+				? JSON.parse(row.full_coins_reference_axis)
+				: null
+
+			// mint relations
+			// row.ref_mint_related = row.ref_mint_related
+			// 	? JSON.parse(row.ref_mint_related)
+			// 	: null
+			row.ref_mint_related_data = row.ref_mint_related_data
+				? JSON.parse(row.ref_mint_related_data)
+				: null
+			row.ref_mint_change_to_uri = row.ref_mint_change_to_uri
+				? JSON.parse(row.ref_mint_change_to_uri)
+				: null
+
 			new_data.push(row)
 		}
 
@@ -928,6 +985,14 @@ page.parse_map_global_data = function(ar_rows) {
 				continue;
 			}
 
+			// ref_table
+			// map new column name 'ref_table' => 'table'
+			// 08-05-2024 Note that column 'table' has been renamed to 'ref_table'
+			// to prevent name collisions and selection issues
+				if (row.ref_table) {
+					row.table = row.ref_table
+				}
+
 			row.georef_geojson = row.georef_geojson
 				? JSON.parse(row.georef_geojson)
 				: null
@@ -952,8 +1017,19 @@ page.parse_map_global_data = function(ar_rows) {
 					return name
 				})(row.table);
 
-				const coins_list_total = row.coins_list ? row.coins_list.length : 0;
-				const types_list_total = row.types_list ? row.types_list.length : 0;
+				const get_total = (list) => {
+					if (!list) {
+						return 0;
+					}
+					const set = new Set(list) // create a set to remove duplicates
+					return set.size
+				}
+
+				// coins_list_total
+				const coins_list_total = get_total(row.coins_list)
+
+				// types_list_total
+				const types_list_total = get_total(row.types_list)
 
 				const title = '<span class="note">'+(tstring[name] || name)+'</span> ' + row.name
 				// const description = (tstring.coins || 'Coins') + ': ' + coins_list_total +'<br>'+ (tstring.types || 'Types') + ': ' + types_list_total
@@ -965,7 +1041,7 @@ page.parse_map_global_data = function(ar_rows) {
 					coins_total			: coins_list_total,
 					types_total			: types_list_total,
 					description			: description,
-					// usefull properties
+					// useful properties
 					ref_section_id		: row.ref_section_id,
 					ref_section_tipo	: row.ref_section_tipo,
 					table				: row.table,
@@ -975,7 +1051,7 @@ page.parse_map_global_data = function(ar_rows) {
 
 				const marker_icon = page.maps_config.markers[name];
 
-				// nomalized item format to use it in leaflet and popup
+				// normalized item format to use it in leaflet and popup
 				const item = {
 					lat			: null,
 					lon			: null,
@@ -1084,8 +1160,11 @@ page.parse_ts_web = function(rows) {
 * PARSE_TREE_DATA
 * Parse rows data to use in tree_factory (thesaurus tables)
 * Table ts_thematic, ts_technique, ts_onomastic, ts_material
+* @param array ar_rows
+* @param array|undefined hilite_terms
+* @param array|null root_term = []
 */
-page.parse_tree_data = function(ar_rows, hilite_terms) {
+page.parse_tree_data = function(ar_rows, hilite_terms, root_term=[]) {
 
 	const data = []
 
@@ -1099,6 +1178,7 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 		// model: null
 		// norder: "0"
 		// parent: "["hierarchy1_273"]"
+		// parents: "["hierarchy1_273"]"
 		// related: ""
 		// scope_note: "En el presente Tesauro el empleo del término es más restrictivo, ya que se aplica a los procedimientos técnicos empleados en la elaboración de bienes culturales."
 		// section_id: "1"
@@ -1109,27 +1189,11 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 		// time: null
 		// tld: "technique1"
 
-	const ar_parse = ['parent','children','space','mib_bibliography','term_data'] //
-	function decode_field(field) {
-		if (field) {
-			return JSON.parse(field)
-		}
-		return null;
-	}
-	function parse_item(item){
-		for (let i = ar_parse.length - 1; i >= 0; i--) {
-			const name = ar_parse[i]
-			item[name] = decode_field(item[name])
-		}
-
-		return item
-	}
-
 	const ar_rows_length = ar_rows.length
 	for (let i = 0; i < ar_rows_length; i++) {
 
-		// parse json encoded strings
-			const item = parse_item(ar_rows[i])
+		// parse JSON encoded strings
+			const item = page.parse_term(ar_rows[i])
 
 		// resolve relations images url
 			// if (item.relations && item.relations.length>0) {
@@ -1169,6 +1233,14 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 				}
 				item.children = current_ar_children
 			}
+
+		// dd_relations
+			// if (item.dd_relations) {
+			// 	item.dd_relations = JSON.parse(item.dd_relations)
+			// }
+
+		// parsed
+			item.parsed = true
 
 		data.push(item)
 	}
@@ -1229,17 +1301,9 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 
 			const row = data[i]
 
-			// skip root terms
-				// if(root_term) {
-				// 	if ( root_term.includes( row.term_id+'' ) ) {
-				// 		// console.log("row.term_id:",row.term_id, root_term);
-				// 		// console.log("/////////////////////////////////////////// row:",row);
-				// 		row.parent = ['hierarchy1_262']
-				// 	}
-				// }
-
+			// skip empty parents except for root terms
 			const parent_term_id = (row.parent && row.parent[0]) ? row.parent[0] : false
-			if (!parent_term_id) {
+			if (!parent_term_id && !root_term.includes(row.term_id)) {
 				console.warn("Ignored undefined parent_term_id:", row.term_id, row);
 				// set to remove
 				term_id_to_remove.push(row.term_id)
@@ -1252,7 +1316,6 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 		if (term_id_to_remove.length>0) {
 			console.warn("term_id_to_remove:",term_id_to_remove);
 		}
-
 
 	// remove unused terms
 		const data_clean = data.filter(el => term_id_to_remove.indexOf(el.term_id)===-1);
@@ -1296,6 +1359,56 @@ page.parse_tree_data = function(ar_rows, hilite_terms) {
 
 	return data_clean
 }//end parse_tree_data
+
+
+
+/**
+* PARSE_TERM
+* Parses JSON row properties
+* @param object row
+* @return object row
+*/
+page.parse_term = function(row) {
+
+	const ar_parse = ['parent','parents','children','space','mib_bibliography','term_data','bibliography','dd_relations','model','indexation','authorship'] //
+	const decode_field = (field) => {
+		if (field && typeof field === 'string') {
+			return JSON.parse(field)
+		}
+		return field ?? null;
+	}
+
+	const ar_parse_length = ar_parse.length
+	for (let i = ar_parse_length - 1; i >= 0; i--) {
+		const name = ar_parse[i]
+		row[name] = decode_field(row[name])
+	}
+
+	// remove legacy columns
+	if (row.childrens) {
+		delete row.childrens;
+	}
+
+	// authorship_date
+	if (row.authorship_date) {
+		row.authorship_date = row.authorship_date.split(' | ')
+	}
+
+	// model
+	if (row.model) {
+
+		if (typeof row.model==='string') {
+			row.model = JSON.parse(row.model)
+		}
+		// get only first element of the array
+		if (Array.isArray(row.model) && row.model[0]) {
+			row.model = row.model[0]
+		}
+	}
+
+
+	return row
+}//end parse_term
 
 
 

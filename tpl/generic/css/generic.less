@@ -1,20 +1,34 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-	@page_path : "../../page";
-
 // Usage library
-	@import "@{page_path}/css/library.less";
+	@import "../../page/css/vars.less";
 
 
 
 // main
 	#main {
 		overflow: hidden;
-		padding-bottom: 2rem;
+		padding-bottom: 5rem;
 
 		.video-wrapper {
 			margin-top: 2em;
+		}
+
+		p {
+			display: inline-block;
+		}
+
+		section.content {
+			word-break: break-word;
+		}
+
+		.images {
+			margin-bottom: 1rem;
+
+			.image_big {
+				height: 29rem;
+				width: 100%;
+				object-fit: contain;
+			}
 		}
 
 		.video-thumb {
@@ -35,7 +49,6 @@
 			margin-top: 1em;
 			margin-bottom: 0;
 		}
-
 	}
 
 

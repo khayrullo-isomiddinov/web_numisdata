@@ -21,6 +21,9 @@ var mints =  {
 		form_container	: null,
 		rows_container	: null,
 
+		// data. Array of api_response result (mints rows)
+		data : null,
+
 	/**
 	* SET_UP
 	*/
@@ -79,6 +82,46 @@ var mints =  {
 					// n_nodes	: 8
 				}
 				self.form_submit()
+			}
+
+		// activate print bibliography
+			const button_print = document.querySelector('.button_print')
+			if (button_print && dedalo_logged===true) {
+				button_print.classList.remove('hidden')
+				const click_handler = async (e) => {
+					e.stopPropagation()
+
+					button_print.classList.add('loading')
+
+					const biblio_data = await self.get_biblio_data()
+
+					// render references
+					const bibliography_container = self.render_bibliography(biblio_data)
+
+					// biblio_print add rendered node
+					const biblio_print = document.getElementById('biblio_print')
+					while (biblio_print.hasChildNodes()) {
+						biblio_print.removeChild(biblio_print.lastChild);
+					}
+					biblio_print.appendChild(bibliography_container)
+
+					window.scrollTo(0, document.body.scrollHeight);
+
+					setTimeout(()=>{
+						const is_chrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+						const msg = is_chrome
+							? (tstring.print || 'Print') + '?\n'
+							: (tstring.print || 'Print') + '?\n' + ' WARNING: ' + (tstring.use_chrome_for_print || 'Preferably use \'Chrome\' for printing')
+						if (confirm(msg)) {
+							window.print()
+						}
+
+					}, 200)
+
+
+					button_print.classList.remove('loading')
+				}
+				button_print.addEventListener('click', click_handler)
 			}
 
 
@@ -287,10 +330,16 @@ var mints =  {
 				body : body
 			})
 			.then(function(api_response){
+				if(SHOW_DEBUG===true) {
+					console.log('form_submit api_response:', api_response);
+				}
 
 				// parse data
 					const data	= page.parse_mint_data(api_response.result)
 					const total	= api_response.total
+
+					// fix rows data
+					self.data = data
 
 					self.pagination.total	= total
 					self.pagination.offset	= offset
@@ -305,7 +354,13 @@ var mints =  {
 						while (rows_container.hasChildNodes()) {
 							rows_container.removeChild(rows_container.lastChild);
 						}
-						rows_container.classList.remove("loading")
+						rows_container.classList.remove('loading')
+						rows_container.classList.remove('hide')
+
+						const biblio_print = document.getElementById('biblio_print')
+						while (biblio_print.hasChildNodes()) {
+							biblio_print.removeChild(biblio_print.lastChild);
+						}
 					})()
 
 				// render
@@ -351,7 +406,7 @@ var mints =  {
 					})
 			})
 
-			// scrool to head result
+			// scroll to head result
 			const div_result = document.querySelector(".rows_container")
 			if (div_result) {
 				div_result.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
@@ -371,7 +426,184 @@ var mints =  {
 	list_row_builder : function(data){
 
 		return mints_rows.draw_item(data)
-	}//end list_row_builder
+	},//end list_row_builder
+
+
+
+	/**
+	* GET_BIBLIO_DATA
+	* @return array biblio_data
+	* 	bibliography parsed rows
+	*/
+	get_biblio_data : async function () {
+
+		const self = this
+
+		// mints rows
+		const mints_rows = self.data || []
+
+		const ar_section_id = mints_rows.map(el => el.section_id)
+
+		const sql_filter = 'section_id IN (' + ar_section_id.join(',') + ')'
+
+		// api call
+		const body = {
+			dedalo_get		: 'records',
+			table			: 'mints',
+			ar_fields		: ['section_id','bibliography_data'],
+			sql_filter		: sql_filter,
+			limit			: 0,
+			count			: false,
+			offset			: 0,
+			order			: null,
+			resolve_portals_custom	: {
+				bibliography_data : 'bibliographic_references'
+			}
+		}
+		const api_response = await data_manager.request({
+			body : body
+		})
+		if(SHOW_DEBUG===true) {
+			console.log('))) get_biblio_data api_response:', api_response);
+		}
+
+		const result = page.parse_mint_data(api_response.result)
+
+		// combine the data
+		const biblio_data = self.combine_biblio_data(result)
+
+
+		return biblio_data
+	},//end get_biblio_data
+
+
+
+	/**
+	* COMBINE_BIBLIO_DATA
+	* Combines bibliographic references data in one unique array of rows ordered by author
+	* @param array biblio_data
+	* @return set combined_biblio_data_clean
+	*/
+	combine_biblio_data : function (biblio_data) {
+
+		const combined_biblio_data = []
+		const biblio_data_length = biblio_data.length
+		for (let i = 0; i < biblio_data_length; i++) {
+			const item = biblio_data[i]
+			if (item.bibliography_data && item.bibliography_data.length) {
+				combined_biblio_data.push( ...item.bibliography_data )
+			}
+		}
+
+		// remove duplicates
+		const combined_biblio_data_clean = []
+		const combined_biblio_data_length = combined_biblio_data.length
+		for (let i = 0; i < combined_biblio_data_length; i++) {
+			const item = combined_biblio_data[i]
+
+			if (combined_biblio_data_clean.find(el => el.publications_data===item.publications_data)) {
+				continue;
+			}
+
+			combined_biblio_data_clean.push(item)
+		}
+		// console.log('combined_biblio_data_clean:', combined_biblio_data_clean);
+
+		// files sort by author
+		// combined_biblio_data.sort((a, b) => new Intl.Collator().compare(a.ref_publications_authors, b.ref_publications_authors));
+
+
+		return combined_biblio_data_clean
+	},//end combine_biblio_data
+
+
+
+	/**
+	* RENDER_BIBLIOGRAPHY
+	* @return
+	*/
+	render_bibliography : function (biblio_data) {
+
+		const bibliography_container = common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'bibliography_container_print'
+		})
+
+		//create the graphical red line that divide blocks
+		const lineSeparator = common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'info_line separator',
+			parent			: bibliography_container
+		})
+		// create the tittle block inside a red background
+		common.create_dom_element({
+			element_type	: 'label',
+			class_name		: 'big_label',
+			text_content	: tstring.bibliographic_references || 'Bibliographic references',
+			parent			: lineSeparator
+		})
+
+		const bibliography_block = common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'info_text_block',
+			parent			: bibliography_container
+		})
+
+		const nodes = []
+		const biblio_data_length = biblio_data.length
+		for (let i = 0; i < biblio_data_length; i++) {
+
+			const item = biblio_data[i]
+
+			// build full ref biblio node
+			const biblio_row_node = biblio_row_fields.render_row_bibliography(item, {
+				add_pages										: false,
+				add_sheet										: false,
+				add_reference									: false,
+				add_link										: false,
+				add_ref_publications_pages_physical_description	: true
+			})
+
+			// text version check for duplicates
+			const text_version = biblio_row_node.textContent
+			// ignore empty rows
+			if (text_version.length<3) {
+				continue;
+			}
+
+			if (nodes.find(el => el.text_version === text_version)) {
+				// ignore already included item
+				console.log('ignored item:', text_version);
+				continue;
+			}
+
+			// set text version as property to sort later
+			biblio_row_node.text_version = text_version
+
+			nodes.push(biblio_row_node)
+		}
+
+		// sort
+		nodes.sort((a, b) => new Intl.Collator().compare(a.text_version, b.text_version));
+
+		// iterate ordered nodes
+		const nodes_length = nodes.length
+		for (let i = 0; i < nodes_length; i++) {
+
+			const node = nodes[i]
+
+			const biblio_row_wrapper = common.create_dom_element({
+				element_type	: 'div',
+				class_name		: 'bibliographic_reference',
+				parent			: bibliography_block
+			})
+
+			biblio_row_wrapper.appendChild(node)
+		}
+
+
+		return bibliography_container
+	},//end render_bibliography
 
 
 

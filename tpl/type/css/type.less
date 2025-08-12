@@ -1,10 +1,7 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-	@page_path : "../../page";
 
 // Usage library
-	@import "@{page_path}/css/library.less";
+	@import "../../page/css/vars.less";
 
 
 
@@ -14,8 +11,6 @@
 	display: table;
 }
 
-
-
 .result {
 
 	a.section_id {
@@ -24,12 +19,10 @@
 
 	>div {
 		margin-bottom: 2em;
-		// background-color: #fffc9f;
 	}
 
 	// .row_wrapper
 	.row_wrapper {
-		// font-size: 1.15em;
 
 		.sides_wrapper{
 			display:flex;
@@ -62,7 +55,7 @@
 		}
 		.identify_coin{
 			font-size: 0.9em;
-			// padding-right: 1em;
+
 			.icon_link{
 				padding-right: 1em;
 				margin-left:0;
@@ -79,10 +72,6 @@
 			}
 		}
 
-		// img {
-		// 	vertical-align: bottom;
-		// }
-
 		.identify_coin_wrapper {
 			align-content: space-between;
 			margin: 0 auto;
@@ -95,9 +84,7 @@
 			height: 15em;
 			margin: 0;
 			margin-top: 1em;
-			// margin-bottom: 1em;
 			position: relative;
-			// background-color: #333333;
 
 			>a {
 
@@ -111,8 +98,6 @@
 				}
 			}
 		}
-
-
 
 		.id_line {
 			font-size: 1.2em;
@@ -311,13 +296,12 @@
 				div {
 					//font-size: 110%;
 				}
-
 			}
 		}
 
 		.bibliographic_reference {
 			margin-top: 1px;
-			color: @color_gold_logo;
+			color: @color_gold_dark;
 			list-style: circle;
 			text-indent: -1em;
 			padding-left: 1em;
@@ -328,6 +312,10 @@
 		}
 
 	}//end row_wrapper
+
+	.children_container {
+		margin-left: 2rem;
+	}
 
 
 	// mint types list
@@ -357,10 +345,23 @@
 		// }
 }//end result
 
+#type_analytics {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+}
+.type_analytics_component {
+	width: 25%;
+}
+.chart_wrapper {
+	margin-top: 0.8em;
+	width: 80%;
+	margin-inline: auto;
+}
 
 
 // update 9-3-2021 paco
-	@media screen and (min-width: 960px){
+	@media screen and (min-width: @content_medium2_max_width){
 		#main .inner .identify_coin_wrapper {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
@@ -387,4 +388,24 @@
 				}
 			}
 		}
+
 	}
+
+// update 2023-02-02 julian
+	@media screen and (max-width: 700px) {
+		#type_analytics {
+			flex-direction: column;
+			justify-content: flex-start;
+		}
+		.type_analytics_component {
+			width: 100%;
+		}
+		.chart_wrapper {
+			width: 45%;
+			margin-inline: auto;
+			margin-top: 1.4em;
+		}
+	}
+
+// import catalog_type.less to render the types
+@import '../../catalog/css/catalog_type.less';

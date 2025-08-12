@@ -1,15 +1,17 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-		@page_path : "../../page";
+@assets_path: "../../assets";
+@fonts_path: "@{assets_path}/fonts";
 
-	// Usage library
-		@import "@{page_path}/css/library.less";
+// Usage library
+@import "../../page/css/vars.less";
 
 
-#wrapper .inner {
-	padding: 0;
-}
+
+// #wrapper
+	#wrapper .inner {
+		padding: 0;
+	}
+
 
 
 // search result
@@ -34,7 +36,6 @@
 			}
 		}
 
-
 		.spinner_svg {
 			position: absolute;
 			top: 3em;
@@ -43,11 +44,13 @@
 	}
 
 
-.spinner {
-	position: fixed;
-	top: 40vh;
-	z-index: 999999;
-}
+
+// spinner
+	.spinner {
+		position: fixed;
+		top: 40vh;
+		z-index: 999999;
+	}
 
 
 
@@ -117,8 +120,6 @@
 				display: flex;
 				flex-wrap: wrap;
 
-
-
 				.title {
 					// margin: 0;
 
@@ -140,7 +141,6 @@
 						cursor: pointer;
 					}
 				}
-
 			}//end row_title
 
 		// row_body
@@ -185,8 +185,6 @@
 					padding-left: 0.5em;
 					padding-right: 0.5em;
 				}
-
-
 			}//end row_url
 
 
@@ -234,7 +232,8 @@
 
 
 // children container
-	.children_contanier{
+	.children_contanier,
+	.mint_relations{
 		margin-left: 2em;
 	}
 
@@ -242,9 +241,21 @@
 		margin-left: 0;
 	}
 
+	.mint_relations{
+		margin-top: 1em;
+		padding-top: 1em;
+		border-top: 1px solid #ddd;
+	}
 
 
-// types contanier
+
+/*
+
+	(!) Removed 09-07-2024 by Paco.
+	It is replaced by the 'catalog_type.less' file which encapsulates the CSS of the type,
+	so that it can be re-used in other sections such as Epigraphy.
+
+// types container
 	.row_node {
 		border-top: 1px solid #ddd;
 
@@ -265,10 +276,6 @@
 			margin: 0;
 		}
 	}
-
-	// span {
-	// 	margin-right: 1em;
-	// }
 
 	.ref_type_averages_weight, .ref_type_averages_diameter{
 		    margin-right: 0.5em;
@@ -300,7 +307,6 @@
 			background-position: center;
 		}
 	}
-
 	.ts_period_value{
 		font-weight: 600;
 	}
@@ -331,8 +337,6 @@
 		grid-row-start: 2;
 		display: inline-flex;
 		text-align: center;
-		/* justify-items: center; */
-		/* align-items: center; */
 		justify-content: center;
 	}
 	.ref_type_design_obverse{
@@ -347,9 +351,7 @@
 			vertical-align: middle;
 		}
 	}
-	// span {
- //    	margin-right: 1em;
-	// }
+
 	.legend_obverse{
 		grid-column-start: 1;
 		grid-row-start: 3;
@@ -367,7 +369,6 @@
 			color: unset;
 			font-weight: unset;
 		}
-
 	}
 
 	.ref_type_design_reverse{
@@ -459,6 +460,8 @@
 	// 		width: calc( attr(data-print_w) / 2);
 	// 	}
 	// }
+*/
+@import '../../catalog/css/catalog_type.less';
 
 
 
@@ -487,7 +490,7 @@
 
 		#footer, #header, #export_data {
 			display: none;
-			
+
 		}
 
 		#wrapper {
@@ -525,8 +528,7 @@
 	}
 
 
-// movile
-
+// mobile
 @media (max-width: @movil_max_width) {
 
 	// children container

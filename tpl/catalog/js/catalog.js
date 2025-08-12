@@ -25,6 +25,15 @@ var catalog = {
 	rows_list_container		: null,
 	export_data_container	: null,
 
+	// errors
+	errors : [],
+
+	// ar_gropper_nodes. Used for print to group the first type node with its own groupers to avoid page break inside it
+	ar_gropper_nodes : [],
+
+	// print_mode
+	print_mode : false,
+
 
 
 	/**
@@ -327,16 +336,34 @@ var catalog = {
 				}
 			})
 
+		// section_id
+			self.form.item_factory({
+				id				: "section_id",
+				name			: "section_id",
+				label			: tstring.id || "id",
+				q_column		: "term_data",
+				q_table 		: "types",
+				value_wrapper	: ['["','"]'], // to obtain ["value"] in selected value only
+				eq				: "=",
+				eq_in			: '["',
+				eq_out			: '"]',
+				is_term			: true,
+				parent			: form_row
+			})
+
 		// number
 			self.form.item_factory({
-				id 			: "number",
-				name 		: "number",
-				q_column 	: "term",
-				q_table 	: "types",
+				id			: "number",
+				name		: "number",
+				q_column	: "term",
+				q_table		: "types",
+				// eq		: 'LIKE',
+				eq_in		: '%',
+				eq_out		: '%',
 				label		: tstring.number_key || "Number & Key",
-				is_term 	: false,
+				is_term		: false,
 				parent		: form_row,
-				group_op 	: '$or',
+				group_op	: '$or',
 				callback	: function(form_item) {
 					self.form.activate_autocomplete({
 						form_item	: form_item,
@@ -351,9 +378,10 @@ var catalog = {
 				name			: "culture",
 				label			: tstring.culture || "culture",
 				q_column		: "p_culture",
-				value_wrapper	: ['["','"]'], // to obtain ["value"] in selected value only
+				value_wrapper	: ['',''], // no add wrapper (affects q_selected)
 				eq_in			: "%",
 				eq_out			: "%",
+				q_selected_eq	: 'LIKE', // is always like, even for q_selected
 				is_term			: true,
 				parent			: form_row,
 				callback		: function(form_item) {
@@ -364,7 +392,7 @@ var catalog = {
 				}
 			})
 
-		// creator (autoridad)
+		// role (cargo)
 			self.form.item_factory({
 				id				: "role",
 				name			: "role",
@@ -574,24 +602,6 @@ var catalog = {
 				is_term			: true,
 				parent			: form_row,
 				callback		: function(form_item) {
-					self.form.activate_autocomplete({
-						form_item	: form_item,
-						table		: 'catalog'
-					})
-				}
-			})
-
-		// group
-			self.form.item_factory({
-				id 			: "group",
-				name 		: "group",
-				label		: tstring.group || "group",
-				q_column 	: "p_group",
-				eq_in 		: "%",
-				// q_table 	: "ts_period",
-				is_term 	: true,
-				parent		: form_row,
-				callback	: function(form_item) {
 					self.form.activate_autocomplete({
 						form_item	: form_item,
 						table		: 'catalog'
@@ -1484,6 +1494,7 @@ var catalog = {
 
 		// sort vars
 			const filter			= options.filter || null
+			const sql_filter		= options.sql_filter || null
 			const ar_fields			= options.ar_fields || ["*"]
 			const order				= options.order || "norder ASC"
 			const lang				= page_globals.WEB_CURRENT_LANG_CODE
@@ -1555,8 +1566,7 @@ var catalog = {
 					// }
 
 			// parsed_filters
-				const sql_filter = self.form.parse_sql_filter(filter)
-				// const sql_filter = filter
+				const parsed_sql_filter = sql_filter || self.form.parse_sql_filter(filter)
 				// console.log("Final sql_filter:", sql_filter);
 
 			// debug
@@ -1571,7 +1581,7 @@ var catalog = {
 					table			: 'catalog',
 					ar_fields		: ar_fields,
 					lang			: lang,
-					sql_filter		: sql_filter,
+					sql_filter		: parsed_sql_filter,
 					limit			: limit,
 					group			: (group.length>0) ? group.join(",") : null,
 					count			: false,
@@ -1607,9 +1617,11 @@ var catalog = {
 	* DRAW_ROWS
 	*/
 	draw_rows : function(options) {
-		// console.log("draw_rows options:",options);
 
 		const self = this
+
+		// errors reset
+		self.errors = []
 
 		// options
 			const target	= options.target // self.rows_list_container
@@ -1640,7 +1652,7 @@ var catalog = {
 						parent			: container
 					})
 
-					// scrool to head again
+					// scroll to head again
 						window.scrollTo(0, 0);
 
 					resolve(container)
@@ -1650,7 +1662,7 @@ var catalog = {
 			// add_spinner
 				// page.add_spinner(container)
 
-			// const render_nodes = async () => {
+			// render_nodes function
 				const render_nodes = async function() {
 
 					const fragment = new DocumentFragment();
@@ -1667,14 +1679,16 @@ var catalog = {
 							: null
 						if(!mint_parent){
 							console.warn("mint don't have public parent:",ar_mints[i]);
+							self.errors.push("mint don't have public parent: " + ar_mints[i].term + ' (' + ar_mints[i].term_id +')')
 							continue
 						}
-						// check if the parent is inside the ar_aprents, if not push inside else nothing
+						// check if the parent is inside the ar_parents, if not push inside else nothing
 						const unique_parent = ar_parent.find(item => item.section_id==parent)
 						if(typeof unique_parent==='undefined'){
 							ar_parent.push(mint_parent)
 						}
 					}
+
 					self.parents = ar_parent
 					// create the nodes with the unique parents: ar_parents
 					for (let i = 0; i < ar_parent.length; i++) {
@@ -1693,7 +1707,7 @@ var catalog = {
 						// });
 
 					return fragment
-				}
+				}//end render_nodes
 
 			render_nodes()
 			.then(fragment => {
@@ -1741,7 +1755,6 @@ var catalog = {
 				if(finded){
 					continue
 				}
-
 				self.get_child(ar_rows, children[i], catalog_row_wrapper)
 			}
 		}
@@ -1751,14 +1764,19 @@ var catalog = {
 
 		const self = this
 
-		const row_object 	= ar_rows.find(item => item.section_id==section_id)
+		const row_object = ar_rows.find(item => item.section_id==section_id)
 
 		if (row_object) {
-			const row_node 	= self.render_rows(row_object, ar_rows)
+
+			// draw_item
+			const row_node = self.render_rows(row_object, ar_rows)
+
 			parent_node.appendChild( row_node )
 
 			if(row_object.children){
+
 				self.get_children(ar_rows, row_object, row_node)
+
 				row_node.addEventListener('mouseup', (event) => {
 					event.preventDefault()
 					const target = event.target.tagName === 'SPAN'
@@ -1769,8 +1787,12 @@ var catalog = {
 						const children_node = row_node.querySelector('.children_contanier')
 						children_node.classList.toggle("hide")
 					}
-
 				}, false);
+			}
+
+			if(row_object.term_table==='mints'){
+				const mint_related_node = self.get_mint_relations(row_object)
+				row_node.appendChild( mint_related_node )
 			}
 		}
 	},
@@ -1779,6 +1801,7 @@ var catalog = {
 
 	render_rows : function(row_object, ar_rows){
 
+		const self = this
 		// Build dom row
 		// item row_object
 			// const row_object = ar_rows[i]
@@ -1791,7 +1814,7 @@ var catalog = {
 			catalog_row_fields.ar_rows = ar_rows
 
 		// catalog_row_fields set
-			const node = catalog_row_fields.draw_item(row_object)
+			const node = catalog_row_fields.draw_item(row_object, self)
 
 		return node
 	},
@@ -1849,8 +1872,78 @@ var catalog = {
 				resolve(data)
 			})
 		})
-	}//end get_catalog_range_years
+	},//end get_catalog_range_years
 
+
+	get_mint_relations : function(mint){
+
+		const fragment = new DocumentFragment()
+
+
+		const mint_relations = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "mint_relations",
+					parent			: fragment
+				})
+
+
+		// relations
+			// change to
+			if (mint.ref_mint_change_to_uri && mint.ref_mint_change_to_uri.length>0) {
+
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "relation_label",
+					text_content	: tstring.change_to || "Change to",
+					parent			: mint_relations
+				})
+
+
+				for (let i = 0; i < mint.ref_mint_change_to_uri.length; i++) {
+					const el		= mint.ref_mint_change_to_uri[i]
+					const label		= el.title || "URI"
+					const uri_text	= '<a class="icon_link info_value" href="' + el.iri + '" target="_blank"> ' + el.title  + '</a>'
+
+					common.create_dom_element({
+						element_type	: "span",
+						inner_html		: uri_text,
+						parent			: mint_relations
+					})
+				}
+			}
+			// related
+			if (mint.ref_mint_related_data && mint.ref_mint_related_data.length>0) {
+
+
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "relation_label",
+					text_content	: tstring.related_to || "Related to",
+					parent			: mint_relations
+				})
+
+				const ar_labels = mint.ref_mint_related.split('<br>')
+
+				for (let i = 0; i < mint.ref_mint_related_data.length; i++) {
+
+					const mint_id	= mint.ref_mint_related_data[i]
+					const label		= ' ' + ar_labels[i] || ""
+
+					const link = common.create_dom_element({
+						element_type	: "a",
+						class_name		: "icon_link info_value",
+						href			: page_globals.__WEB_ROOT_WEB__ + '/mint/' + mint_id,
+						text_content	: label,
+						target			: '_blank',
+						parent			: mint_relations
+					})
+				}
+			}
+
+		return fragment
+	},//end get_mint_relations
 
 
 }//end catalog

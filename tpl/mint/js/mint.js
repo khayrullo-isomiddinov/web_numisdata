@@ -14,6 +14,7 @@ var mint = {
 		export_data_container	: null,
 		row_detail				: null,
 		map_container			: null, // DOM node
+		map 					: null,
 
 
 	/**
@@ -29,6 +30,13 @@ var mint = {
 			self.row_detail				= options.row_detail
 			self.section_id				= options.section_id
 			self.map_container			= options.map_container
+			self.map 					= null
+
+		// print button
+			if (dedalo_logged===true) {
+				const print_button = self.render_print_button()
+				self.export_data_container.appendChild(print_button)
+			}
 
 		// export_data_buttons added once
 			const export_data_buttons = page.render_export_data_buttons()
@@ -46,7 +54,9 @@ var mint = {
 				section_id : self.section_id
 			})
 			.then(function(response){
-				// console.log("--> set_up get_row_data API response:",response.result);
+				if(SHOW_DEBUG===true) {
+					console.log("--> set_up get_row_data API response:", response.result);
+				}
 
 				// mint draw
 					const mint = response.result.find( el => el.id==='mint')
@@ -60,15 +70,38 @@ var mint = {
 				// map draw
 					if (typeof mint.result[0]!=="undefined") {
 						if (mint_data.georef_geojson) {
+							const public_info = mint_data.public_info
+								? mint_data.public_info.trim()
+								: ''
 							self.draw_map({
 								mint_map_data	: mint_data.georef_geojson,
 								mint_popup_data	: {
 									section_id	: mint_data.section_id,
 									title		: mint_data.name,
-									description	: mint_data.public_info.trim()
+									description	: public_info
 								},
 								types			: mint_data.relations_types
 							})
+
+							// window.addEventListener('beforeprint', async function(e) {
+
+							// 	self.map_container.style.width = '210mm'
+							// 	self.map_container.style.height = '120mm'
+
+							// 	await self.map.map.invalidateSize()
+							// 	await self.map.map.fitBounds(self.map.feature_group.getBounds())
+
+							// })
+
+							// window.addEventListener('afterprint', async function(e) {
+
+							// 	self.map_container.style.width	= null
+							// 	self.map_container.style.height	= null
+
+							// 	await self.map.map.invalidateSize()
+							// 	await self.map.map.fitBounds(self.map.feature_group.getBounds())
+
+							// })
 						}
 					}
 
@@ -80,7 +113,7 @@ var mint = {
 							self.get_types_data2({
 								section_id : _mint_catalog.section_id
 							})
-							.then(function(result){
+							.then(async function(result){
 								// self.draw_types({
 								// 	target	: document.getElementById('types'),
 								// 	ar_rows	: result
@@ -92,6 +125,7 @@ var mint = {
 									//result[i].term_section_id = result[i].term_section_id.section_id
 								}
 
+								// types
 								const types_node = self.draw_types2({
 									ar_rows			: result,
 									mint_section_id	: _mint_catalog.section_id
@@ -100,6 +134,13 @@ var mint = {
 									const target = document.getElementById('types')
 									target.appendChild(types_node)
 									page.activate_images_gallery(target)
+								}
+
+								// types print
+								const types_node_print = await mint_row.render_type_print(result)
+								if (types_node_print) {
+									const target = document.getElementById('types_print')
+									target.appendChild(types_node_print)
 								}
 							})
 						}else{
@@ -137,6 +178,38 @@ var mint = {
 			// 	}
 			// }
 
+		// beforeprint event. Forces the page to scroll to the bottom and load all coin images
+		window.addEventListener('beforeprint', (e) => {
+			window.scrollTo(0, document.body.scrollHeight);
+
+			// hide types and bibliography
+			if (dedalo_logged!==true) {
+				['types_print','biblio_print','row_detail'].forEach(el => {
+					const node = document.getElementById(el)
+					if (node) {
+						node.style.visibility = 'hidden'
+						node.classList.add('print_hide')
+					}
+				})
+			}
+		});
+
+		// afterprint
+		window.addEventListener("afterprint", (e) => {
+
+			// show types and bibliography
+			if (dedalo_logged!==true) {
+				['types_print','biblio_print','row_detail'].forEach(el => {
+					const node = document.getElementById(el)
+					if (node) {
+						node.style.visibility = ''
+						node.classList.remove('print_hide')
+					}
+				})
+			}
+		})
+
+
 		return true
 	},//end set_up
 
@@ -144,7 +217,7 @@ var mint = {
 
 	/**
 	* GET_ROW_DATA
-	* Get dabase mint row from table mints and catalog
+	* Get database mint row from table mints and catalog
 	* @return promise
 	*/
 	get_row_data : function(options) {
@@ -177,9 +250,13 @@ var mint = {
 						'georef_geojson',
 						'relations_types',
 						'authorship_data',
+						// 'authorship_date'
 						'authorship_names',
 						'authorship_surnames',
-						'authorship_roles'
+						'authorship_roles',
+						'change_to_uri',
+						'related',
+						'related_data'
 					],
 					sql_filter				: "section_id = " + parseInt(section_id),
 					count					: false,
@@ -325,7 +402,7 @@ var mint = {
 						? row.parents.find(el => el==mint_section_id)
 						: false
 					if (!is_mint_child) {
-						console.log("Excluded row:",row);
+						console.log("Excluded row:", row, 'mint_section_id:', mint_section_id);
 						continue;
 					}
 
@@ -650,7 +727,7 @@ var mint = {
 		// line
 			const line = common.create_dom_element({
 				element_type 	: "div",
-				class_name 		: "",
+				class_name 		: "line",
 				parent 			: fragment
 			})
 
@@ -661,7 +738,7 @@ var mint = {
 					element_type	: "a",
 					class_name		: "section_id go_to_dedalo",
 					text_content	: row_object.section_id,
-					href			: '/dedalo/lib/dedalo/main/?t=numisdata6&id=' + row_object.section_id,
+					href			: '/dedalo/core/page/?tipo=numisdata6&id=' + row_object.section_id,
 					parent			: line
 				})
 				link.setAttribute('target', '_blank');
@@ -669,86 +746,7 @@ var mint = {
 
 		// Cite of record
 			const golden_separator = document.querySelector('.golden-separator')
-			const cite = common.create_dom_element({
-				element_type	: "span",
-				class_name		: "cite_this_record",
-				text_content	: tstring.cite_this_record || 'cite this record',
-				parent			: golden_separator
-			})
-			cite.addEventListener('click', async function(){
-				const main_catalog_data = await page.load_main_catalog()
-				const cite_data = main_catalog_data.result[0];
-				const publication_data = cite_data.publication_data[0];
-				cite_data.autors = {
-					authorship_data		: row_object.authorship_data || null,
-					authorship_names	: row_object.authorship_names || null,
-					authorship_surnames	: row_object.authorship_surnames || null,
-					authorship_roles	: row_object.authorship_roles || null,
-				}
-				cite_data.catalog = null
-				cite_data.title = row_object.name
-				cite_data.publication_data = publication_data
-				cite_data.uri_location 	= window.location
-
-				const cite_data_node = biblio_row_fields.render_cite_this(cite_data)
-
-
-				const popUpContainer = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-cite",
-					parent 			: document.body
-				})
-				popUpContainer.addEventListener('mouseup',function() {
-
-   					popUpContainer.classList.add('copy')
-   					cite_data_node.classList.add('copy')
-
-   					const selection = window.getSelection();
-					//create a selection range
-					const copy_range = document.createRange();
-					//choose the element we want to select the text of
-					copy_range.selectNodeContents(cite_data_node);
-					//select the text inside the range
-					selection.removeAllRanges();
-       				selection.addRange( copy_range );
-
-       				//copy the text to the clipboard
-					document.execCommand("copy");
-
-					//remove our selection range
-					window.getSelection().removeAllRanges();
-				})
-
-				const title = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-label",
-					text_content	: tstring.cite_this_record || 'Cite this record',
-					parent 			: popUpContainer
-				})
-
-				const close_buttom = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "close-buttom",
-					parent 			: popUpContainer
-				})
-				close_buttom.addEventListener("click",function(){
-					// popUpContainer.remove()
-				})
-				document.body.addEventListener("click",function(event_cite){
-					document.body.removeEventListener("click", function(event_cite){})
-					popUpContainer.remove()
-				})
-
-				popUpContainer.appendChild(cite_data_node)
-
-				const click_to_copy = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-text_copy",
-					text_content	: tstring.click_to_copy || 'Click to copy',
-					parent 			: popUpContainer
-				})
-				
-			})
+			page.render_cite_record(row_object, golden_separator)
 
 		// name & place
 			if (row_object.name && row_object.name.length>0) {
@@ -782,26 +780,9 @@ var mint = {
 					}
 
 				// authorship
-					if (row_object.authorship_names && row_object.authorship_names.length>0) {
-
-						const ar_names = row_object.authorship_names.split('|');
-						const ar_surnames = row_object.authorship_surnames.split('|');
-						const ar_roles = row_object.authorship_roles.split('|');
-
-						const authorship_length = ar_names.length
-						for (let i = 0; i < authorship_length; i++) {
-							const name		= ar_names[i].trim().toUpperCase()
-							const surname	= ar_surnames[i].trim().toUpperCase()
-							const rol		= ar_roles[i].trim()
-
-							const authorship = name + ' ' + surname+ ' | ' +rol
-							common.create_dom_element({
-								element_type 	: "div",
-								class_name 		: "authorship",
-								text_content 	: authorship,
-								parent 			: lineTittleWrap
-							})
-						}
+					if(row_object.authorship_names && row_object.authorship_names.length>0) {
+						const authorship_node = page.render_authorship(row_object)
+						lineTittleWrap.appendChild(authorship_node)
 					}
 			}//end if (row_object.name && row_object.name.length>0)
 
@@ -826,6 +807,7 @@ var mint = {
 					parent			: comments_wrap
 				})
 			}
+
 		// numismatic_comments
 			// if (row_object.numismatic_comments && row_object.numismatic_comments.length>0) {
 			// 	const numismatic_comments = row_object.numismatic_comments
@@ -843,13 +825,73 @@ var mint = {
 				page.create_expandable_block(comments_wrap, line)
 			}
 
+		// relations
+			// change to
+			if (row_object.change_to_uri && row_object.change_to_uri.length>0) {
+
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "related",
+					text_content	: tstring.change_to || "Change to",
+					parent			: line
+				})
+
+
+				for (let i = 0; i < row_object.change_to_uri.length; i++) {
+					const el		= row_object.change_to_uri[i]
+					const label		= el.title || "URI"
+					const uri_text	= '<a class="icon_link info_value" href="' + el.iri + '" target="_blank"> ' + el.title  + '</a>'
+
+					common.create_dom_element({
+						element_type	: "span",
+						inner_html		: uri_text,
+						parent			: line
+					})
+				}
+			}
+			// related
+			if (row_object.related_data && row_object.related_data.length>0) {
+				//create the tittle block inside a red background
+				common.create_dom_element({
+					element_type	: "div",
+					class_name		: "related",
+					text_content	: tstring.related_to || "Related to",
+					parent			: line
+				})
+
+				const ar_labels = row_object.related.split('<br>')
+
+				for (let i = 0; i < row_object.related_data.length; i++) {
+
+					const mint_id	= row_object.related_data[i]
+					const label		= ' '+ar_labels[i] || ""
+
+					const link = common.create_dom_element({
+						element_type	: "a",
+						class_name		: "icon_link info_value",
+						href			: page_globals.__WEB_ROOT_WEB__ + '/mint/' + mint_id,
+						inner_html		: label,
+						target			: '_blank',
+						parent			: line
+					})
+				}
+			}
+
 		// bibliography_data
 			if (row_object.bibliography_data && row_object.bibliography_data.length>0) {
+
+				const bibliography_container = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'bibliography_container',
+					parent			: line
+				})
+
 				//create the graphical red line that divide blocks
 				const lineSeparator = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "info_line separator",
-					parent			: line
+					parent			: bibliography_container
 				})
 				//create the tittle block inside a red background
 				common.create_dom_element({
@@ -862,10 +904,10 @@ var mint = {
 				const bibliography_block = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "info_text_block",
-					parent			: line
+					parent			: bibliography_container
 				})
 
-				const ref_biblio		= row_object.bibliography_data
+				const ref_biblio = row_object.bibliography_data
 				const ref_biblio_length	= ref_biblio.length
 				for (let i = 0; i < ref_biblio_length; i++) {
 
@@ -880,33 +922,52 @@ var mint = {
 					biblio_row_wrapper.appendChild(biblio_row_node)
 				}
 
-				// createExpandableBlock(bibliography_block,line);
-				page.create_expandable_block(bibliography_block, line)
+				// createExpandableBlock(bibliography_block,bibliography_container);
+				// page.create_expandable_block(bibliography_block, bibliography_container)
+
+				// clone to bibliography_container for print
+				const biblio_print = document.getElementById('biblio_print')
+				if (biblio_print) {
+					const bibliography_container_clone = bibliography_container.cloneNode(true);
+					bibliography_container_clone.classList.remove('bibliography_container')
+					bibliography_container_clone.classList.add('bibliography_container_print')
+					biblio_print.appendChild(bibliography_container_clone)
+				}
 			}
 
-			// other permanent uri
-				if (row_object.uri && row_object.uri.length>0) {
+		// other permanent URI
+			if (row_object.uri && row_object.uri.length>0) {
 
-					//create the graphical red line that divide blocks
-					// const lineSeparator = common.create_dom_element({
-					// 	element_type	: "div",
-					// 	class_name		: "info_line separator",
-					// 	parent 			: line
-					// })
-					for (let i = 0; i < row_object.uri.length; i++) {
+				// create the graphical red line that divide blocks
+				// const lineSeparator = common.create_dom_element({
+				// 	element_type	: "div",
+				// 	class_name		: "info_line separator",
+				// 	parent 			: line
+				// })
+				for (let i = 0; i < row_object.uri.length; i++) {
 
-						const el		= row_object.uri[i]
-						const label		= el.label || "URI"
-						const uri_text	= '<a class="icon_link info_value" href="' + el.value + '" target="_blank"> ' + el.label  + '</a>'
+					const el		= row_object.uri[i]
+					const label		= el.label || "URI"
+					const uri_text	= '<a class="icon_link info_value" href="' + el.value + '" target="_blank"> ' + label  + '</a>'
 
-						common.create_dom_element({
-							element_type	: "span",
-							inner_html		: uri_text,
-							parent			: line
-						})
-
-					}
+					common.create_dom_element({
+						element_type	: "span",
+						inner_html		: uri_text,
+						parent			: line
+					})
 				}
+			}
+
+		// authorship PRINT ONLY
+			if(row_object.authorship_names && row_object.authorship_names.length>0) {
+				const authorship_print_container = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'authorship_print_container hide',
+					parent			: line
+				})
+				const authorship_node = page.render_authorship(row_object)
+				authorship_print_container.appendChild(authorship_node)
+			}
 
 		// container final add
 		container.appendChild(fragment)
@@ -1340,6 +1401,9 @@ var mint = {
 
 	/**
 	* DRAW_MAP
+	*
+	* @param object options
+	* @return void
 	*/
 	draw_map : function(options) {
 
@@ -1348,20 +1412,36 @@ var mint = {
 		// options
 			const mint_map_data		= options.mint_map_data
 			const mint_popup_data	= options.mint_popup_data
-			const types				= options.types
+			const types				= options.types || null
+
+		// popup parser
+			const parse_popup_data = (data) => {
+				return {
+					section_id	: data.section_id,
+					title		: data.name,
+					description	: ""
+				}
+			}
 
 		self.get_findspot_hoards({
 			types : types
 		})
 		.then(function(response){
-			// console.log("draw_map get_place_data: ",response);
+			if(SHOW_DEBUG===true) {
+				console.log('draw_map API response:', response);
+			}
+
+			if (!response || !response.result) {
+				console.warn('Warning! Empty API response from hoard data. types:', types);
+				return
+			}
 
 			const container	= self.map_container // document.getElementById("map_container")
 
-			if (response && response.result) {
-				container.classList.remove('hide')
-			}
+			// show map (default is hidden)
+			container.classList.remove('hide')
 
+			// map factory init
 			self.map = self.map || new map_factory() // creates / get existing instance of map
 			self.map.init({
 				map_container	: container,
@@ -1372,7 +1452,8 @@ var mint = {
 				legend			: page.render_map_legend
 			})
 
-			const map_data_points = self.map_data(mint_map_data, mint_popup_data) // prepares data to used in map
+			// prepares data to be used in map
+			const map_data_points = self.map_data(mint_map_data, mint_popup_data)
 
 			// findspots to map
 				const findspots_map_data = response.result[0].result;
@@ -1396,7 +1477,6 @@ var mint = {
 
 			// hoards to map
 				const hoards_map_data = response.result[1].result;
-
 				if (hoards_map_data && hoards_map_data.length>0){
 					for (let i=0;i<hoards_map_data.length;i++){
 
@@ -1418,19 +1498,9 @@ var mint = {
 				self.map.parse_data_to_map(map_data_points, null)
 				.then(function(){
 					container.classList.remove("hide_opacity")
+					return true
 				})
 		})
-
-		function parse_popup_data(data){
-			const popup_data = {
-				section_id	: data.section_id,
-				title		: data.name,
-				description	: ""
-			}
-			return popup_data;
-		}
-
-		return true
 	},//end draw_map
 
 
@@ -1439,9 +1509,13 @@ var mint = {
 	* GET_PLACE_DATA
 	* Search findspots and hoards data with same place_data
 	*/
-	get_findspot_hoards : function(data){
+	get_findspot_hoards : async function(data){
 
-		const types = data.types
+		const types = data.types || []
+
+		if (!types || types.length<1) {
+			return null
+		}
 
 		const ar_filter = []
 
@@ -1481,14 +1555,16 @@ var mint = {
 				}
 			})
 
-			const js_promise = data_manager.request({
+		// api request
+			const api_response = await data_manager.request({
 				body : {
 					dedalo_get	: 'combi',
 					ar_calls	: ar_calls
 				}
 			})
 
-			return js_promise
+
+		return api_response
 	},//end get_place_data
 
 
@@ -1528,10 +1604,48 @@ var mint = {
 			}
 			map_points.push(item)
 		}
-		// console.log("--map_data map_points:",map_points);
+
 
 		return map_points
-	}//end map_data
+	},//end map_data
+
+
+
+	/**
+	* RENDER_PRINT_BUTTON
+	* @return HTMLElement export_container
+	*/
+	render_print_button : function () {
+
+		const export_container = common.create_dom_element({
+			element_type	: 'div',
+			class_name		: 'export_container'
+		})
+
+		// print_button
+		const print_button = common.create_dom_element({
+			element_type	: 'input',
+			type			: 'button',
+			class_name		: 'btn primary button_print',
+			value			: tstring.print || 'Print',
+			parent			: export_container
+		})
+		const click_handler = (e) => {
+			e.stopPropagation()
+
+			const is_chrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+			const msg = is_chrome
+				? (tstring.print || 'Print') + '?\n'
+				: (tstring.print || 'Print') + '?\n' + ' WARNING: ' + (tstring.use_chrome_for_print || 'Preferably use \'Chrome\' for printing')
+			if (confirm(msg)) {
+				window.print()
+			}
+		}
+		print_button.addEventListener('click', click_handler)
+
+
+		return export_container
+	},//end render_print_button
 
 
 

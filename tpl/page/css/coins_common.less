@@ -2,17 +2,12 @@
 * COINS LIST UNIFIED STYLES
 */
 
-// Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-	@page_path : "../../page";
-
 // Usage library
-	@import "@{page_path}/css/library.less";
+	@import "vars.less";
 
 
 .coins_list {
-	
+
 	display: flex;
 	flex-wrap: wrap;
 
@@ -24,17 +19,69 @@
 		border-right: none;
 	}*/
 
+	img.svg {
+		height: 28px;
+	}
+
 	.sorted_coin {
 		width : 33.33%;
 		margin-bottom: 0.5em;
-		// margin-right: 0.5em;
 		font-size: 80%;
 		border-right: 1px solid rgb(227, 227, 227);
-		// background-color: #f6f6f6;
 		padding: 0.5em;
 		border-radius: 4px;
 
-		.uri-text a{
+		>.images_wrapper {
+			margin-bottom: 0.5rem;
+			position: relative;
+
+			img {
+				width: 50%;
+				height: 200px;
+				object-fit: contain;
+				object-position: center;
+				background-color: white;
+			}
+		}
+
+		>.additional_info {
+			margin-top: -0.5rem;
+
+			>.additional_info_item {
+				display: inline-block;
+
+				&.mint {
+					margin-right: 0.66rem;
+					font-size: 1.2em;
+					font-weight: 600;
+					font-variant-caps: small-caps;
+				}
+
+				&.type {
+					// margin-left: 0.5rem;
+					font-weight: 500;
+					color: #b7996d;
+				}
+
+			}
+		}
+
+		>.countermarks_wrapper {
+
+			.svg {
+				height: 2rem;
+			}
+		}
+
+		>.references {
+			margin-top: -0.5rem;
+
+			>.bibliographic_reference {
+
+			}
+		}
+
+		.uri-text a {
 			@media screen and (min-width: 1680px){
 				font-size:90%;
 			}
@@ -49,18 +96,9 @@
 			}
 		}
 
-		.images_wrapper {
-			margin-bottom: 0.5em;
-			position: relative;
 
-			img {
-				width: 50%;
-				height: 200px;
-				object-fit: contain;
-				object-position: center;
-				background-color: white;
-			}
-		}
+
+
 
 		@media screen and (max-width: 976px){
 			width: 48% !important;

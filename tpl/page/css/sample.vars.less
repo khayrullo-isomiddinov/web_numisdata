@@ -1,7 +1,7 @@
 /*
 * vars
 * Global less vars
-* (file included from library.less)
+* (file included from vars.less)
 */
 
 
@@ -18,7 +18,29 @@
 
 
 // colors
-	@color_grey_dark	: #622f2f; // #333333;
+	@color_grey_dark	: #333333; // #333333;
 	@color_gold_logo	: #b7996d;
 	@blue_ocean			: #b1c9e2;
 	@color_red_dark		: #a33e1f; // used in big labels
+
+
+	// button_icon_simple
+	.button_icon_simple {
+		background-repeat: no-repeat;
+		background-position: center center;
+		cursor: pointer;
+
+		width: 1em;
+		height: 1em;
+		cursor: pointer;
+		background-size: contain;
+		opacity: 0.7;
+
+		&:active {
+			opacity: 0.5;
+		}
+
+		&:hover {
+			opacity: 1;
+		}
+	}

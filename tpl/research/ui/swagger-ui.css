@@ -1,34 +1,8 @@
-.button_icon {
-  background-repeat: no-repeat;
-  background-position: center center;
-  width: 1.25em;
-  height: 1.25em;
-  cursor: pointer;
-  background-size: 71%;
-  background-color: #c8c8c87d;
-  border-radius: 2px;
-}
-.button_icon:active {
-  opacity: 0.5;
-}
-.button_icon:hover {
-  opacity: 1;
-}
-.button_icon_simple {
-  background-repeat: no-repeat;
-  background-position: center center;
-  width: 1em;
-  height: 1em;
-  cursor: pointer;
-  background-size: contain;
-  opacity: 0.7;
-}
-.button_icon_simple:active {
-  opacity: 0.5;
-}
-.button_icon_simple:hover {
-  opacity: 1;
-}
+/*
+* vars
+* Global less vars
+* (file included from vars.less)
+*/
 .swagger-ui html {
   box-sizing: border-box;
 }

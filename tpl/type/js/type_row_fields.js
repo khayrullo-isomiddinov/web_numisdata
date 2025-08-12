@@ -3,8 +3,12 @@
 "use strict";
 
 
+import { COLOR_PALETTE, chart_wrapper } from "../../lib/charts/chart-wrapper";
+import { minimal_boxvio_chart_wrapper } from "../../lib/charts/d3/boxvio/minimal-boxvio-chart-wrapper";
+import { minimal_clock_chart_wrapper } from "../../lib/charts/d3/clock/minimal-clock-chart-wrapper";
 
-var type_row_fields = {
+
+export const type_row_fields = {
 
 
 	// caller. Like 'type'
@@ -12,14 +16,19 @@ var type_row_fields = {
 	type : '',
 	equivalents : '',
 
-
+	// charts
+	/** @type {chart_wrapper} */
+	weight_chat_wrapper: null,
+	/** @type {chart_wrapper} */
+	diameter_chart_wrapper: null,
+	/** @type {chart_wrapper} */
+	axis_chart_wrapper: null,
 
 	draw_item : function(item) {
 
 		const self = this
 
 		const fragment = new DocumentFragment()
-
 
 		// dedalo_link
 			if (dedalo_logged===true) {
@@ -29,87 +38,15 @@ var type_row_fields = {
 
 		// Cite of record
 			const golden_separator = document.querySelector('.golden-separator')
-			const cite = common.create_dom_element({
-				element_type	: "span",
-				class_name		: "cite_this_record",
-				text_content	: tstring.cite_this_record || 'cite this record',
-				parent			: golden_separator
-			})
-			cite.addEventListener('click', async function(){
-				const main_catalog_data = await page.load_main_catalog()
-				const cite_data = main_catalog_data.result[0];
-				const publication_data = cite_data.publication_data[0];
-
-				cite_data.autors = {
-					authorship_data		: item.authorship_data || null,
-					authorship_names	: item.authorship_names || null,
-					authorship_surnames	: item.authorship_surnames || null,
-					authorship_roles	: item.authorship_roles || null,
+			requestAnimationFrame(
+				() => {
+					page.render_cite_record(
+						item,
+						golden_separator,
+						'<em>'+self.type+'</em>' // title
+					)
 				}
-				cite_data.catalog = null
-				cite_data.title = '<em>'+self.type+'</em>'
-				cite_data.publication_data = publication_data
-				cite_data.uri_location 	= window.location
-
-				const cite_data_node = biblio_row_fields.render_cite_this(cite_data)
-
-
-				const popUpContainer = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-cite",
-					parent 			: document.body
-				})
-				popUpContainer.addEventListener('mouseup',function() {
-
-   					popUpContainer.classList.add('copy')
-   					cite_data_node.classList.add('copy')
-
-   					const selection = window.getSelection();
-					//create a selection range
-					const copy_range = document.createRange();
-					//choose the element we want to select the text of
-					copy_range.selectNodeContents(cite_data_node);
-					//select the text inside the range
-					selection.removeAllRanges();
-       				selection.addRange( copy_range );
-
-       				//copy the text to the clipboard
-					document.execCommand("copy");
-
-					//remove our selection range
-					window.getSelection().removeAllRanges();
-				})
-
-				const title = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-label",
-					text_content	: tstring.cite_this_record || 'Cite this record',
-					parent 			: popUpContainer
-				})
-
-				const close_buttom = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "close-buttom",
-					parent 			: popUpContainer
-				})
-				close_buttom.addEventListener("click",function(){
-					// popUpContainer.remove()
-				})
-				document.body.addEventListener("click",function(event_cite){
-					document.body.removeEventListener("click", function(event_cite){})
-					popUpContainer.remove()
-				})
-
-				popUpContainer.appendChild(cite_data_node)
-
-				const click_to_copy = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-text_copy",
-					text_content	: tstring.click_to_copy || 'Click to copy',
-					parent 			: popUpContainer
-				})
-
-			})
+			)
 
 		// catalog_hierarchy
 			fragment.appendChild(
@@ -128,21 +65,34 @@ var type_row_fields = {
 				parent			: fragment
 			})
 
-		// ref_coins_image_obverse
-			identify_coin.appendChild(
-				self.image(item, "ref_coins_image_obverse")
-			)
+			// ref_coins_image_obverse
+				requestAnimationFrame(
+					() => {
+						identify_coin.appendChild(
+							self.image(item, "ref_coins_image_obverse")
+						)
+					}
+				)
 
-		// ref_coins_image_reverse
-			identify_coin.appendChild(
-				self.image(item, "ref_coins_image_reverse")
-			)
+			// <a href="https://gallica.bnf.fr/ark:/12148/btv1b84812787/f1.highres" class="image_link">
+			// <img title="44726" src="https://gallica.bnf.fr/ark:/12148/btv1b84812787/f1.highres" loading="lazy" data-caption="Bibliotèque nationale de France Fonds général.280 (36-5-29)">
+			// </a>
 
-			//embedded gallery reference node
+			// ref_coins_image_reverse
+				requestAnimationFrame(
+					() => {
+						identify_coin.appendChild(
+							self.image(item, "ref_coins_image_reverse")
+						)
+					}
+				)
+
+
+			// embedded gallery reference node
 			common.create_dom_element({
-				element_type 	: "div",
-				id 				: "embedded-gallery",
-				parent 			: fragment
+				element_type	: "div",
+				id				: "embedded-gallery",
+				parent			: fragment
 			})
 
 		// identify_coin
@@ -170,14 +120,18 @@ var type_row_fields = {
 		})
 
 		// design_obverse
-			obverse_wrapper.appendChild(
-				self.default(item, "design_obverse")
-			)
+			if (item.design_obverse_data) {
+				obverse_wrapper.appendChild(
+					self.default(item, "design_obverse")
+				)
+			}
 
 		// symbol_obverse
-			obverse_wrapper.appendChild(
-				self.default(item, "symbol_obverse")
-			)
+			if (item.symbol_obverse_data) {
+				obverse_wrapper.appendChild(
+					self.default(item, "symbol_obverse")
+				)
+			}
 
 		// legend_obverse
 			// fragment.appendChild(
@@ -199,9 +153,11 @@ var type_row_fields = {
 			// }
 
 		// legend_obverse_transcription
-			obverse_wrapper.appendChild(
-				self.default(item, "legend_obverse_transcription")
-			)
+			if (item.legend_obverse_transcription) {
+				obverse_wrapper.appendChild(
+					self.default(item, "legend_obverse_transcription")
+				)
+			}
 
 		// reverse_info_wrapper
 		const reverse_wrapper = common.create_dom_element({
@@ -211,14 +167,18 @@ var type_row_fields = {
 		})
 
 		// design_reverse
-			reverse_wrapper.appendChild(
-				self.default(item, "design_reverse")
-			)
+			if (item.design_reverse) {
+				reverse_wrapper.appendChild(
+					self.default(item, "design_reverse")
+				)
+			}
 
 		// symbol_reverse
-			reverse_wrapper.appendChild(
-				self.default(item, "symbol_reverse")
-			)
+			if (item.symbol_reverse_data) {
+				reverse_wrapper.appendChild(
+					self.default(item, "symbol_reverse")
+				)
+			}
 
 		// legend_reverse
 			// fragment.appendChild(
@@ -234,9 +194,11 @@ var type_row_fields = {
 			}
 
 		// legend_reverse_transcription
-			reverse_wrapper.appendChild(
-				self.default(item, "legend_reverse_transcription")
-			)
+			if (item.legend_reverse_transcription) {
+				reverse_wrapper.appendChild(
+					self.default(item, "legend_reverse_transcription")
+				)
+			}
 
 		// public_info
 			fragment.appendChild(
@@ -257,8 +219,8 @@ var type_row_fields = {
 			)
 		// related_types : "MIB | 03a<br>MIB | 15b"
 			if(item.related_types){
-				const related_types 		= item.related_types
-				const related_types_data 	= item.related_types_data
+				const related_types			= item.related_types
+				const related_types_data	= item.related_types_data
 
 				const label		= tstring.related_types || "Related types"
 				const beats 	= related_types_data.length
@@ -290,12 +252,10 @@ var type_row_fields = {
 				const related_types_node = common.create_dom_element({
 					element_type	: "span",
 					class_name		: "info_value related_types",
-					inner_html 		: label +": "+ ar_final.join(" | "),
-					parent 			: fragment
+					inner_html		: label +": "+ ar_final.join(" | "),
+					parent			: fragment
 				})
 			}
-
-
 
 		// bibliography
 			const ar_references = item.bibliography_data
@@ -359,6 +319,134 @@ var type_row_fields = {
 				}
 			}
 
+		// Weight, diameter, and axis
+			let color = COLOR_PALETTE[0]
+			if (item.denomination_data
+				&& item.denomination_data.length
+				&& item.denomination_data[0].color) {
+				color = item.denomination_data[0].color
+			}
+			const catalog_data = item.catalog || {}
+			const calculable = catalog_data.full_coins_reference_calculable
+				? catalog_data.full_coins_reference_calculable
+				: []
+			const diameter = catalog_data.full_coins_reference_diameter_max
+				? catalog_data.full_coins_reference_diameter_max.filter((v, i) => v && calculable[i])
+				: []
+			const weight = catalog_data.full_coins_reference_weight
+				? catalog_data.full_coins_reference_weight.filter((v, i) => v && calculable[i])
+				: []
+			const axis = catalog_data.full_coins_reference_axis
+				? catalog_data.full_coins_reference_axis.filter((v) => v)
+				: []
+			const axis_counts = Array(12).fill(0)
+			for (const hour of axis) {
+				axis_counts[hour % 12]++
+			}
+			if (diameter.length || weight.length || axis.length) {
+				const analytics_div_wrapper = common.create_dom_element({
+					element_type	: 'div',
+					id				: 'type_analytics'
+				})
+				fragment.appendChild(analytics_div_wrapper)
+
+				if (weight.length) {
+					const weight_wrapper = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'type_analytics_component',
+						parent			: analytics_div_wrapper
+					})
+					const separator = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'info_line separator',
+						parent			: weight_wrapper
+					})
+					common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'big_label',
+						text_content	: tstring.weight || 'Weight',
+						parent			: separator
+					})
+					const chart_wrapper = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'chart_wrapper',
+						parent			: weight_wrapper
+					})
+					self.weight_chat_wrapper = new minimal_boxvio_chart_wrapper(
+						chart_wrapper,
+						weight,
+						{
+							color				: color,
+							whiskers_quantiles	: [10, 90],
+						}
+					)
+					self.weight_chat_wrapper.render()
+				}
+
+				if (diameter.length) {
+					const diameter_wrapper = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'type_analytics_component',
+						parent			: analytics_div_wrapper
+					})
+					const separator = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'info_line separator',
+						parent			: diameter_wrapper
+					})
+					common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'big_label',
+						text_content	: tstring.diameter || 'Diameter',
+						parent			: separator
+					})
+					const chart_wrapper = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'chart_wrapper',
+						parent			: diameter_wrapper
+					})
+					self.diameter_chart_wrapper = new minimal_boxvio_chart_wrapper(
+						chart_wrapper,
+						diameter,
+						{
+							color				: color,
+							whiskers_quantiles	: [10, 90],
+						}
+					)
+					self.diameter_chart_wrapper.render()
+				}
+
+				if (axis.length) {
+					const axis_wrapper = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'type_analytics_component',
+						parent			: analytics_div_wrapper
+					})
+					const separator = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'info_line separator',
+						parent			: axis_wrapper
+					})
+					common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'big_label',
+						text_content	: tstring.die_position || 'Die axis',
+						parent			: separator
+					})
+					const chart_wrapper = common.create_dom_element({
+						element_type	: 'div',
+						class_name		: 'chart_wrapper',
+						parent			: axis_wrapper
+					})
+					self.axis_chart_wrapper = new minimal_clock_chart_wrapper(
+						chart_wrapper,
+						axis_counts,
+						{}
+					)
+					self.axis_chart_wrapper.render()
+				}
+			}
+
 		// findspots - hoards_and_findspots - (hallazgos) list
 			// if (item.ref_coins_findspots_data && item.ref_coins_findspots_data.length>0) {
 			// 	fragment.appendChild( self.label(item, tstring.findspots) )
@@ -405,7 +493,7 @@ var type_row_fields = {
 			element_type	: "a",
 			class_name		: "section_id go_to_dedalo",
 			inner_html		: item.section_id + " <small>(" + section_tipo +")</small>",
-			href			: '/dedalo/lib/dedalo/main/?t=' + section_tipo + '&id=' + item.section_id
+			href			: '/dedalo/core/page/?tipo=' + section_tipo + '&id=' + item.section_id
 		})
 		dedalo_link.setAttribute('target', '_blank');
 
@@ -461,7 +549,7 @@ var type_row_fields = {
 				const prompt_label = common.create_dom_element({
 					element_type	: "a",
 					class_name		: "info_value underline-text",
-					inner_html 		: item_text.trim(),
+					inner_html 		: item_text ? item_text.trim() : '',
 					href			: catalog_url,
 					parent 			: line
 				})
@@ -470,7 +558,7 @@ var type_row_fields = {
 				common.create_dom_element({
 					element_type	: "span",
 					class_name		: "info_value",
-					inner_html		: item_text.trim(),
+					inner_html		: item_text ? item_text.trim() : '',
 					parent			: line
 				})
 			}
@@ -526,7 +614,7 @@ var type_row_fields = {
 			for (let i = parents_ordered.length - 1; i >= 0; i--) {
 
 				if (parents_ordered[i].term_table === 'mints') {
-					// console.log("parents_ordered[i]", parents_ordered[i]);
+
 					const mint_section_id = (parents_ordered[i].term_data)
 						? JSON.parse(parents_ordered[i].term_data)[0]
 						: ''
@@ -548,7 +636,6 @@ var type_row_fields = {
 					})
 				}
 
-
 				common.create_dom_element({
 					element_type 	: "span",
 					class_name 		: "breadcrumb_symbol",
@@ -561,11 +648,18 @@ var type_row_fields = {
 				? catalog.ref_mint_number+'/'
 				: ''
 
+			const type_string = page.compose_catalog_id({
+				archive		: page_globals.OWN_CATALOG_ACRONYM,
+				section_id	: catalog.term_section_id,
+				mint_number	: catalog.ref_mint_number,
+				type		: catalog.term
+			})
+
 			common.create_dom_element({
-				element_type 	: "span",
-				class_name 		: "breadcrumb",
-				text_content	: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + catalog.term,
-				parent 			: line
+				element_type	: 'span',
+				class_name		: 'breadcrumb',
+				inner_html		: type_string,
+				parent			: line
 			})
 		}
 
@@ -638,28 +732,81 @@ var type_row_fields = {
 
 		// line
 			const line = common.create_dom_element({
-				element_type	: "div",
-				class_name		: "info_line inline " + name
+				element_type	: 'div',
+				class_name		: 'info_line inline ' + name
 			})
 
 		if (item[name] && item[name].length>0) {
 
-			const url = item[name]
+			const url = item[name] || ''
+
+			let caption = ''
+
+			// search for math coin image in coin references
+			const coin_references = item.coin_references || []
+			const found_coin = coin_references.find(el => el.image_obverse===url || el.image_reverse===url)
+			if (found_coin) {
+
+				// collection
+					if (found_coin.collection && found_coin.collection.length) {
+						const collection = found_coin.collection
+						caption += collection
+					}
+
+				// ref_auction
+					const parts = []
+					if (found_coin.ref_auction_group && found_coin.ref_auction_group.length) {
+						// name
+						const name = found_coin.ref_auction_group[0].name || ''
+						parts.push(name)
+						// date
+						const date = found_coin.ref_auction_group[0].date || ''
+						parts.push(date)
+						// number
+						const number = found_coin.ref_auction_group[0].number || ''
+						parts.push(number)
+					}
+					caption += parts.join(' ')
+
+				// lot
+					if (found_coin.number && found_coin.number.length) {
+						const lot = (found_coin.ref_auction_group && found_coin.ref_auction_group.length)
+						 ? (tstring.lot || 'lot') +' '+ found_coin.number
+						 : found_coin.number
+						caption += ', ' + lot
+					}
+
+				// photographer
+					if (found_coin.photographer && found_coin.photographer.length) {
+						const photographer = found_coin.photographer
+						caption += '<spam> | </spam> <i class="fa fa-camera"></i> ' + photographer
+					}
+			}
 
 			const image_link = common.create_dom_element({
-				element_type	: "a",
-				class_name		: "image_link",
+				element_type	: 'a',
+				class_name		: 'image_link',
 				href			: url,
 				parent			: line
 			})
 
+			// caption text (bellow images)
+				// const ar_caption = []
+				// if (self.type) {
+				// 	ar_caption.push(self.type)
+				// }
+				// if (self.equivalents) {
+				// 	ar_caption.push(self.equivalents)
+				// }
+
+			// img
 			common.create_dom_element({
-				element_type	: "img",
-				class_name		: "image",
+				element_type	: 'img',
+				class_name		: 'image',
 				src				: url,
 				title			: item.number,
 				dataset			: {
-					caption : self.type + ' | '+self.equivalents
+					caption : caption
 				},
 				parent			: image_link
 			})
@@ -897,20 +1044,18 @@ var type_row_fields = {
 			name = "catalogue"
 			if (item[name] && item[name].length>0) {
 
-				// const catalogue_number = JSON.parse(item["catalogue_data"])[0]
-				// const type_section_id = item["section_id"]
+				const type_string = page.compose_catalog_id({
+					archive		: page_globals.OWN_CATALOG_ACRONYM,
+					section_id	: item.section_id,
+					mint_number	: item.mint_number,
+					type		: item.number
+				})
 
-				const mint_number = (item.mint_number)
-					? item.mint_number+'/'
-					: ''
-
-				const item_text = item[name] + " " +  mint_number + item["number"]
-
-				self.type = item_text
+				self.type = type_string
 				const node = common.create_dom_element({
-					element_type 	: "span",
-					class_name 		: "info_value " + name,
-					text_content 	: item_text
+					element_type	: "span",
+					class_name		: "info_value " + name,
+					inner_html		: type_string
 				})
 				ar_nodes.push(node)
 			}
@@ -1259,8 +1404,10 @@ var type_row_fields = {
 
 			const image = this
 			const hires = this.hires
-			setTimeout(function(){
-				image.src = hires
+			setTimeout(()=>{
+				requestAnimationFrame(()=>{
+					image.src = hires
+				})
 			}, 1000)
 		}
 
@@ -1270,7 +1417,6 @@ var type_row_fields = {
 		})
 
 		// images
-
 
 			// obverse
 			const images = common.create_dom_element({
@@ -1288,16 +1434,12 @@ var type_row_fields = {
 				element_type	: "img",
 				src				: data.image_obverse_thumb,
 				title 			: data.section_id,
-				/*
-				dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
-				*/
 				loading			: "lazy",
 				parent			: image_link_obverse
 			})
 			image_obverse.hires = data.image_obverse
 			image_obverse.addEventListener("load", load_hires, false)
+
 			// reverse
 			const image_link_reverse = common.create_dom_element({
 				element_type	: "a",
@@ -1309,16 +1451,45 @@ var type_row_fields = {
 				element_type	: "img",
 				src				: data.image_reverse_thumb,
 				title 			: data.section_id,
-				/*
-				dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
-				*/
 				loading			: "lazy",
 				parent			: image_link_reverse
 			})
 			image_reverse.hires = data.image_reverse
 			image_reverse.addEventListener("load", load_hires, false)
+
+		// additional_info
+			// Additional info is calculated only by thesaurus -> countermarks
+			if (data.additional_info && (data.additional_info.mint || data.additional_info.type)) {
+				const additional_info = common.create_dom_element({
+					element_type	: 'div',
+					class_name		: 'additional_info',
+					parent			: wrapper
+				})
+				// mint
+					if (data.additional_info.mint) {
+						common.create_dom_element({
+							element_type	: 'span',
+							class_name		: 'additional_info_item mint',
+							inner_html		: data.additional_info.mint,
+							parent			: additional_info
+						})
+					}
+				// type
+					if (data.additional_info.type) {
+						const type_string = page.compose_catalog_id({
+							archive		: page_globals.OWN_CATALOG_ACRONYM,
+							section_id	: data.type_section_id,
+							mint_number	: data.additional_info.mint_number,
+							type		: data.additional_info.type
+						})
+						common.create_dom_element({
+							element_type	: 'span',
+							class_name		: 'additional_info_item type',
+							inner_html		: type_string,
+							parent			: additional_info
+						})
+					}
+			}
 
 		// collection
 			if (data.collection && data.collection.length>0){
@@ -1403,8 +1574,7 @@ var type_row_fields = {
 				return true
 			}
 
-
-		//GET IMAGE PHOTOGRAPHER
+		// photographer. Get image photographer
 
 			// (!) COMMENTED : UNFEASIBLE FOR MAP . REMOVED 14-03-2022 UNTIL RESOLVE IT IN A VIABLE WAY
 				// const observer = new IntersectionObserver(async function(entries) {
@@ -1419,7 +1589,6 @@ var type_row_fields = {
 				// 			if (result[0] && result[0].photographer) {
 				// 				const currentAttr = image_obverse.getAttribute("data-caption")
 				// 				image_obverse.setAttribute("data-caption", currentAttr + '<spam> | </spam> <i class="fa fa-camera"></i> ' + result[0].photographer)
-				// 				console.log("image_obverse:",image_obverse);
 				// 			}
 				// 		})
 				// 	}
@@ -1444,14 +1613,20 @@ var type_row_fields = {
 
 			if (data.ref_auction_group) {
 				for (let i = 0; i < data.ref_auction_group.length; i++) {
+
+					// re-enable add lot 26-10-2024
 					data.ref_auction_group[i].lot = data.number
+
 					draw_auction(data.ref_auction_group[i], wrapper, "identify_coin", '')
 				}
 			}
 
 			if (data.ref_related_coin_auction_group) {
 				for (let i = 0; i < data.ref_related_coin_auction_group.length; i++) {
+
+					// re-enable add lot 26-10-2024
 					data.ref_related_coin_auction_group[i].lot = data.number
+
 					draw_auction(data.ref_related_coin_auction_group[i], wrapper, "identify_coin", '= ')
 				}
 			}
@@ -1533,25 +1708,32 @@ var type_row_fields = {
 		// countermark_obverse
 			if (data.countermark_obverse && data.countermark_obverse.length>0){
 
-				common.create_dom_element({
+				const node = common.create_dom_element({
 					element_type	: "span",
 					class_name		: "countermark_obverse",
 					inner_html		: data.countermark_obverse,
 					parent			: countermarks
 				})
+
+				// make images clickable to open thesaurus record
+				page.make_images_links(node)
 			}
+
 		// countermark_reverse
 			if (data.countermark_reverse && data.countermark_reverse.length>0){
 
-				common.create_dom_element({
+				const node = common.create_dom_element({
 					element_type	: "span",
 					class_name		: "countermark_reverse",
 					inner_html		: data.countermark_reverse,
 					parent			: countermarks
 				})
+
+				// make images clickable to open thesaurus record
+				page.make_images_links(node)
 			}
 
-		// biblio
+		// bibliography
 			const references_container = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "references",
@@ -1576,14 +1758,13 @@ var type_row_fields = {
 				parent			: wrapper
 			})
 
-
-		//collection uri
+		// collection uri
 			if (data.uri && data.uri.length>0) {
 				for (let i = 0; i < data.uri.length; i++) {
 
-					const el = data.uri[i]
-					const label	= el.label || "URI"
-					const uri_text	= '<a class="icon_link info_value" href="' + el.value + '" target="_blank"> ' + el.label  + '</a>'
+					const el		= data.uri[i]
+					const label		= el.label || "URI"
+					const uri_text	= `<a class="icon_link info_value" href="${el.value}" target="_blank"> ${el.label} </a>`
 
 					common.create_dom_element({
 						element_type	: "span",
@@ -1624,9 +1805,6 @@ var type_row_fields = {
 		// 			body : request_body
 		// 		})
 		// 		.then(function(response){
-		// 			// console.log("++++++++++++ request_body:",request_body);
-		// 			 // console.log("get_image_data:",response);
-
 		// 			resolve(response.result)
 		// 		})
 		// 	})
@@ -1679,7 +1857,6 @@ var type_row_fields = {
 			})
 
 		function draw_coin_inside(data, container) {
-			// console.log("--draw_coin_inside data:",data);
 
 			const wrapper = common.create_dom_element({
 				element_type	: "div",
@@ -1705,8 +1882,8 @@ var type_row_fields = {
 					src				: data.image_obverse,
 					title 			: data.section_id,
 					dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
+						caption: self.type + ' | '+ self.equivalents
+					},
 					parent			: image_link_obverse
 				})
 				image_obverse.loading="lazy"
@@ -1722,8 +1899,8 @@ var type_row_fields = {
 					src				: data.image_reverse,
 					title 			: data.section_id,
 					dataset 		: {
-									caption: self.type +' | '+self.equivalents
-								},
+						caption: self.type + ' | ' + self.equivalents
+					},
 					parent			: image_link_reverse
 				})
 				image_reverse.loading="lazy"
@@ -1803,9 +1980,9 @@ var type_row_fields = {
 						parent			: info
 					})
 					const ar_references = data.bibliography_data
-						references_container.appendChild(
-							self.draw_bibliographic_reference(ar_references)
-						)
+					references_container.appendChild(
+						self.draw_bibliographic_reference(ar_references)
+					)
 
 		}//end draw_coin_inside
 
@@ -1876,8 +2053,6 @@ var type_row_fields = {
 						for (let j = 0; j < coins_length; j++) {
 							const coin_section_id	= coins[j];
 							const current_coin		= item.coin_references.find(el => el.section_id==coin_section_id)
-								// console.log("item.coin_references:",item.coin_references);
-								// console.log("current_coin:",current_coin, coin_section_id);
 							if (current_coin) {
 								draw_coin_inside(current_coin, typology_coins)
 								ar_coins.push(coin_section_id)
@@ -1892,15 +2067,15 @@ var type_row_fields = {
 						const hoard_data_map = JSON.parse(hoard.map)
 						if (hoard_data_map) {
 							map_data.push({
-								section_id	: hoard.section_id,
-								name		: hoard.name,
-								place		: hoard.place,
-								georef		: hoard.georef,
-								data		: hoard_data_map,
-								items		: ar_coins.length,
-								total_items	: coins_length,
-								type		: 'hoard',
-								marker_icon	: page.maps_config.markers.hoard
+								section_id		: hoard.section_id,
+								name			: hoard.name,
+								place			: hoard.place,
+								georef_geojson	: hoard.georef_geojson,
+								data			: hoard_data_map,
+								items			: ar_coins.length,
+								total_items		: coins_length,
+								type			: 'hoard',
+								marker_icon		: page.maps_config.markers.hoard
 							})
 						}
 
@@ -1983,8 +2158,6 @@ var type_row_fields = {
 						for (let j = 0; j < coins_length; j++) {
 							const coin_section_id	= coins[j];
 							const current_coin		= item.coin_references.find(el => el.section_id==coin_section_id)
-								// console.log("item.coin_references:",item.coin_references);
-								// console.log("current_coin:",current_coin, coin_section_id);
 							if (current_coin) {
 								draw_coin_inside(current_coin, typology_coins)
 								ar_coins.push(coin_section_id)
@@ -1995,15 +2168,15 @@ var type_row_fields = {
 						const findspot_data_map = JSON.parse(findspot.map)
 						if (findspot_data_map) {
 							map_data.push({
-								section_id	: findspot.section_id,
-								name		: findspot.name,
-								place		: findspot.place,
-								georef		: findspot.georef,
-								data		: findspot_data_map,
-								items 		: ar_coins.length,
-								total_items : coins_length,
-								type 		: 'findspot',
-								marker_icon	: page.maps_config.markers.findspot
+								section_id		: findspot.section_id,
+								name			: findspot.name,
+								place			: findspot.place,
+								georef_geojson	: findspot.georef_geojson,
+								data			: findspot_data_map,
+								items			: ar_coins.length,
+								total_items		: coins_length,
+								type			: 'findspot',
+								marker_icon		: page.maps_config.markers.findspot
 							})
 						}
 
@@ -2040,15 +2213,15 @@ var type_row_fields = {
 					const mint_data_map = JSON.parse(mint.map)
 					if (mint_data_map) {
 						map_data.push({
-							section_id	: mint.section_id,
-							name		: mint.name,
-							place		: mint.place,
-							georef		: mint.georef,
-							data		: mint_data_map,
-							items 		: ar_coins.length,
-							total_items : coins_length,
-							type 		: 'mint',
-							marker_icon	: page.maps_config.markers.mint
+							section_id		: mint.section_id,
+							name			: mint.name,
+							place			: mint.place,
+							georef_geojson	: mint.georef_geojson,
+							data			: mint_data_map,
+							items			: ar_coins.length,
+							total_items		: coins_length,
+							type			: 'mint',
+							marker_icon		: page.maps_config.markers.mint
 						})
 					}
 				}
@@ -2059,6 +2232,9 @@ var type_row_fields = {
 		// draw map
 			if (map_data.length>0) {
 				common.when_in_dom(map_container, draw_map)
+				if(SHOW_DEBUG===true) {
+					console.log('type row fields map_data:', map_data);
+				}
 				function draw_map() {
 					self.caller.draw_map({
 						container		: map_container,
@@ -2576,9 +2752,9 @@ var type_row_fields = {
 					op		: '=' // default is 'LIKE'
 				}]
 			}]
-			// console.log("form_factory", psqo_factory);
-			const parse_psqo = psqo_factory.encode_psqo(psqo)
-			const catalog_url = page_globals.__WEB_ROOT_WEB__+"/catalog/?psqo="+ parse_psqo
+
+			const parse_psqo	= psqo_factory.encode_psqo(psqo)
+			const catalog_url	= page_globals.__WEB_ROOT_WEB__+"/catalog/?psqo="+ parse_psqo
 
 			const prompt_label = common.create_dom_element({
 				element_type	: "a",
@@ -2588,9 +2764,9 @@ var type_row_fields = {
 				parent 			: float_prompt
 			})
 
-			const close_buttom = common.create_dom_element({
+			const close_button = common.create_dom_element({
 				element_type	: "div",
-				class_name		: "close-buttom",
+				class_name		: "close-button",
 				parent 			: float_prompt
 			})
 
@@ -2603,7 +2779,7 @@ var type_row_fields = {
 				})
 			}
 
-			if (item[data_ref][0].iri.length>0){
+			if (item[data_ref][0].iri && item[data_ref][0].iri.length>0){
 				const uris	= page.split_data(item[data_ref][0].iri, ' | ')
 				for (let i=0; i<uris.length;i++){
 
@@ -2619,6 +2795,7 @@ var type_row_fields = {
 			}
 
 			parentNode.addEventListener("click",function(e){
+				e.stopPropagation()
 
 				const float_prompts_list = document.getElementsByClassName("float-prompt");
 				for (let i=0;i<float_prompts_list.length;i++){
@@ -2632,7 +2809,9 @@ var type_row_fields = {
 				float_prompt.classList.remove("hide");
 			})
 
-			close_buttom.addEventListener("click",function(){
+			close_button.addEventListener("click",function(e){
+				e.stopPropagation()
+
 				float_prompt.classList.add("hide");
 			})
 		}

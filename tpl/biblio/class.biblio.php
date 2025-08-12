@@ -90,9 +90,29 @@ class biblio {
 					// 	break;
 
 					default:
-						// scape
-						$value 		 = self::escape_value($value_obj->value);
-						$ar_filter[] = '`'.$value_obj->name."` LIKE '%".$value."%'";
+						if (isset($value_obj->is_selection) && $value_obj->is_selection===true) {
+
+							// values from autocomplete selection
+
+							$value 		 = self::escape_value($value_obj->value);
+							$ar_filter[] = '`'.$value_obj->name."` LIKE '%".$value."%'";
+
+						}else{
+
+							// free search from input field
+
+							// $ar_filter[] = 'MATCH (`'.$value_obj->name.'`) AGAINST (\''.$value_obj->value.'\' IN BOOLEAN MODE)';
+
+							// split by blank spaces
+							$value_string	= $value_obj->value ?? '';
+							$ar_words		= explode(' ', $value_string);
+							$ar_sentences	= [];
+							foreach ($ar_words as $word) {
+								$c_value 		 = self::escape_value($word);
+								$ar_sentences[] = '`'.$value_obj->name."` LIKE '%".$c_value."%'";
+							}
+							$ar_filter[] = '(' . implode(' AND ', $ar_sentences) . ')';
+						}
 
 						// if ($value_obj->name==='authors' && strpos($value_obj->value, ' | ')===false) {
 						// 	$use_union = true;
@@ -103,8 +123,9 @@ class biblio {
 			$filter = implode(' '.$operator.' ', $ar_filter);
 		}
 		if(SHOW_DEBUG===true) {
-			debug_log(__METHOD__." filter ".to_string($filter), 'DEBUG');
+			debug_log(__METHOD__." filter: ".to_string($filter), 'DEBUG');
 		}
+
 
 		// $ar_fields = [
 		// 	'section_id',

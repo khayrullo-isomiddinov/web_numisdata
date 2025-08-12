@@ -1,13 +1,21 @@
 // Variables
-	@assets_path: '../../assets';
-	@fonts_path: '@{assets_path}/fonts';
-	@path_page: '../../page'; ;
 
 // Usage library
-	@import '@{path_page}/css/library.less';
+	@import '../../page/css/vars.less';
 
 .content {
 	padding-top: 1rem;
+}
+
+.images {
+	margin-bottom: 1rem;
+	margin-top: 1rem;
+
+	.image_big {
+		height: 28rem;
+		width: 100%;
+		object-fit: contain;
+	}
 }
 
 

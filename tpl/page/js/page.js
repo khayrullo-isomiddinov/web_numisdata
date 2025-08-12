@@ -127,6 +127,44 @@ var page = {
 			}
 		},
 
+		// thesaurus map
+		// correspondences between section_tipo and table name like 'sccmk1' => 'ts_countermarks'
+		thesaurus_map : {
+			sccmk1			: 'ts_countermarks',
+			cult1			: 'ts_culture',
+			cont1			: 'ts_find_context',
+			scell1			: 'ts_greek',
+			icon1			: 'ts_iconography',
+			sclat1			: 'ts_latin',
+			scxibo1			: 'ts_northern_palaeohispanic',
+			scxibm1			: 'ts_southern_palaeohispanic',
+			grup1			: 'ts_numismatic_group',
+			// ts_object	: 'ts_object',
+			peri1			: 'ts_period',
+			scxpu1			: 'ts_punic',
+			ds1				: 'ts_semantic_relations',
+			sctxr1			: 'ts_south_palaeohispanic',
+			scsym1			: 'ts_symbols',
+			terr1			: 'ts_territories',
+			tema1			: 'ts_theme',
+			// numisdata349	: 'ts_web'
+		},
+
+		// thesaurus_area_tables
+		// correspondence between tables and areas
+		thesaurus_area_tables : {
+			'ts_iconography'				: 'iconography',
+			'ts_symbols'					: 'symbols',
+			'ts_countermarks'				: 'countermarks',
+			// epigraphy
+			'ts_greek'						: 'epigraphy',
+			'ts_punic'						: 'epigraphy',
+			'ts_northern_palaeohispanic'	: 'epigraphy',
+			'ts_southern_palaeohispanic'	: 'epigraphy',
+			'ts_south_palaeohispanic'		: 'epigraphy',
+			'ts_latin'						: 'epigraphy'
+		},
+
 
 
 	/**
@@ -147,6 +185,9 @@ var page = {
 					footer.classList.remove('hidded')
 				},500)
 			}
+
+		// banner
+			self.render_banner_ans()
 
 		// debug_info
 			let showing_debug
@@ -343,7 +384,7 @@ var page = {
 		$(elements).each(function() {
 			new Tooltip($(this), {
 				placement	: 'top'
-	    	});
+			});
 		});
 	},//end activate_tooltips
 
@@ -548,23 +589,16 @@ var page = {
 
 	/**
 	* REMOTE_IMAGE
+	* Alias of common.local_to_remote_path(
 	* @return bool
 	*/
 	remote_image : function(url) {
 
-		if (url) {
+		const remote_url = url
+			? common.local_to_remote_path(url)
+			: null
 
-			let remote_url = ''
-			if (url.indexOf('v5/media_test')!==-1) {
-				remote_url = url.replace(/\/v5\/media_test\/media_monedaiberica\//g, page_globals.__WEB_MEDIA_BASE_URL__ + "/dedalo/media/")
-			}else{
-				remote_url = url.replace(/\/dedalo\/media_test\/media_monedaiberica\//g, page_globals.__WEB_MEDIA_BASE_URL__ + "/dedalo/media/")
-			}
-
-			return remote_url
-		}
-
-		return null
+		return remote_url
 	},//end remote_image
 
 
@@ -629,15 +663,15 @@ var page = {
 			return string
 		}
 
-	    while(string.charAt(0)==charToRemove) {
-	        string = string.substring(1);
-	    }
+		while(string.charAt(0)==charToRemove) {
+			string = string.substring(1);
+		}
 
-	    while(string.charAt(string.length-1)==charToRemove) {
-	        string = string.substring(0,string.length-1);
-	    }
+		while(string.charAt(string.length-1)==charToRemove) {
+			string = string.substring(0,string.length-1);
+		}
 
-	    return string;
+		return string;
 	},//end trim_char
 
 
@@ -652,9 +686,9 @@ var page = {
 			return null
 		}
 
-		const year 	= timestamp.substring(0, 4) // 2014-06-24
-		const month 	= timestamp.substring(5, 7)
-		const day 	= timestamp.substring(8, 10)
+		const year	= timestamp.substring(0, 4) // 2014-06-24
+		const month	= timestamp.substring(5, 7)
+		const day	= timestamp.substring(8, 10)
 
 		// push in order when not empty
 			const ar_parts = []
@@ -940,7 +974,9 @@ var page = {
 			parent 			: textBlockSeparator
 		})
 
-		textBlockSeparator.addEventListener("click",function(){
+		const click_handler = (e) => {
+			e.stopPropagation()
+
 			if (textBlock.classList.contains("contracted-block")){
 				textBlock.classList.remove ("contracted-block");
 				separatorArrow.style.transform = "rotate(-90deg)";
@@ -948,7 +984,9 @@ var page = {
 				textBlock.classList.add("contracted-block");
 				separatorArrow.style.transform = "rotate(90deg)";
 			}
-		})
+		}
+		textBlockSeparator.addEventListener('click', click_handler)
+
 
 		return true
 	},//end create_expandable_block
@@ -980,7 +1018,296 @@ var page = {
 			})
 
 		return js_promise
-	}//end load_main_catalog
+	},//end load_main_catalog
+
+
+
+	/**
+	* COMPOSE_CATALOG_ID
+	* Composes the catalogue number in a standardised form
+	* @param options object
+	* {
+	*	archive: string (sample: 'MIB')
+	* 	section_id: string|int (sample: 2715)
+	* 	mint_number: string|int (sample: 40)
+	* 	type: string (sample: '104b')
+	* }
+	* @return string catalog_id
+	* 	sample 'MIB 40/104b'
+	*/
+	compose_catalog_id : function(options) {
+
+		// debug
+		if(SHOW_DEBUG===true) {
+			if (!options.section_id) {
+				if(SHOW_DEBUG===true) {
+					console.warn('Empty section_id. options:', options);
+					// alert("Missing section_id !!!");
+				}
+			}
+		}
+
+		// options
+			const archive		= options.archive || '' // like MIB
+			const section_id	= options.section_id || '' // like 2715
+			const mint_number	= options.mint_number || '' // like 40
+			const type			= options.type || '' // like 104b
+
+		const catalog_id = `${archive} ${section_id} <span class="no_bold"> | ${mint_number}/${type}</span>`
+
+		return catalog_id
+	},//end compose_catalog_id
+
+
+
+	/**
+	* DD_REQUEST_IDLE_CALLBACK
+	* Queues a function to be called during a browser's idle periods.
+	* This enables to perform background and low priority work on the main event loop,
+	* without impacting latency-critical events such as animation and input response
+	* @param function callback
+	* @return void
+	*/
+	dd_request_idle_callback : function (callback) {
+
+		if (typeof window.requestIdleCallback === 'function') {
+			// Use requestIdleCallback to schedule work if available
+			requestIdleCallback(callback)
+		} else {
+			// window.requestAnimationFrame(callback)
+			// Fallback for browsers without requestIdleCallback support like Safari
+			setTimeout(callback, 1);
+		}
+	},//end dd_request_idle_callback
+
+
+
+	/**
+	* WHEN_IN_VIEWPORT
+	* Exec a callback when node element is visible in document viewport
+	* @param DOM node 'node'
+	* @param function callback
+	* @param bool once
+	*
+	* @return mutation observer
+	*/
+	when_in_viewport : function(node, callback, once=true) {
+
+		// observer. Exec the callback when element is in viewport
+		const observer = new IntersectionObserver(
+			function(entries, observer) {
+
+				const entry = entries[1] || entries[0]
+				if (entry.isIntersecting===true || entry.intersectionRatio > 0) {
+
+					// default is true (executes the callback once)
+					if (once===true) {
+						observer.disconnect();
+					}
+
+					// callback()
+					window.requestAnimationFrame(callback)
+				}
+			},
+			{
+				rootMargin: "0px",
+				threshold: [0]
+			}
+		);
+		observer.observe(node);
+
+
+		return observer
+	},//end when_in_viewport
+
+
+
+	/**
+	* RENDER_BANNER_ANS
+	* @return
+	*/
+	render_banner_ans : function () {
+
+		const self = this
+
+		// banner HTMLElement from page DOM
+		const banner = document.querySelector('.banner')
+		if (!banner) {
+			return
+		}
+
+		// click event
+		const click_handler = (e) => {
+			e.stopPropagation()
+			// open window
+			window.open(
+				'https://numismatics.org/2024-collier-prize-ceremony/',
+				'_blank'
+			)
+		}
+		banner.addEventListener('click', click_handler)
+
+		// activate animation
+		const svg = banner.querySelector('svg')
+
+		page.when_in_viewport(svg, () => {
+			// svg.classList.add('active')
+			setTimeout(function(){
+				svg.classList.add('active')
+			}, 300)
+		})
+
+		return true
+	},//end render_banner_ans
+
+
+
+	/**
+	* TOGGLE_MEDIA_TYPE
+	* Forces a new media CSS style in the page
+	* Used by mint print actions
+	* @param string media_type
+	* 	print|screen
+	* @return bool
+	*/
+	toggle_media_type : function (media_type) {
+
+		const screenRules = [];
+		const printRules = [];
+
+		function simulatePrintMediaQuery(rules) {
+			for ( const rule of rules.screenRules ) {
+				rule.media.mediaText = 'disabled';
+			}
+
+			for ( const rule of rules.printRules) {
+				rule.media.mediaText = 'screen';
+			}
+		}
+
+		function restorePrintMediaQuery(rules) {
+			for ( const rule of rules.screenRules ) {
+				rule.media.mediaText = 'screen';
+			}
+
+			for ( const rule of rules.printRules) {
+				rule.media.mediaText = 'print';
+			}
+		}
+
+		function simulatePrintLink(sheet) {
+			if (sheet.media === 'screen') {
+				sheet.disabled = true;
+			}
+			if (sheet.media === 'print') {
+				sheet.title = 'print-disabled';
+				sheet.media = '';
+			}
+		}
+
+		function restoreScreenLink(sheet) {
+			if (sheet.media === 'screen') {
+				  sheet.disabled = false;
+			}
+			if (sheet.title === 'print-disabled') {
+				sheet.title = '';
+				sheet.media = 'print';
+			}
+		}
+
+		function identifyCssRules() {
+			const styleSheets = document.styleSheets;
+
+			for ( const sheet of styleSheets ) {
+				const rules = sheet.cssRules || sheet.rules; // IE <= 8 use "rules" property
+
+				for ( const rule of rules ) {
+					if ( rule.type == CSSRule.MEDIA_RULE ) {
+						const media = rule.media;
+
+						if ( rule.conditionText === 'print' ) {
+							printRules.push(rule);
+						} else if ( rule.conditionText === 'screen' ) {
+							screenRules.push(rule);
+						}
+					}
+				}
+			}
+			return {
+				printRules,
+				screenRules
+			}
+		}
+
+		function simulatePrintMedia() {
+			screenRules.length = 0;
+			printRules.length = 0;
+			const rules = identifyCssRules();
+			simulatePrintMediaQuery(rules);
+			for ( const sheet of document.getElementsByTagName("link")) {
+				simulatePrintLink(sheet);
+			}
+		}
+
+		function restoreScreenMedia() {
+			const rules = { screenRules, printRules };
+			restorePrintMediaQuery(rules);
+			for ( const sheet of document.getElementsByTagName("link")) {
+				restoreScreenLink(sheet);
+			}
+		}
+
+		// set new media style
+		if (media_type==='print') {
+			simulatePrintMedia()
+		}else{
+			restoreScreenMedia()
+		}
+
+		return true
+	},//end toggle_media_type
+
+
+
+	/**
+	* LOAD_STYLE
+	* @param string src
+	* @return promise
+	* 	resolve/reject src
+	*/
+	load_style : function (src, media_type='screen') {
+
+		return new Promise(function(resolve, reject) {
+
+			// check already loaded
+				const links 	= document.getElementsByTagName('link');
+				const links_len = links.length
+				for (let i = links_len - 1; i >= 0; i--) {
+					if(links[i].getAttribute('href')===src) {
+						resolve(src)
+						return
+					}
+				}
+
+			// DOM tag
+				const element		= document.createElement('link')
+					  element.rel	= 'stylesheet'
+					  element.media = media_type
+
+				element.addEventListener('load', function(e) {
+					resolve(src);
+				})
+
+				element.addEventListener('error', function(e) {
+					reject(src);
+				})
+
+				element.href = src
+
+				document.getElementsByTagName('head')[0].appendChild(element)
+		})
+		.catch(err => { console.error(err) });
+	},//end load_style
 
 
 

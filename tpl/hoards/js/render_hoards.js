@@ -61,7 +61,7 @@ var render_hoards = {
 										const popup_data = {
 											section_id	: row.section_id,
 											title		: row.name,
-											description	: row.public_info.trim(),
+											description	: row.public_info ? row.public_info.trim() : '',
 											type		: row.table==='findspots'
 												? 'findspot'
 												: 'hoard'
@@ -100,7 +100,7 @@ var render_hoards = {
 					const target_path = row.table==='findspots'
 						? 'findspot'
 						: 'hoard'
-					const hoard_uri = page_globals.__WEB_ROOT_WEB__ + '/'+target_path+'/' + row.section_id
+					const hoard_uri = page_globals.__WEB_ROOT_WEB__ +'/'+ target_path +'/'+ row.section_id
 					// const hoard_uri_text	='<a class="icon_link" href="'+hoard_uri+'"></a>'
 					const hoard_uri_text ='<span class="icon_link"></span>'
 					common.create_dom_element ({

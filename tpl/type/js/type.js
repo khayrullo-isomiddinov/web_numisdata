@@ -1,4 +1,4 @@
-/*global tstring, page_globals, page, event_manager, common, image_gallery, map_factory, type_row_fields, data_manager, Promise */
+/*global tstring, page_globals, page, event_manager, common, image_gallery, map_factory, type_row_fields_min, data_manager, Promise */
 /*eslint no-undef: "error"*/
 "use strict";
 
@@ -52,6 +52,9 @@ var type =  {
 						section_id : self.section_id
 					})
 					.then(function(response){
+						if(SHOW_DEBUG===true) {
+							console.log('set_up get_row_data response:', self.section_id, response);
+						}
 
 						// container. clean container div
 							const container	= document.getElementById('row_detail')
@@ -60,13 +63,13 @@ var type =  {
 							}
 
 						// combi request split results
-							const type		= response.result.find(item => item.id==='type')
-							const catalog	= response.result.find(item => item.id==='catalog')
+							const type_response		= response.result.find(item => item.id==='type')
+							const catalog_response	= response.result.find(item => item.id==='catalog')
 
-						if (typeof type.result[0]!=="undefined") {
+						if (typeof type_response.result[0]!=="undefined") {
 
-							const row			= type.result[0]
-							const catalog_rows	= catalog.result[0] || null
+							const row			= type_response.result[0]
+							const catalog_rows	= page.parse_catalog_data(catalog_response.result)[0] || null
 
 							// app property catalog with all catalog rows result
 								row.catalog = catalog_rows
@@ -88,26 +91,48 @@ var type =  {
 								// append final rendered node
 									container.appendChild(row_wrapper)
 
-								// newGallery
-									const embeddedGallery = row_wrapper.querySelectorAll('a')
-									if (embeddedGallery && embeddedGallery.length>0) {
-										// hide default images
-										row_wrapper.querySelector('.identify_coin_wrapper').remove()
-										const newGallery = Object.create(image_gallery);
-										newGallery.set_up_embedded ({
-											galleryNode		: embeddedGallery,
-											galleryPrimId	: 'embedded-gallery-id',
-											containerId		: 'embedded-gallery'
+								// children case (only variants)
+									const children = catalog_rows.children || null
+									if (children && children.length>0) {
+										const children_container = common.create_dom_element({
+											element_type	: 'div',
+											class_name		: 'children_container gallery',
+											parent			: container
+										})
+										children.forEach(child_row => {
+											const node = catalog_row_fields.draw_item(child_row, catalog)
+											children_container.appendChild(node)
 										})
 									}
 
-								// activate images light box
-									const images_gallery_containers = row_wrapper.querySelectorAll('.gallery')
-									if (images_gallery_containers) {
-										for (let i = 0; i < images_gallery_containers.length; i++) {
-											page.activate_images_gallery(images_gallery_containers[i])
+								// newGallery
+									requestAnimationFrame(
+										() => {
+											// activate images light box
+											const images_gallery_containers = container.querySelectorAll('.gallery')
+											if (images_gallery_containers) {
+												for (let i = 0; i < images_gallery_containers.length; i++) {
+													page.activate_images_gallery(images_gallery_containers[i])
+												}
+											}
+
+											const embeddedGallery = row_wrapper.querySelectorAll('a')
+											if (embeddedGallery && embeddedGallery.length>0) {
+												// hide default images div
+												const identify_coin_wrapper = row_wrapper.querySelector('.identify_coin_wrapper')
+												if (identify_coin_wrapper) {
+													identify_coin_wrapper.remove()
+												}
+												// create identify images gallery
+												const newGallery = Object.create(image_gallery);
+												newGallery.set_up_embedded ({
+													galleryNode		: embeddedGallery,
+													galleryPrimId	: 'embedded-gallery-id',
+													containerId		: 'embedded-gallery'
+												})
+											}
 										}
-									}
+									)
 
 								// show export buttons
 									self.export_data_container.classList.remove('hide')
@@ -180,21 +205,42 @@ var type =  {
 			})
 
 		// catalog call
+			const ar_fields = ['section_id', 'term', 'term_data', 'term_table', 'term_section_tipo', 'parents', 'children',
+							   'ref_mint_number', 'full_coins_reference_calculable', 'full_coins_reference_discard',
+							   'full_coins_reference_diameter_max', 'full_coins_reference_weight', 'full_coins_reference_axis']
 			ar_calls.push({
 				id		: "catalog",
 				options	: {
 					dedalo_get				: 'records',
 					table					: "catalog",
-					ar_fields				: ["section_id","term","term_data","term_table","term_section_tipo","parents",'ref_mint_number'],
+					ar_fields				: ar_fields,
 					lang					: lang,
 					count					: false,
 					sql_filter				: "term_data='[\"" + parseInt(section_id) + "\"]' AND term_table='types'",
 					resolve_portals_custom	: {
-						"parents" : "catalog"
+						'parents'	: 'catalog',
+						'children'	: 'catalog'
 					}
 				}
 			})
 
+		// catalog children call (Unnecessary because already resolved from resolve_portals_custom->children)
+			// ar_calls.push({
+			// 	id		: "catalog_children",
+			// 	options	: {
+			// 		dedalo_get	: 'records',
+			// 		table		: "catalog",
+			// 		ar_fields	: ['*'],
+			// 		lang		: lang,
+			// 		count		: false,
+			// 		order		: 'norder ASC',
+			// 		sql_filter	: "term_data='[\"" + parseInt(section_id) + "\"]' AND term_table='types'",
+			// 		process_result	: {
+			// 			fn		: 'process_result::add_parents_and_children_recursive',
+			// 			columns	: [{name : "parents"}]
+			// 		}
+			// 	}
+			// })
 
 		// request
 			const js_promise = data_manager.request({
@@ -247,10 +293,9 @@ var type =  {
 			// parse parse_ordered_coins creating _coins_group
 				self.parse_ordered_coins(row)
 
-
 			// render row
-				type_row_fields.caller	= self
-				const row_node			= type_row_fields.draw_item(row)
+				type_row_fields_min.type_row_fields.caller = self
+				const row_node = type_row_fields_min.type_row_fields.draw_item(row)
 
 
 			resolve(row_node)
@@ -356,28 +401,73 @@ var type =  {
 	* MAP_DATA
 	* @return array data
 	*/
+		// map_data_OLD : function(data) {
+
+		// 	const data_clean = []
+		// 	for (let i = 0; i < data.length; i++) {
+
+		// 		const item = {
+		// 			lat			: parseFloat(data[i].data.lat),
+		// 			lon			: parseFloat(data[i].data.lon),
+		// 			marker_icon	: data[i].marker_icon || null,
+		// 			data		: {
+		// 				section_id	: data[i].section_id,
+		// 				name		: data[i].name,
+		// 				place		: data[i].place,
+		// 				type 		: data[i].type,
+		// 				items 		: data[i].items,
+		// 				total_items	: data[i].total_items
+		// 			}
+		// 		}
+		// 		data_clean.push(item)
+		// 	}
+
+		// 	return data_clean
+		// },//end map_data
+
+
+
+	/**
+	* MAP_DATA
+	* @return array data
+	*/
 	map_data : function(data) {
 
-		const data_clean = []
+		const map_points = []
 		for (let i = 0; i < data.length; i++) {
 
-			const item = {
-				lat			: parseFloat(data[i].data.lat),
-				lon			: parseFloat(data[i].data.lon),
-				marker_icon	: data[i].marker_icon || null,
-				data		: {
-					section_id	: data[i].section_id,
-					name		: data[i].name,
-					place		: data[i].place,
-					type 		: data[i].type,
-					items 		: data[i].items,
-					total_items	: data[i].total_items
-				}
+			// ignore empty georef_geojson rows
+			if (!data[i].georef_geojson) {
+				continue
 			}
-			data_clean.push(item)
+
+			const geojson = Array.isArray(data[i].georef_geojson)
+				? data[i].georef_geojson
+				: JSON.parse(data[i].georef_geojson)
+
+			const marker_icon = data[i].marker_icon || null
+
+			const popup_data = {
+				section_id	: data[i].section_id,
+				name		: data[i].name,
+				place		: data[i].place,
+				type 		: data[i].type,
+				items 		: data[i].items,
+				total_items	: data[i].total_items
+			}
+
+			const item = {
+				lat			: null,
+				lon			: null,
+				geojson		: geojson,
+				marker_icon	: marker_icon,
+				data		: popup_data
+			}
+			map_points.push(item)
 		}
 
-		return data_clean
+
+		return map_points
 	},//end map_data
 
 
@@ -386,7 +476,6 @@ var type =  {
 	* MAP_POPUP_BUILDER
 	*/
 	map_popup_builder : function(data) {
-		// console.log("-- map_popup_builder data:",data);
 
 		const data_group = data.group[0]
 

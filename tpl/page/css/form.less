@@ -6,10 +6,9 @@
 
 // Variables
 	@assets_path: '../../assets';
-	@page_path : '../../page';
 
 // Usage library
-	@import '@{page_path}/css/library.less';
+	@import 'vars.less';
 
 
 
@@ -162,7 +161,6 @@
 				border-bottom: solid 1px #eeeeee;
 			}
 
-
 		.form-row {
 			display: flex;
 			flex-wrap: wrap;
@@ -177,7 +175,7 @@
 				// padding-top: 0.5em;
 				padding-right: 1em;
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					flex: 1 1 50%;
 				}
 
@@ -200,12 +198,10 @@
 			// 	font-weight: 400;
 			// 	color: black;
 			// }
-
 		}
 
 		.button_submit {
 			display: inline-block;
-			// background-color: #9de49e;
 		}
 
 		.button_reset {

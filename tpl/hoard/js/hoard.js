@@ -48,7 +48,6 @@ var hoard =  {
 					section_id : options.section_id
 				})
 				.then(function(ar_rows){
-					console.log("[set_up->get_row_data] ar_rows:",ar_rows);
 
 					if (ar_rows && ar_rows.length>0) {
 
@@ -157,7 +156,6 @@ var hoard =  {
 	* @return
 	*/
 	get_types_data : function(row, rows_container) {
-		// console.log("row:",row);
 
 		// term_id
 			const term_id = (row.table==='hoards')
@@ -183,7 +181,6 @@ var hoard =  {
 			// title			: "<span class=\"note\">Tesoro</span> Idanha-a-Velha",
 			// types_total		: 11
 		}
-		// console.log("selected_element:",selected_element);
 
 		const global_data_item = {
 			coins_list : row.coins, // ['92797', '92842', '92850', '92893', '138826'],
@@ -192,7 +189,6 @@ var hoard =  {
 
 		map.load_map_selection_info(selected_element, global_data_item)
 		.then(function(response) {
-			// console.log("--> load_map_selection_info response:",response);
 
 			spinner.remove()
 

@@ -14,11 +14,22 @@ var catalog_row_fields = {
 
 
 
-	draw_item : function(item) {
+	/**
+	* DRAW_ITEM
+	* Renders the catalog nodes (usually types, but also periods, and groupers)
+	* @param object item
+	* 	database parsed catalog row
+	* @param object catalog
+	* 	full catalog.js instance/pointer
+	* @return HTMLElement node
+	* 	Catalog row node rendered
+	*/
+	draw_item : function(item, catalog) {
 
 		const self 		 = this
 		const term_table = item.term_table
 		const fragment	 = new DocumentFragment()
+		const print_mode = catalog?.print_mode ?? false
 
 		// load_hires. When thumb is loaded, this event is triggered
 		function load_hires() {
@@ -32,7 +43,6 @@ var catalog_row_fields = {
 			}, 1600)
 		}
 
-
 		switch(term_table){
 
 			case "types":
@@ -41,7 +51,7 @@ var catalog_row_fields = {
 					// term_line
 						const term_line = common.create_dom_element({
 							element_type	: "div",
-							class_name		: "term_line",
+							class_name		: "term_grouper term_line",
 							parent			: fragment
 						})
 
@@ -56,6 +66,9 @@ var catalog_row_fields = {
 						self.node_factory(item, "ref_type_averages_diameter", term_line, null, null)
 						self.node_factory(item, "ref_type_total_diameter_items", term_line, null, null)
 
+					if (catalog) {
+						catalog.ar_gropper_nodes.push(term_line);
+					}
 				}else{
 					// i.e.
 						// children: null
@@ -103,10 +116,32 @@ var catalog_row_fields = {
 						// term_section_tipo: "["numisdata3"]"
 						// term_table: "types"
 
+					// ar_gropper_nodes (used in mint print options to create non page breakable blocks)
+						const type_container_deep = common.create_dom_element({
+							element_type	: "div",
+							class_name		: "type_container_deep"
+						})
+						const ar_gropper_nodes_len = catalog?.ar_gropper_nodes.length || 0
+						if( ar_gropper_nodes_len > 0 ){
+
+							fragment.appendChild(type_container_deep)
+
+							for (let i = 0; i < ar_gropper_nodes_len; i++) {
+								const grouper_clone = catalog.ar_gropper_nodes[i].cloneNode( true )
+								grouper_clone.classList.remove('term_grouper')
+								grouper_clone.classList.add('grouper_print')
+
+								const indent = (ar_gropper_nodes_len - i) * 10
+								grouper_clone.style.marginLeft = '-' + indent + 'pt'
+								type_container_deep.appendChild( grouper_clone )
+							}
+							catalog.ar_gropper_nodes = [];
+						}
+
 					const type_container = common.create_dom_element({
 						element_type	: "div",
 						class_name		: "type_container",
-						parent			: fragment
+						parent			: ar_gropper_nodes_len>0 ? type_container_deep : fragment
 					})
 
 					const type_info = common.create_dom_element({
@@ -115,14 +150,14 @@ var catalog_row_fields = {
 						parent			: type_container
 					})
 
-
 					// term
 						self.node_factory(item, "term", type_info, "span", null)
 
 					// conditionals
-						const my_parent 	 = item.parent ? item.parent[0] : null
-						const parent_element = self.ar_rows.find(el => el.section_id==my_parent)
-						if (parent_element && parent_element.term_table!=="types") {
+						const my_parent			= item.parent ? item.parent[0] : null
+						const add_denomination	= item.add_denomination ? item.add_denomination : null
+						const parent_element	= self.ar_rows.find(el => el.section_id==my_parent)
+						if (add_denomination || (parent_element && parent_element.term_table!=="types")) {
 							self.node_factory(item, "ref_type_material", type_info, null, null)
 							self.node_factory(item, "ref_type_denomination", type_info, null, null)
 						}
@@ -132,7 +167,6 @@ var catalog_row_fields = {
 						self.node_factory(item, "ref_type_total_weight_items", type_info, null, null)
 						self.node_factory(item, "ref_type_averages_diameter", type_info, null, null)
 						self.node_factory(item, "ref_type_total_diameter_items", type_info, null, null)
-
 
 					// obverse
 						const descriptions = common.create_dom_element({
@@ -184,10 +218,9 @@ var catalog_row_fields = {
 					self.node_factory(item, "ref_type_equivalents", type_container, null, null)
 
 					// images
-
 						const mint_number = (item.ref_mint_number)
-						? item.ref_mint_number+'/'
-						: ''
+							? item.ref_mint_number
+							: ''
 
 						const ar		= item.term.split(", ")
 						const c_name	= ar[0]
@@ -217,18 +250,29 @@ var catalog_row_fields = {
 								href			: item.ref_coins_image_obverse,
 								parent			: coins_images
 							})
+							const type_string = page.compose_catalog_id({
+								archive		: page_globals.OWN_CATALOG_ACRONYM,
+								section_id	: item.term_section_id,
+								mint_number	: mint_number,
+								type		: c_name
+							})
 							const img_obverse = common.create_dom_element({
 								element_type	: "img",
 								class_name		: "image_obverse",
 								src				: item.ref_coins_image_obverse_thumb,
 								title			: item.section_id,
-								dataset			: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+								// dataset		: {caption: page_globals.OWN_CATALOG_ACRONYM + " " + mint_number + c_name  },
+								dataset			: {caption : type_string},
 								parent			: image_link_obverse
 							})
 							img_obverse.style.width = (diameter * 2 ) + 'mm'
 							img_obverse.hires = item.ref_coins_image_obverse
-							img_obverse.loading="lazy"
-							img_obverse.addEventListener("load", load_hires, false)
+							if (print_mode) {
+								img_obverse.src = img_obverse.hires
+							}else{
+								img_obverse.loading = "lazy"
+								img_obverse.addEventListener("load", load_hires, false)
+							}
 
 						// img_reverse
 							const image_link_reverse = common.create_dom_element({
@@ -247,15 +291,19 @@ var catalog_row_fields = {
 							})
 							img_reverse.style.width = (diameter * 2 ) + 'mm'
 							img_reverse.hires = item.ref_coins_image_reverse
-							img_reverse.loading="lazy"
-							img_reverse.addEventListener("load", load_hires, false)
+							if (print_mode) {
+								img_reverse.src = img_reverse.hires
+							}else{
+								img_reverse.loading = "lazy"
+								img_reverse.addEventListener("load", load_hires, false)
+							}
 
 						if (window.matchMedia) {
 							window.matchMedia('print').addListener(function(mql) {
-								 if (mql.matches) {
-									coins_images.style.width	= (diameter * 2 ) + 'mm'
-									img_obverse.style.width		= (diameter * 1 ) + 'mm'
-									img_reverse.style.width		= (diameter * 1 ) + 'mm'
+								if (mql.matches) {
+									coins_images.style.width	= (diameter * 2.08) + 'mm'
+									img_obverse.style.width		= (diameter * 1.04) + 'mm'
+									img_reverse.style.width		= (diameter * 1.04) + 'mm'
 								}
 								if (!mql.matches) {
 									coins_images.style.width 	= (diameter * 4 ) + 'mm'
@@ -274,7 +322,6 @@ var catalog_row_fields = {
 					self.node_factory(item, "ref_coins_auction", collection_auction, null, null)
 				}
 				break;
-
 
 			case "mints":
 				common.create_dom_element({
@@ -296,12 +343,16 @@ var catalog_row_fields = {
 				break;
 
 			default:
-				common.create_dom_element({
+				const groupper = common.create_dom_element({
 					element_type	: "div",
-					class_name		: term_table+'_value',
+					class_name		: 'term_grouper grouper_value ' + term_table + '_value',
 					text_content	: item.term, // + " [" + term_table + "]",
 					parent			: fragment
 				})
+
+				if (catalog) {
+					catalog.ar_gropper_nodes.push(groupper);
+				}
 				break;
 		}//end switch
 
@@ -334,7 +385,7 @@ var catalog_row_fields = {
 
 				case "ref_type_total_weight_items":
 				case "ref_type_total_diameter_items":
-					current_value = '('+item[name]+')'
+					current_value = '('+item[name]+').'
 					break;
 
 				case "ref_type_averages_weight":

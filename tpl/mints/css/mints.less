@@ -1,19 +1,25 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
 
 // Usage library
-	//@import "@{assets_path}/css/library.less";
+	@import "../../page/css/vars.less";
 
 // wrapper
 	/*
 	#wrapper {
-
 		height: 100vh;
-
 	}
 	*/
 
+	#main {
+
+		>.inner {
+			 min-height: 80vh;
+		}
+	}
+
+	.biblio_print {
+		font-family: ".SF UI Text Condensed Regular", serif;
+	}
 
 
 // search_form
@@ -22,11 +28,9 @@
 	}
 
 
-
 // search result
 	section.result {
-		min-height: 70vh;
-
+		// min-height: 70vh;
 	}
 
 
@@ -57,9 +61,6 @@
 			background-color: transparent;
 		}
 	}
-
-
-
 
 
 .randomColor(){
@@ -146,7 +147,7 @@
 						content: " ";
 						height: 100%;
 						width: 1em;
-						background-image: url("@{assets_path}/images/file-pdf-o.svg");
+						background-image: url("../../assets/images/file-pdf-o.svg");
 						background-repeat: no-repeat;
 						background-size: contain;
 						background-position: center;
@@ -299,3 +300,25 @@
 		background-color: #f9f9f9;
 		border: none !important;
 	}
+
+
+
+#print_font {
+	>.regular {
+		font-family: ".SF UI Text Regular", sans-serif;
+	}
+
+	>.bold {
+		font-family: ".SF UI Text Bold", sans-serif;
+	}
+
+	>.condensed_regular {
+		font-family: ".SF UI Text Condensed Regular", serif;
+	}
+
+	>.condensed_light {
+		font-family: ".SF UI Text Condensed Light", sans-serif;
+	}
+}
+
+@import './mints_print';

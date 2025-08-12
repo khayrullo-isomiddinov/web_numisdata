@@ -4,13 +4,13 @@
 	@page_path : "../../page";
 
 // Usage library
-	@import "@{page_path}/css/library.less";
+	@import "@{page_path}/css/vars.less";
 
 
 
 // search_form
 	// form {
-		
+
 	// 	.form-group.field_operators {
 	// 		float: right;
 	// 		// background-color: #e1c96e;
@@ -27,7 +27,7 @@
 		.image {
 			height: 6em;
 
-			@media screen and (max-width: 736px){
+			@media screen and (max-width: @content_medium_max_width){
 				height: 8em;
 			}
 
@@ -100,7 +100,7 @@
 			.info_container {
 				flex-grow:1;
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					width: 100%;
 				}
 
@@ -110,7 +110,7 @@
 				text-align: right;
 				flex-direction: row;
 
-				@media screen and (max-width: 736px){
+				@media screen and (max-width: @content_medium_max_width){
 					width: 100%;
 					text-align: left;
 				}
@@ -132,7 +132,7 @@
 
 	#footer, #header, #export_data {
 		display: none;
-		
+
 	}
 
 	#wrapper {
@@ -181,4 +181,3 @@
 			max-width: 100% !important;
 		}
 }
-	

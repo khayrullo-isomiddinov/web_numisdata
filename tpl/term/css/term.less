@@ -1,0 +1,198 @@
+// term
+
+// imports
+@import "../../page/css/vars.less";
+
+.main_title {
+	height: 3rem;
+}
+
+.cite_this_record {
+	position: absolute;
+	right: 0px;
+}
+
+// row_detail
+#main #row_detail {
+	position: relative;
+	min-height: 80vh;
+	padding-top: 3rem;
+
+	label {
+		margin: 0;
+	}
+
+	// a link go to dedalo
+	>.go_to_dedalo {
+		position: absolute;
+		right: 0px;
+		top: -2rem;
+		line-height: 1rem;
+		text-decoration: none;
+	}
+
+	// image illustration
+	>.illustration {
+		display: block;
+		// height: 25rem;
+		height: 12rem;
+		width: 100%;
+		padding: 0px;
+	}
+
+	>.utf8_term {
+		display: block;
+		height: 25rem;
+		width: 100%;
+		padding: 0px;
+		font-weight: 400;
+		font-size: 25rem;
+		line-height: 21rem;
+		text-align: center;
+		color: black;
+		user-select: none;
+	}
+
+	// type_images_container
+	>.type_images_container {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-evenly;
+		width: 100%;
+		min-height: 25rem;
+
+		&.invisible {
+			visibility: hidden;
+		}
+
+		>.type_image {
+			max-width: 50%;
+			height: 25rem;
+		}
+	}
+
+	// title as 'Signo ibérico ś/s inciso'
+	.line-tittle-wrap {
+		display: block;
+		position: relative;
+		padding: 0px;
+		margin: 0px;
+
+		>.line-tittle {
+			margin-left: 1rem;
+		}
+
+		.info_value {
+			display:inline-block;
+			margin-left: 1rem;
+		}
+
+		.authorship {
+			margin-left: 0.7em;
+			font-size: 0.8em;
+			letter-spacing: 1px;
+		}
+	}
+
+	// epi_container (legends_container, countermarks_container)
+	.epi_container {
+		font-size: 1.166rem;
+		margin-top: 1rem;
+
+		.children_contanier {
+			margin-left: 2rem;
+		}
+
+		.warning {
+			color: #FF9800;
+			padding-left: 2rem;
+			padding-bottom: 1rem;
+		}
+
+		.json {
+			line-height: 1.3rem;
+			padding-left: 2rem;
+		}
+	}
+
+	// block_container (info, coins, types blocks)
+	>.block_container {
+		position: relative;
+		min-height: 19rem;
+
+		.block_label {
+			display: inline-block;
+			font-size: 1.7rem;
+			line-height: 1.9rem;
+			padding: 0px;
+			padding-top: 0.5em;
+			margin: 0px;
+			font-weight: 300;
+			font-variant: small-caps;
+			letter-spacing: 1.5px;
+			border-bottom: 1px solid #b7996d;
+		}
+
+		&.loaded {
+			min-height: unset;
+		}
+
+		&.info {
+			padding-bottom: 1rem;
+			padding-top: 0.25rem;
+			padding-left: 2rem;
+
+			.block_label {
+
+			}
+
+			.item {
+				margin-top: 0.5rem;
+				font-size: 1.2rem;
+				line-height: 1.9rem;
+
+				&.term_id {
+					font-weight: 500;
+					color: @color_gold_logo;
+
+					.code {
+						font-weight: 300;
+					}
+				}
+			}
+		}
+
+		&.coins_container {
+
+			.info_line.separator {
+
+			}
+
+			.coins_list {
+				margin-top: 1rem;
+			}
+		}
+
+		&.types_container {
+
+		}
+
+		&.parents_container {
+			padding-left: 2rem;
+			margin-bottom: 2rem;
+			min-height: 7.5rem;
+
+			>.block_label {
+				padding-top: 0;
+			}
+
+			.parents_list {
+				padding-left: 1rem;
+			}
+		}
+	}
+
+}//end #row_detail
+
+// import
+	@import '../../catalog/css/catalog_type.less';

@@ -156,6 +156,7 @@ class json_web_data {
 
 		# Avoid verify ssl certificates (very slow)
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
 		//execute post
 		$result = curl_exec($ch);

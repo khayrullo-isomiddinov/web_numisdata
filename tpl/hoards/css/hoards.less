@@ -1,16 +1,11 @@
 // Variables
-	@assets_path: "../../assets";
-	@fonts_path: "@{assets_path}/fonts";
-	@page_path : "../../page";
-
 // Usage library
-	@import "@{page_path}/css/library.less";
+	@import "../../page/css/vars.less";
 
 
 
 // search_form
 	// form {
-
 	// 	.form-group.field_operators {
 	// 		float: right;
 	// 		// background-color: #e1c96e;
@@ -19,22 +14,18 @@
 	// 	}
 	// }
 
-
-
 // result
 	.result {
 
 		.image {
 			height: 6em;
 
-			@media screen and (max-width: 736px){
+			@media screen and (max-width: @content_medium_max_width){
 				height: 8em;
 			}
 
 		}
 	}
-
-
 
 // rows_container
 	.rows_container {

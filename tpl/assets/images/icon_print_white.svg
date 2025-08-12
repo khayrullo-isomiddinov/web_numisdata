@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="icon_print_white.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.62890625"
+     inkscape:cx="256"
+     inkscape:cy="256"
+     inkscape:current-layer="svg1" />
+  <!--! Font Awesome Pro 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
+  <path
+     d="m 88,160 c 4.41,0 8,-3.6 8,-8 V 39.999999 c 0,-13.23 10.8,-24 24,-24 h 226.8 c 6.312,0 12.5,2.562 16.97,7.031 l 45.25,45.25 c 4.38,4.469 6.98,10.659 6.98,16.969 V 152 c 0,4.4 3.6,8 8,8 4.4,0 8,-3.578 8,-8 V 85.249999 c 0,-10.69 -4.156,-20.72 -11.72,-28.28 l -45.25,-45.25 C 367.6,4.2659988 357.3,-8e-7 346.8,-8e-7 H 120 C 97.94,-8e-7 80,17.939999 80,39.999999 V 152 c 0,4.4 3.59,8 8,8 z m 360,32 H 64 C 28.65,192 0,220.7 0,256 v 96 c 0,17.67 14.33,32 32,32 h 48 v 104 c 0,13.2 10.78,24 24,24 h 304 c 13.22,0 24,-10.77 24,-24 V 384 h 48 c 17.67,0 32,-14.33 32,-32 v -96 c 0,-35.3 -28.7,-64 -64,-64 z m -32,296 c 0,4.406 -3.594,8 -8,8 H 104 c -4.41,0 -8,-3.6 -8,-8 V 344 c 0,-4.406 3.594,-8 8,-8 h 304 c 4.406,0 8,3.594 8,8 z m 80,-136 c 0,8.822 -7.176,16 -16,16 h -48 v -24 c 0,-13.23 -10.78,-24 -24,-24 H 104 c -13.22,0 -24,10.77 -24,24 v 24 H 32 c -8.824,0 -16,-7.178 -16,-16 v -96 c 0,-26.47 21.53,-48 48,-48 h 384 c 26.47,0 48,21.53 48,48 z m -64,-96 c -8.8,0 -16,7.2 -16,16 0,8.8 7.2,16 16,16 8.8,0 16,-7.2 16,-16 0,-8.8 -7.2,-16 -16,-16 z"
+     id="path1"
+     style="fill:#be875a;fill-opacity:1" />
+</svg>

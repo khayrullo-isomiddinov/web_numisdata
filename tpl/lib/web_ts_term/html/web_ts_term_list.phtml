@@ -7,7 +7,9 @@ if (!empty($this->illustration)) {
 		$dd_relations = json_decode($this->dd_relations);
 		//get legends id
 		$ar_legends_locators = array_filter($dd_relations, function($locator){
-			return ($locator->from_section_tipo === 'numisdata41' ) ? $locator : false ;
+			return (isset($locator->from_section_tipo) && $locator->from_section_tipo==='numisdata41')
+				? $locator
+				: false;
 		});
 
 		$legends = array_map(function($locator){
@@ -18,7 +20,9 @@ if (!empty($this->illustration)) {
 
 		//get countermark id
 		$ar_cmk_locators = array_filter($dd_relations, function($locator){
-			return ($locator->from_section_tipo === 'numisdata4' ) ? $locator : false ;
+			return (isset($locator->from_section_tipo) && $locator->from_section_tipo==='numisdata4' )
+				? $locator
+				: false;
 		});
 
 		$countermarck = array_map(function($locator){
@@ -46,7 +50,7 @@ if (!empty($this->illustration)) {
 			# INDEX_WRAPPER
 			$html .= "<div id=\"index_wrapper_{$this->term_id}\" class=\"index_wrapper hidden\"></div>";
 		$html .= "</li>";
-	
+
 }else{
 	$html .= "<li class=\"web_ts_term_li clearfix\">";
 

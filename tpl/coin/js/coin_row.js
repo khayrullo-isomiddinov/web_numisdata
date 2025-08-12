@@ -27,95 +27,27 @@ var coin_row = {
 			if (dedalo_logged===true) {
 
 				const link = common.create_dom_element({
-					element_type 	: "a",
-					class_name 		: "section_id go_to_dedalo",
-					text_content 	: row.section_id,
-					href 			: '/dedalo/lib/dedalo/main/?t=numisdata4&id=' + row.section_id,
-					parent 			: fragment
+					element_type	: "a",
+					class_name		: "section_id go_to_dedalo",
+					text_content	: row.section_id,
+					href			: '/dedalo/core/page/?tipo=numisdata4&id=' + row.section_id,
+					parent			: fragment
 				})
 				link.setAttribute('target', '_blank');
 			}
 
 		// Cite of record
 			const golden_separator = document.querySelector('.golden-separator')
-			const cite = common.create_dom_element({
-				element_type	: "span",
-				class_name		: "cite_this_record",
-				text_content	: tstring.cite_this_record || 'cite this record',
-				parent			: golden_separator
-			})
-			cite.addEventListener('click', async function(){
-				const main_catalog_data = await page.load_main_catalog()
-				const cite_data = main_catalog_data.result[0];
-				const publication_data = cite_data.publication_data[0];
-				cite_data.autors = {
-					authorship_data		: row.authorship_data || null,
-					authorship_names	: row.authorship_names || null,
-					authorship_surnames	: row.authorship_surnames || null,
-					authorship_roles	: row.authorship_roles || null,
+			requestAnimationFrame(
+				() => {
+					const title = '<em>' + page_globals.OWN_CATALOG_ACRONYM + ' ' + row.section_id + '</em>'
+					page.render_cite_record(
+						row,
+						golden_separator, // cite_container
+						title // title
+					)
 				}
-				cite_data.catalog = null
-				cite_data.title = '<em>'+ page_globals.OWN_CATALOG_ACRONYM +' '+row.section_id + '</em>'
-				cite_data.publication_data = publication_data
-				cite_data.uri_location 	= window.location
-
-				const cite_data_node = biblio_row_fields.render_cite_this(cite_data)
-
-				const popUpContainer = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-cite",
-					parent 			: document.body
-				})
-				popUpContainer.addEventListener('mouseup',function() {
-
-   					popUpContainer.classList.add('copy')
-   					cite_data_node.classList.add('copy')
-
-   					const selection = window.getSelection();
-					//create a selection range
-					const copy_range = document.createRange();
-					//choose the element we want to select the text of
-					copy_range.selectNodeContents(cite_data_node);
-					//select the text inside the range
-					selection.removeAllRanges();
-       				selection.addRange( copy_range );
-
-       				//copy the text to the clipboard
-					document.execCommand("copy");
-
-					//remove our selection range
-					window.getSelection().removeAllRanges();
-				})
-
-				const title = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-label",
-					text_content	: tstring.cite_this_record || 'Cite this record',
-					parent 			: popUpContainer
-				})
-
-				const close_buttom = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "close-buttom",
-					parent 			: popUpContainer
-				})
-				close_buttom.addEventListener("click",function(){
-					// popUpContainer.remove()
-				})
-				document.body.addEventListener("click",function(event_cite){
-					document.body.removeEventListener("click", function(event_cite){})
-					popUpContainer.remove()
-				})
-
-				popUpContainer.appendChild(cite_data_node)
-
-				const click_to_copy = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-text_copy",
-					text_content	: tstring.click_to_copy || 'Click to copy',
-					parent 			: popUpContainer
-				})
-			})
+			)
 
 		// identify_images
 			const identify_images = common.create_dom_element({
@@ -145,7 +77,7 @@ var coin_row = {
 
 					//GALLERY IMAGE CAPTIONS
 					if (row.collection && row.collection.length>0){
-						const collection_former = (row.former_collection.length>0)
+						const collection_former = (row.former_collection && row.former_collection.length>0)
 							? row.collection + " ("+row.former_collection+")"
 							: row.collection
 
@@ -380,7 +312,9 @@ var coin_row = {
 								// + ' ' +label_mint.toLowerCase()
 								// + ' / ' +label_number.toLowerCase()
 								// +' ' +label_type_name.toLowerCase();
-			const type_section = row.type_data.filter(item => item.catalogue === page_globals.OWN_CATALOG_ACRONYM)[0]
+			const type_section = row.type_data.find(item => item.catalogue === page_globals.OWN_CATALOG_ACRONYM)
+				? row.type_data.find(item => item.catalogue === page_globals.OWN_CATALOG_ACRONYM)
+				: row.type_data[0]
 
 			// creators
 			const creators_data = typeof type_section!=="undefined"
@@ -403,7 +337,7 @@ var coin_row = {
 				const text_creators = []
 				const data_length = data.length
 
-				for (var i = 0; i < data_length; i++) {
+				for (let i = 0; i < data_length; i++) {
 					const name		= ar_names[i]
 						? ar_names[i]
 						: ''
@@ -444,26 +378,36 @@ var coin_row = {
 				? type_section.mint_number
 				: ''
 
-			const type_number = (type_section.mint_number)
+			const type_number = (type_section.number)
 				? type_section.number
 				: ''
 
-			const value_type = mint + ' ' +type_section.catalogue +' '+ mint_number+'/'+type_number
+			// const value_type = mint
+			// 	? mint + ' ' +type_section.catalogue +' '+ mint_number+'/'+type_number
+			// 	: +type_section.catalogue +' '+ type_number
 
-			const type_uri	= page_globals.__WEB_ROOT_WEB__ + "/type/" + type_section.section_id
-			const type_uri_text	= "<a class=\"icon_link\" href=\""+type_uri+"\"></a> "
+			const type_string = page.compose_catalog_id({
+				archive		: page_globals.OWN_CATALOG_ACRONYM,
+				section_id	: type_section.section_id,
+				mint_number	: mint_number,
+				type		: type_number
+			})
 
-			const label_type_node = common.create_dom_element({
+			const type_uri = page_globals.__WEB_ROOT_WEB__ + "/type/" + type_section.section_id
+
+			// left label ('Type')
+			common.create_dom_element({
 				element_type	: "label",
 				class_name		: "left-labels",
 				inner_html		: label_type,
 				parent			: info_container
 			})
 
-			const value_type_node = common.create_dom_element({
+			common.create_dom_element({
 				element_type	: "a",
 				class_name		: "rigth-values type_label",
-				inner_html		: value_type +' '+type_uri_text,
+				// inner_html	: value_type + " <a class=\"icon_link\" href=\""+type_uri+"\"></a> ",
+				inner_html		: mint + ' ' + type_string + ` <a class="icon_link" href="${type_uri}"></a>`,
 				href 			: type_uri,
 				target 			: "_blank",
 				parent			: info_container
@@ -473,11 +417,47 @@ var coin_row = {
 				const catalogue = row.catalogue_type_mint[i]
 				if(catalogue === page_globals.OWN_CATALOG_ACRONYM ) continue;
 
-				const value_type_node = common.create_dom_element({
+				common.create_dom_element({
 					element_type	: "span",
 					class_name		: "rigth-values equivalents",
 					inner_html		: catalogue+' '+row.type[i],
 					parent			: info_container
+				})
+			}
+
+		// denomination (added 28-10-2024)
+			if (row.denomination) {
+				// label left
+				common.create_dom_element({
+					element_type	: "label",
+					class_name		: "left-labels sub-label",
+					text_content	: tstring.denomination || "Denomination",
+					parent			: info_container
+				})
+				// value right
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "rigth-values",
+					inner_html 		: row.denomination,
+					parent 			: info_container
+				})
+			}
+
+		// material (added 28-10-2024)
+			if (row.material) {
+				// label left
+				common.create_dom_element({
+					element_type	: "label",
+					class_name		: "left-labels sub-label",
+					text_content	: tstring.material || "Material",
+					parent			: info_container
+				})
+				// value right
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "rigth-values",
+					inner_html 		: row.material,
+					parent 			: info_container
 				})
 			}
 
@@ -574,7 +554,7 @@ var coin_row = {
 					common.create_dom_element({
 						element_type	: "label",
 						class_name		: "left-labels sub-label",
-						text_content	: tstring.countermark || "countermark",
+						text_content	: tstring.countermark || "Countermark",
 						parent			: info_container
 					})
 					const current_node = page.render_legend({
@@ -674,7 +654,7 @@ var coin_row = {
 					common.create_dom_element({
 						element_type	: "label",
 						class_name		: "left-labels sub-label",
-						text_content	: tstring.countermark || "countermark",
+						text_content	: tstring.countermark || "Countermark",
 						parent			: info_container
 					})
 					const current_node = page.render_legend({
@@ -746,7 +726,6 @@ var coin_row = {
 						parent			: info_container
 					})
 				}
-
 
 		// find type
 			if (row.find_type && row.find_type.length>0) {
@@ -877,42 +856,42 @@ var coin_row = {
 				}
 
 		// bibliography -- desactivada. por revisar el formato !!! ---
-				if (row.bibliography_data && row.bibliography_data.length>0) {
+			if (row.bibliography_data && row.bibliography_data.length>0) {
 
-					// const group = common.create_dom_element({
-					// 	element_type	: "div",
-					// 	class_name		: "group block_wrapper",
-					// 	parent			: info_container
-					// })
+				// const group = common.create_dom_element({
+				// 	element_type	: "div",
+				// 	class_name		: "group block_wrapper",
+				// 	parent			: info_container
+				// })
 
-					common.create_dom_element({
-						element_type	: "label",
-						class_name		: "left-labels",
-						text_content	: tstring.bibliography || "bibliography",
-						parent			: info_container
-					})
+				common.create_dom_element({
+					element_type	: "label",
+					class_name		: "left-labels",
+					text_content	: tstring.bibliography || "bibliography",
+					parent			: info_container
+				})
 
-					const bibliography_group = common.create_dom_element({
+				const bibliography_group = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "vertical-group",
+					parent			: info_container
+				})
+
+				const ref_biblio		= row.bibliography_data
+				const ref_biblio_length	= ref_biblio.length
+				for (let i = 0; i < ref_biblio_length; i++) {
+
+					// build full ref biblio node
+					const biblio_row_node = biblio_row_fields.render_row_bibliography(ref_biblio[i])
+
+					const biblio_row_wrapper = common.create_dom_element({
 						element_type	: "div",
-						class_name		: "vertical-group",
-						parent			: info_container
+						class_name		: "rigth-values sub-vertical-group",
+						parent			: bibliography_group
 					})
-
-					const ref_biblio		= row.bibliography_data
-					const ref_biblio_length	= ref_biblio.length
-					for (let i = 0; i < ref_biblio_length; i++) {
-
-						// build full ref biblio node
-						const biblio_row_node = biblio_row_fields.render_row_bibliography(ref_biblio[i])
-
-						const biblio_row_wrapper = common.create_dom_element({
-							element_type	: "div",
-							class_name		: "rigth-values sub-vertical-group",
-							parent			: bibliography_group
-						})
-						biblio_row_wrapper.appendChild(biblio_row_node)
-					}
+					biblio_row_wrapper.appendChild(biblio_row_node)
 				}
+			}
 
 		// row_wrapper
 			const row_wrapper = common.create_dom_element({
