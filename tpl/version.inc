@@ -1,3 +1,3 @@
 <?php # WEB_VERSION
-define('WEB_VERSION', '5.0.3');
-define('WEB_BUILD', '2025-05-08T09:57:44+02:00');
+define('WEB_VERSION', '5.0.6');
+define('WEB_BUILD', '2025-07-11T12:22:30+02:00');

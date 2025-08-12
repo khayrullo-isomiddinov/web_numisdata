@@ -393,6 +393,10 @@
   .types_print .row_node.types .descriptions .ref_type_design_reverse {
     line-height: 10pt;
   }
+  .types_print .row_node.types .descriptions .legend_obverse span,
+  .types_print .row_node.types .descriptions .legend_reverse span {
+    margin: unset;
+  }
   .types_print .row_node.types .descriptions .legend_obverse .ref_type_legend_transcription_obverse,
   .types_print .row_node.types .descriptions .legend_reverse .ref_type_legend_transcription_obverse,
   .types_print .row_node.types .descriptions .legend_obverse .ref_type_legend_transcription_reverse,
@@ -406,6 +410,7 @@
   }
   .types_print .row_node.types .descriptions .legend_box.small img {
     height: 8pt;
+    vertical-align: middle;
   }
   .types_print .type_container {
     width: 160mm;
