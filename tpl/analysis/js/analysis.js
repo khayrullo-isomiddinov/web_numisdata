@@ -693,7 +693,7 @@ export const analysis =  {
 					render_sample()
 
 					// plot_points_regression. Do the hard work
-					// const points_data = this.plot_points_regression(reference_calculable)
+					const points_data = this.plot_points_regression(reference_calculable)
 				}
 			})
 
