@@ -649,11 +649,185 @@ export const analysis =  {
 					this.clock_chart_wrapper.render()
 				}
 
+				// Modelo_Regresión
+				//full_coins_reference_calculable
+
+				this.plot_points_regression(parsed_data)
+			
+
 			})
 
 
 		return js_promise
 	},
+
+	
+	//Plot points cloud and regresion line
+
+// Regression model to estimate dies head
+// Load library (html)
+// Get coefficients of the straight line (a and b values)
+coefficients: function(IR_Ant, D_A_Ant){
+    const n = IR_Ant.length;
+
+    const IR_Mitja = IR_Ant.reduce((a, b) => a + b, 0) / n;
+    const D_A_Mitja = D_A_Ant.reduce((a, b) => a + b, 0) / n;
+
+    let N = 0;
+    let D = 0;
+
+    for (let i = 0; i < n; i++) {
+        N += (IR_Ant[i] - IR_Mitja) * (D_A_Ant[i] - D_A_Mitja);
+        D += Math.pow(IR_Ant[i] - IR_Mitja, 2);
+
+    }
+
+    const b_R = N / D;
+    const a_R = D_A_Mitja - b_R * IR_Mitja;
+
+    return { a: a_R, b: b_R };
+},
+
+//Define IR values vector and estimation head dies values vector
+IR : [ 209, 23, 13, 165, 78, 19, 68, 285, 27, 28, 26, 54, 23, 88, 41, 12, 9, 29, 16, 23, 30, 113, 82, 111, 68,
+	   282, 8, 4, 42, 17, 21, 33, 21, 79, 17, 17, 153, 18, 1, 66, 16, 10, 81, 20, 6, 24, 20, 73, 27, 44, 17, 40,
+	   14, 27, 27, 40, 57, 83, 23, 51, 228, 82, 250, 191, 32, 46, 53, 334, 20, 7, 39, 145, 18, 3, 5, 55, 265, 12,
+	   93, 24, 42, 31, 29, 32, 26, 13, 198, 698, 59, 23, 39, 6, 75, 12, 34, 10, 11, 99, 132, 22, 12, 5, 58, 255,
+	   60, 316, 440, 143, 107, 20, 184, 18, 73, 676, 32, 31, 65, 3, 1, 2, 9, 3, 1, 6, 1, 1, 1, 1, 2, 1, 1, 2, 1,
+	   1, 1, 1, 1, 1, 2, 1, 3, 10, 2, 4, 2, 1, 1, 1, 9, 2, 4, 6, 37, 24, 2, 10, 9, 2, 2, 1, 1, 3, 3, 5, 3, 3, 6, 
+	   1, 16, 1, 2, 10, 3, 6, 6, 2, 1, 4, 1, 6, 2, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 1, 2, 4, 1, 1, 1, 2, 1, 1, 1, 1, 
+	   1, 1, 1, 1, 1, 1],
+D_anv : [19.288,1.7388,1.4393,32.5154,9.3203,1.6183,13.2642,4.3435,1.6365,1.3375,3.1817,2.2931,10.3866,4.3371,2.8984,
+	     2.1349,3.6742,5.9707,3.3636,4.8809,8.8011,31.1737,16.2005,21.9585,16.8808,54.9425,2.8284,1.2408,2.5741,3.8956,
+		 4.5646,3.7473,1.8879,20.5892,2.9085,11.2785,12.6561,4.0613,0.1099,8.4090,3.7179,4.4006,13.1208,1.0392,1.3554,
+		 1.1053,1.4669,6.7971,2.4900,2.3604,1.4888,1.5658,1.1983,1.6365,2.5048,6.2040,2.7656,3.0158,2.4037,5.8363,16.3876,
+		 13.4484,24.9023,16.1263,3.2141,6.1362,13.5359,38.4715,1.8201,1.5215,1.1599,10.0102,1.2764,1.0000,0.7770,3.7011,
+		 15.8002,1.4982,17.5551,2.3830,1.3929,2.2820,1.0853,5.5768,3.3636,2.0475,26.6653,52.3163,2.2310,1.6290,7.9543,2.2795,
+		 6.9208,2.4816,1.8473,1.9882,1.5755,2.9867,18.2778,1.2133,4.7087,1.9882,6.0597,69.6541,1.2838,34.8405,31.4052,12.2125,
+		 7.7861,3.3437,16.6990,3.0897,6.2436,134.7504,12.5054,2.5284,7.5464,2.2795,1.0000,1.6818,5.4216,2.2795,1.0000,4.5590,
+		 1.0000,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.6818,1.0000,1.3554,
+		 6.7272,1.6818,1.2408,1.4756,1.0000,1.0000,1.0000,3.6223,2.0000,3.0000,5.3449,6.5147,6.7770,1.6818,5.9645,4.3694,2.0000,
+		 1.0000,1.0000,1.0000,1.0000,2.7108,4.0000,2.7108,2.7108,5.4216,1.0000,4.9632,1.0000,1.6818,5.0000,2.7108,4.0000,4.5861,
+		 2.0000,1.0000,3.7224,1.0000,3.4396,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,3.0000,1.0000,1.0000,1.0000,1.0000,
+		 1.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],
+
+// IR values at the beginning	 
+IR_ant : [111, 11, 8, 75, 34, 10, 29, 174, 14, 19, 14, 45, 19, 79, 25, 11, 4, 17, 8, 7, 18, 71, 74, 98, 48, 229, 2, 3, 30, 12, 
+	      12, 36, 9, 76, 26, 9, 83, 7, 19, 33, 7, 6, 49, 19, 4, 21, 12, 36, 8, 14, 10, 22, 11, 14, 20,30, 37, 48, 18, 21, 134,
+		  48, 116, 101, 17, 26, 22, 149, 9, 4, 32, 90, 13, 3, 7, 61, 144, 7, 56, 19, 27, 26, 26, 14, 13, 5, 144, 488, 51, 12,
+		  21, 2, 62, 9, 15, 4, 6, 58, 22, 17, 13, 2, 84, 209, 43, 131, 122, 22, 30, 4, 47, 4, 16, 522, 7, 9, 19, 1, 1, 1, 6, 1, 
+		  1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 1, 3, 3, 1, 1, 1, 7, 2, 4, 7, 26, 16, 1, 4, 8, 2, 2, 1, 1, 3, 
+		  2, 5, 2, 2, 4, 1, 12, 1, 1, 10, 2, 6, 5, 2, 1, 3, 1, 5, 1, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 
+		  1, 1, 1, 1, 1, 1, 1],
+// Exact number of head dies at IR_ant
+Anvers : [12, 1, 1, 18, 5, 1, 7, 3, 1, 1, 2, 2, 9, 4, 2, 2, 2, 4, 2, 2, 6, 22, 15, 20, 13, 47, 1, 1, 2, 3, 3, 4, 1, 20, 4, 7, 8, 
+	      2, 1, 5, 2, 3, 9, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 2, 5, 2, 2, 2, 3, 11, 9, 14, 10, 2, 4, 7, 21, 1, 1, 1, 7, 1, 1, 1, 
+		  4, 10, 1, 12, 2, 1, 2, 1, 3, 2, 1, 21, 40, 2, 1, 5, 1, 6, 2, 1, 1, 1, 2, 19, 1, 5, 1, 8, 60, 1, 18, 12, 3, 3, 1,6, 1, 
+		  2, 111, 4, 1, 3, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 3, 2, 3, 6, 
+		  5, 5, 1, 3, 4, 2, 1, 1, 1, 1, 2, 4, 2, 2, 4, 1, 4, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1,
+		   1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+
+ 
+plot: function() {
+        // Obtain coefficients
+        const { a, b } = this.coefficients(this.IR, this.D_anv);
+
+        // Paso 2: extremos de vector1
+        const minIR = Math.min(...this.IR);
+        const maxIR = Math.max(...this.IR);
+
+        // Generate x_vals
+        const x_vals = Array.from({ length: 2000 }, (_, i) => minIR + (i / 1999) * (maxIR - minIR));
+
+        // Generate y_vals
+        const y_vals = x_vals.map(x => a + b * x);
+
+		const traces = [
+      {
+        x: this.IR_ant,
+        y: this.Anvers,
+        mode: 'markers',
+        type: 'scatter',
+        name: 'Dades observades',
+        marker: { color: 'blue' }
+      },
+      {
+        x: x_vals,
+        y: y_vals,
+        mode: 'lines',
+        type: 'scatter',
+        name: 'Model estimat',
+        line: { color: 'red', width: 2 }
+      }
+    ];
+    const layout = {
+      title: 'Ajust del model',
+      xaxis: { title: 'Índex de Raresa (IR)', gridcolor: '#ccc' },
+      yaxis: { title: 'Nombre de cuños estimat', gridcolor: '#ccc' },
+      legend: { x: 0.05, y: 1 },
+      plot_bgcolor: '#fff',
+      paper_bgcolor: '#fff'
+    };
+
+	Plotly.newPlot('miDiv', traces, layout);
+
+    return { x_vals, y_vals, traces, layout };
+  },
+
+// Calculation IR
+calculation_IR_PlotPoint: function (parsed_data){
+	let index_number = [];
+	// Obtain all vectors full_coins_reference_calculables
+	const everyCalculables = this.parsed_data.map(
+  	moneda => moneda.full_coins_reference_calculable)
+	
+	// Calculate number IR of each vector (with this, we review if vector is empty)
+	for (let i = 0; i < everyCalculables.length; i++) {
+		//Define counter
+		let counter = 0;
+      	for (let j = 0; j < everyCalculables[i].length; j++) {
+			if (this.everyCalculable[i][j] === true) {
+        		counter ++;
+      		}
+		}
+		index_number[i] = counter;
+	}	
+    //We have a vector index_number and in each of the positions we have the IR of asociate type
+	// call function to use a and b valors 
+	const { a, b } = this.coefficients(this.IR,this.D_anv);
+	//Define vector that we will refill with approximations
+	let approx = [];
+	for (let i = 0; i < index_number.length; i++) {
+  		approx[i] = a + b*index_number[i];
+	}
+	//Finally we plot points (index_number[i],approx[i]) on the regression line
+return { index_number, approx };
+},
+
+plot_points_regression : function(){
+	const { index_number, approx } = this.coordenadas();
+	const pointsTrace = {
+        x: index_number,
+        y: approx,
+        mode: 'markers',
+        type: 'scatter',
+        name: 'Aproximación',
+        marker: { 
+            color: 'orange',  
+            size: 10,         
+            line: { width: 2, color: 'black' } 
+        }
+    };
+
+    // Añadimos la nueva traza al gráfico existente
+    Plotly.addTraces('miDiv', pointsTrace);
+},
+
+
+	
+
+
+
 
 	/**
 	 * SEARCH_ROWS
@@ -812,3 +986,4 @@ async function type_tooltip_callback(options) {
 	return ele
 
 }
+
