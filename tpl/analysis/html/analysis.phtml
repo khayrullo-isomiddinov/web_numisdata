@@ -40,6 +40,10 @@
 								<div class="info_line separator"><div class="big_label"><?php echo tstring('die_position')?></div></div>
 								<div id="clock_chart_container" class="chart_wrapper"></div>
 							</div>
+							<div id="regression_model_section" class="hide">
+								<div class="info_line separator"><div class="big_label"><?php echo tstring('regression_model')?></div></div>
+								<div id="regression_model_chart_container" class="chart_wrapper"></div>
+							</div>
 							<!-- <div id="export_data" class="export_data_container"></div> -->
 						</section>
 
@@ -56,13 +60,14 @@
 dom_ready(function(){
 	var analysis = analysis_min.analysis
 	analysis.set_up({
-		row							: <?php echo json_encode($this->row) ?>,
-		area_name					: <?php echo json_encode($area_name) ?>,
-		export_data_container		: document.getElementById('export_data'),
-		form_items_container		: document.getElementById('items_container'),
-		weight_chart_container		: document.getElementById('weight_chart_container'),
-		diameter_chart_container	: document.getElementById('diameter_chart_container'),
-		clock_chart_container		: document.getElementById('clock_chart_container')
+		row									: <?php echo json_encode($this->row) ?>,
+		area_name							: <?php echo json_encode($area_name) ?>,
+		export_data_container				: document.getElementById('export_data'),
+		form_items_container				: document.getElementById('items_container'),
+		weight_chart_container				: document.getElementById('weight_chart_container'),
+		diameter_chart_container			: document.getElementById('diameter_chart_container'),
+		clock_chart_container				: document.getElementById('clock_chart_container'),
+		regression_model_chart_container	: document.getElementById('regression_model_chart_container')
 	})
 })
 </script>
