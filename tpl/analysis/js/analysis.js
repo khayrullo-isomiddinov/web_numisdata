@@ -693,6 +693,7 @@ export const analysis =  {
 					// render_sample()
 
 					// plot_points_regression. Do the hard work
+					console.log(self.regression_model_chart_container)
 					const points_data = self.plot_points_regression(parsed_data, self.regression_model_chart_container)
 				}
 			})
@@ -808,59 +809,71 @@ export const analysis =  {
 	      plot_bgcolor: '#fff',
 	      paper_bgcolor: '#fff'
 	    };
-
+		
 		const graf = Plotly.newPlot(regression_model_chart_container, traces, layout);
 
 	    return graf;
 	  },
 
 	// Calculation IR
-	calculation_IR: function (type_data){
-		let index_number = [];
-		// Obtain all vectors full_coins_reference_calculables
-		const everyCalculables = this.parsed_data.map(
-	  	moneda => moneda.full_coins_reference_calculable)
-
-		// Calculate number IR of each vector (with this, we review if vector is empty)
-		for (let i = 0; i < everyCalculables.length; i++) {
-			//Define counter
-			let counter = 0;
-	      	for (let j = 0; j < everyCalculables[i].length; j++) {
-				if (this.everyCalculable[i][j] === true) {
-	        		counter ++;
-	      		}
+	calculation_IR: function (emblem){
+		const index = emblem.full_coins_reference_calculable || [];
+		//Define counter
+		let ir = 0;
+		// Calculate number IR of each type
+		for (let i = 0; i < index.length; i++) {
+			if(index[i] === true){
+				ir ++;
 			}
-			index_number[i] = counter;
 		}
-	    //We have a vector index_number and in each of the positions we have the IR of asociate type
+
+	    //We have IR of the type (emblem)
 		// call function to use a and b valors
 		const { a, b } = this.coefficients(this.IR,this.D_anv);
-		//Define vector that we will refill with approximations
-		let approx = [];
-		for (let i = 0; i < index_number.length; i++) {
-	  		approx[i] = a + b*index_number[i];
-		}
-		//Finally we plot points (index_number[i],approx[i]) on the regression line
-	return { index_number, approx };
+
+		//Calculate approximations
+		let approx; 
+	  	approx = a + b*ir;
+
+	return { ir, approx };
 	},
 
 	plot_points_regression : function(parsed_data, regression_model_chart_container){
-		const { index_number, approx } = this.calculation_IR();
+		let vect_tipos = [];
+		for(let i=1; i< parsed_data.length; i++){
+			let emblem = parsed_data[i]
+			const { ir,approx } = this.calculation_IR(emblem)
+
+			const tipo = {
+            ir,
+            approx,
+            ceca: emblem.p_mint,
+            id: emblem.term_section_id,
+       		};
+			vect_tipos.push(tipo);
+		}
+		
+
+		const xValues = vect_tipos.map(obj => obj.ir);
+		const yValues = vect_tipos.map(obj => obj.approx);
+		
 		const pointsTrace = {
-	        x: index_number,
-	        y: approx,
+	        x: xValues,
+	        y: yValues,
 	        mode: 'markers',
 	        type: 'scatter',
 	        name: 'Aproximación',
 	        marker: {
 	            color: 'orange',
-	            size: 10,
+	            size: 15,
 	            line: { width: 2, color: 'black' }
 	        }
 	    };
-		const graf = this.plot(regression_model_chart_container)
+		//const graf = 
+		this.plot(regression_model_chart_container)
 	    // Añadimos la nueva traza al gráfico existente
-	    graf.addTraces(regression_model_chart_container, pointsTrace);
+	    //graf
+		Plotly.addTraces(regression_model_chart_container, pointsTrace);
 	},
 
 
