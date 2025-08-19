@@ -664,36 +664,36 @@ export const analysis =  {
 					// Show hidden DOM node 'regression_model_chart_container'
 					section_container.regression_model.classList.remove('hide')
 
-					const render_sample = () => {
-						// Data
-						  var trace1 = {
-						    x: [1, 2, 3, 4, 5],
-						    y: [10, 14, 18, 24, 30],
-						    type: 'scatter',
-						    mode: 'lines+markers',
-						    marker: {color: 'blue'}
-						  };
+					// const render_sample = () => {
+					// 	//Data
+					// 	  var trace1 = {
+					// 	    x: [1, 2, 3, 4, 5],
+					// 	    y: [10, 14, 18, 24, 30],
+					// 	    type: 'scatter',
+					// 	    mode: 'lines+markers',
+					// 	    marker: {color: 'blue'}
+					// 	  };
 
-						  var test_data = [trace1];
+					// 	  var test_data = [trace1];
 
-						  // Layout
-						  var layout = {
-						    title: 'Simple Line Chart',
-						    xaxis: {title: 'X Axis'},
-						    yaxis: {title: 'Y Axis'}
-						  };
+					// 	  // Layout
+					// 	  var layout = {
+					// 	    title: 'Simple Line Chart',
+					// 	    xaxis: {title: 'X Axis'},
+					// 	    yaxis: {title: 'Y Axis'}
+					// 	  };
 
-						  // Render the plot
-						  Plotly.newPlot(
-						  	regression_model_chart_container, // DOM node where to place the graph
-						  	test_data, // data to draw
-						  	layout // graph layout setup
-						  );
-					}
-					render_sample()
+					// 	  // Render the plot
+					// 	  Plotly.newPlot(
+					// 	  	regression_model_chart_container, // DOM node where to place the graph
+					// 	  	test_data, // data to draw
+					// 	  	layout // graph layout setup
+					// 	  );
+					// }
+					// render_sample()
 
 					// plot_points_regression. Do the hard work
-					const points_data = this.plot_points_regression(reference_calculable)
+					const points_data = self.plot_points_regression(parsed_data, self.regression_model_chart_container)
 				}
 			})
 
@@ -768,7 +768,7 @@ export const analysis =  {
 			   1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 
 
-	plot: function() {
+	plot: function(regression_model_chart_container) {
 	        // Obtain coefficients
 	        const { a, b } = this.coefficients(this.IR, this.D_anv);
 
@@ -809,13 +809,13 @@ export const analysis =  {
 	      paper_bgcolor: '#fff'
 	    };
 
-		Plotly.newPlot('miDiv', traces, layout);
+		const graf = Plotly.newPlot(regression_model_chart_container, traces, layout);
 
-	    return { x_vals, y_vals, traces, layout };
+	    return graf;
 	  },
 
 	// Calculation IR
-	calculation_IR_PlotPoint: function (parsed_data){
+	calculation_IR: function (type_data){
 		let index_number = [];
 		// Obtain all vectors full_coins_reference_calculables
 		const everyCalculables = this.parsed_data.map(
@@ -844,8 +844,8 @@ export const analysis =  {
 	return { index_number, approx };
 	},
 
-	plot_points_regression : function(){
-		const { index_number, approx } = this.coordenadas();
+	plot_points_regression : function(parsed_data, regression_model_chart_container){
+		const { index_number, approx } = this.calculation_IR();
 		const pointsTrace = {
 	        x: index_number,
 	        y: approx,
@@ -858,9 +858,9 @@ export const analysis =  {
 	            line: { width: 2, color: 'black' }
 	        }
 	    };
-
+		const graf = this.plot(regression_model_chart_container)
 	    // Añadimos la nueva traza al gráfico existente
-	    Plotly.addTraces('miDiv', pointsTrace);
+	    graf.addTraces(regression_model_chart_container, pointsTrace);
 	},
 
 
