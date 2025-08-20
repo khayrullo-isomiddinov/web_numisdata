@@ -863,16 +863,15 @@ export const analysis =  {
 	        mode: 'markers',
 	        type: 'scatter',
 	        name: 'Aproximación',
+			text: vect_tipos.map(o => o.id),
+			hovertemplate: "Tipo: %{text}<br>IR: %{x}<br>Aprox: %{y}<extra></extra>",
 	        marker: {
 	            color: 'orange',
-	            size: 15,
+	            size: 10,
 	            line: { width: 2, color: 'black' }
-	        }
+	        },
 	    };
-		//const graf = 
-		this.plot(regression_model_chart_container)
-	    // Añadimos la nueva traza al gráfico existente
-	    //graf
+		this.plot(regression_model_chart_container);
 		Plotly.addTraces(regression_model_chart_container, pointsTrace);
 	},
 
