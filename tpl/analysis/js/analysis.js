@@ -789,16 +789,18 @@ export const analysis =  {
 	        y: this.Anvers,
 	        mode: 'markers',
 	        type: 'scatter',
-	        name: 'Dades observades',
-	        marker: { color: 'blue' }
+	        name: 'Datos observados',
+	        marker: { color: 'skyblue' },
+			hovertemplate: "Num. monedas: %{x}<br>" +
+            "Estimación cuños: %{y}<extra></extra>",
 	      },
 	      {
 	        x: x_vals,
 	        y: y_vals,
 	        mode: 'lines',
 	        type: 'scatter',
-	        name: 'Model estimat',
-	        line: { color: 'red', width: 2 }
+	        name: 'Modelo estimado',
+	        line: { color: 'lightsteelblue', width: 2 }
 	      }
 	    ];
 	    const layout = {
@@ -849,6 +851,8 @@ export const analysis =  {
             approx,
             ceca: emblem.p_mint,
             id: emblem.term_section_id,
+			num: emblem.ref_type_number,
+			ref_ceca: emblem.ref_mint_number
        		};
 			vect_tipos.push(tipo);
 		}
@@ -863,10 +867,12 @@ export const analysis =  {
 	        mode: 'markers',
 	        type: 'scatter',
 	        name: 'Aproximación',
-			text: vect_tipos.map(o => o.id),
-			hovertemplate: "Tipo: %{text}<br>IR: %{x}<br>Aprox: %{y}<extra></extra>",
+			customdata: vect_tipos.map(o => [o.id, o.ref_ceca, o.num]),
+    		hovertemplate: "MIB: %{customdata[0]} | %{customdata[1]} / %{customdata[2]}<br>" +
+            "Num. monedas: %{x}<br>" +
+            "Estimación cuños: %{y}<extra></extra>",
 	        marker: {
-	            color: 'orange',
+	            color: 'darkblue',
 	            size: 10,
 	            line: { width: 2, color: 'black' }
 	        },
