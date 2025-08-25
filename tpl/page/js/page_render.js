@@ -802,7 +802,7 @@ page.render_cite_record = async (row, container, title) => {
 				authorship_data		: row.authorship_data || null,
 				authorship_names	: row.authorship_names || null,
 				authorship_surnames	: row.authorship_surnames || null,
-				authorship_roles	: row.authorship_roles || null,
+				authorship_roles	: row.authorship_roles || null
 			}
 			cite_data.catalog			= null
 			cite_data.title				= title || row.name || 'Untitled'

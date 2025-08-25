@@ -479,7 +479,7 @@ export const analysis =  {
 			})
 			.then((parsed_data)=>{
 				if(SHOW_DEBUG===true) {
-					console.log(parsed_data)
+					console.log("debug parsed_data:", parsed_data)
 				}
 
 				event_manager.publish('form_submit', parsed_data)
@@ -548,7 +548,6 @@ export const analysis =  {
 							data.push(tmp_data)
 						}
 					}
-					// console.log(data)
 
 				// Weights
 				const weights = data.filter( (ele) => ele.weight ).map( (ele) => {
@@ -693,8 +692,7 @@ export const analysis =  {
 					// render_sample()
 
 					// plot_points_regression. Do the hard work
-					console.log(self.regression_model_chart_container)
-					const points_data = self.plot_points_regression(parsed_data, self.regression_model_chart_container)
+					self.plot_points_regression(parsed_data, self.regression_model_chart_container)
 				}
 			})
 
@@ -703,7 +701,7 @@ export const analysis =  {
 	},
 
 
-	//Plot points cloud and regresion line
+	// Plot points cloud and regression line
 
 	// Regression model to estimate dies head
 	// Load library (html)
@@ -738,6 +736,7 @@ export const analysis =  {
 		   1, 1, 1, 1, 1, 2, 1, 3, 10, 2, 4, 2, 1, 1, 1, 9, 2, 4, 6, 37, 24, 2, 10, 9, 2, 2, 1, 1, 3, 3, 5, 3, 3, 6,
 		   1, 16, 1, 2, 10, 3, 6, 6, 2, 1, 4, 1, 6, 2, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 1, 2, 4, 1, 1, 1, 2, 1, 1, 1, 1,
 		   1, 1, 1, 1, 1, 1],
+
 	D_anv : [19.288,1.7388,1.4393,32.5154,9.3203,1.6183,13.2642,4.3435,1.6365,1.3375,3.1817,2.2931,10.3866,4.3371,2.8984,
 		     2.1349,3.6742,5.9707,3.3636,4.8809,8.8011,31.1737,16.2005,21.9585,16.8808,54.9425,2.8284,1.2408,2.5741,3.8956,
 			 4.5646,3.7473,1.8879,20.5892,2.9085,11.2785,12.6561,4.0613,0.1099,8.4090,3.7179,4.4006,13.1208,1.0392,1.3554,
@@ -767,7 +766,6 @@ export const analysis =  {
 			  2, 111, 4, 1, 3, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 3, 2, 3, 6,
 			  5, 5, 1, 3, 4, 2, 1, 1, 1, 1, 2, 4, 2, 2, 4, 1, 4, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1,
 			   1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-
 
 	plot: function(regression_model_chart_container) {
 	        // Obtain coefficients
@@ -811,11 +809,11 @@ export const analysis =  {
 	      plot_bgcolor: '#fff',
 	      paper_bgcolor: '#fff'
 	    };
-		
+
 		const graf = Plotly.newPlot(regression_model_chart_container, traces, layout);
 
 	    return graf;
-	  },
+	},
 
 	// Calculation IR
 	calculation_IR: function (emblem){
@@ -834,7 +832,7 @@ export const analysis =  {
 		const { a, b } = this.coefficients(this.IR,this.D_anv);
 
 		//Calculate approximations
-		let approx; 
+		let approx;
 	  	approx = a + b*ir;
 
 	return { ir, approx };
@@ -856,11 +854,11 @@ export const analysis =  {
        		};
 			vect_tipos.push(tipo);
 		}
-		
+
 
 		const xValues = vect_tipos.map(obj => obj.ir);
 		const yValues = vect_tipos.map(obj => obj.approx);
-		
+
 		const pointsTrace = {
 	        x: xValues,
 	        y: yValues,
