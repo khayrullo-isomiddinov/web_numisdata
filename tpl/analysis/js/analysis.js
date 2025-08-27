@@ -693,8 +693,11 @@ export const analysis =  {
 					// render_sample()
 
 					// plot_points_regression. Do the hard work
-					console.log(self.regression_model_chart_container)
-					const points_data = self.plot_points_regression(parsed_data, self.regression_model_chart_container)
+					//console.log(self.regression_model_chart_container)
+					//const points_data = self.plot_points_regression_anv(parsed_data, self.regression_model_chart_container)
+					//const points_data_rev = self.plot_points_regression_rev(parsed_data, self.regression_model_chart_container)
+					const points_dats = self.plot_rev_and_anv(this.regression_model_chart_container,parsed_data)
+					//this.plot_rev_and_anv("miDiv", parsed_data);
 				}
 			})
 
@@ -705,7 +708,7 @@ export const analysis =  {
 
 	//Plot points cloud and regresion line
 
-	// Regression model to estimate dies head
+	
 	// Load library (html)
 	// Get coefficients of the straight line (a and b values)
 	coefficients: function(IR_Ant, D_A_Ant){
@@ -738,6 +741,7 @@ export const analysis =  {
 		   1, 1, 1, 1, 1, 2, 1, 3, 10, 2, 4, 2, 1, 1, 1, 9, 2, 4, 6, 37, 24, 2, 10, 9, 2, 2, 1, 1, 3, 3, 5, 3, 3, 6,
 		   1, 16, 1, 2, 10, 3, 6, 6, 2, 1, 4, 1, 6, 2, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 1, 2, 4, 1, 1, 1, 2, 1, 1, 1, 1,
 		   1, 1, 1, 1, 1, 1],
+
 	D_anv : [19.288,1.7388,1.4393,32.5154,9.3203,1.6183,13.2642,4.3435,1.6365,1.3375,3.1817,2.2931,10.3866,4.3371,2.8984,
 		     2.1349,3.6742,5.9707,3.3636,4.8809,8.8011,31.1737,16.2005,21.9585,16.8808,54.9425,2.8284,1.2408,2.5741,3.8956,
 			 4.5646,3.7473,1.8879,20.5892,2.9085,11.2785,12.6561,4.0613,0.1099,8.4090,3.7179,4.4006,13.1208,1.0392,1.3554,
@@ -751,6 +755,19 @@ export const analysis =  {
 			 1.0000,1.0000,1.0000,1.0000,2.7108,4.0000,2.7108,2.7108,5.4216,1.0000,4.9632,1.0000,1.6818,5.0000,2.7108,4.0000,4.5861,
 			 2.0000,1.0000,3.7224,1.0000,3.4396,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,3.0000,1.0000,1.0000,1.0000,1.0000,
 			 1.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],
+	
+	D_rev :[22.5033,1.7388,1.4393,54.1924,5.5922,3.2366,24.6335,5.7914,3.2731,4.0126,4.7726,6.8792,10.3866,3.2528,2.8984,2.1349,3.6742,
+			5.9707,5.0454,4.8809,10.2680,38.2586,15.1204,23.0564,18.1794,60.7874,2.8284,1.2408,3.8612,2.5971,3.0430,2.8105,1.8879,15.4419,
+			2.1814,6.4449,25.3122,2.0306,0.1099,8.4090,1.8589,1.4669,17.4944,3.1177,2.7108,5.5267,4.4006,6.7971,2.4900,7.0813,8.9328,
+			1.5658,2.3965,3.2731,2.5048,3.7224,2.7656,1.5079,6.0091,7.7817,19.3672,8.9656,24.9023,22.5768,1.6070,9.2043,5.8011,75.1111,
+			3.6402,1.5215,2.3199,12.8702,2.5529,1.0000,0.7770,8.3275,26.8603,1.4982,21.9438,3.5745,4.1786,2.2820,1.0853,7.4358,3.3636,
+			4.0951,57.1399,74.5507,2.2310,1.6290,9.5452,4.5590,19.6088,3.7224,1.8473,1.9882,1.5755,17.9199,26.9356,3.6400,5.6504,1.9882,
+			14.3918,70.8150,3.8515,34.8405,41.8735,28.4959,20.7628,3.3437,33.3981,3.0897,9.3653,144.4622,12.5054,7.5851,5.0309,2.2795,
+			1.0000,1.6818,5.4216,2.2795,1.0000,2.2795,1.0000,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,
+			1.0000,1.0000,1.6818,1.0000,1.3554,6.7272,1.6818,1.2408,1.4756,1.0000,1.0000,1.0000,4.8297,2.0000,3.0000,5.3449,3.9088,2.7108,
+			1.6818,5.9645,5.4618,1.0000,2.0000,1.0000,1.0000,1.0000,2.7108,4.0000,2.7108,2.7108,4.0662,1.0000,3.7224,1.0000,1.6818,5.0000,
+			2.7108,4.0000,4.5861,2.0000,1.0000,3.7224,1.0000,4.5861,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,3.0000,1.0000,1.0000,
+			1.0000,1.0000,2.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],		 
 
 	// IR values at the beginning
 	IR_ant : [111, 11, 8, 75, 34, 10, 29, 174, 14, 19, 14, 45, 19, 79, 25, 11, 4, 17, 8, 7, 18, 71, 74, 98, 48, 229, 2, 3, 30, 12,
@@ -767,13 +784,20 @@ export const analysis =  {
 			  2, 111, 4, 1, 3, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 3, 2, 3, 6,
 			  5, 5, 1, 3, 4, 2, 1, 1, 1, 1, 2, 4, 2, 2, 4, 1, 4, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1,
 			   1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+	// Exact number of reverse dies at IR_ant		 
+	Revers : [14, 1, 1, 30, 3, 2, 13, 4, 2, 3, 3, 6, 9, 3, 2, 2, 2, 4, 3, 2, 7, 27, 14, 21, 14, 52, 1, 1, 3, 2, 2, 3, 1, 15, 3, 4, 16, 1,
+			  1, 5, 1, 1, 12, 3, 2, 5, 3, 4, 1, 3, 6, 1, 2, 2, 2, 3, 2, 1, 5, 4, 13, 6, 14, 14, 1, 6, 3, 41, 2, 1, 2, 9, 2, 1, 1, 9, 17, 1,
+			  15, 3, 3, 2, 1, 4, 2, 2, 45, 57, 2, 1, 6, 2, 17, 3, 1, 1, 1, 12, 28, 3, 6, 1, 19, 61, 3, 18, 16, 7, 8, 1, 12, 1, 3, 119, 4, 3,
+			  2, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 4, 2, 3, 6, 3, 2, 1, 3, 5, 1, 2, 1,
+			  1,1, 2, 4, 2, 2, 3, 1, 3, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			  1, 1, 1, 1],		   
 
-
-	plot: function(regression_model_chart_container) {
+	// Regression model to estimate head dies 
+	plot_anv: function(regression_model_chart_container) {
 	        // Obtain coefficients
 	        const { a, b } = this.coefficients(this.IR, this.D_anv);
 
-	        // Paso 2: extremos de vector1
+	        
 	        const minIR = Math.min(...this.IR);
 	        const maxIR = Math.max(...this.IR);
 
@@ -793,6 +817,8 @@ export const analysis =  {
 	        marker: { color: 'skyblue' },
 			hovertemplate: "Num. monedas: %{x}<br>" +
             "Estimación cuños: %{y}<extra></extra>",
+			xaxis: 'x1',
+      		yaxis: 'y1'
 	      },
 	      {
 	        x: x_vals,
@@ -800,25 +826,17 @@ export const analysis =  {
 	        mode: 'lines',
 	        type: 'scatter',
 	        name: 'Modelo estimado',
-	        line: { color: 'lightsteelblue', width: 2 }
+	        line: { color: 'lightsteelblue', width: 2 },
+			xaxis: 'x1',
+     		yaxis: 'y1'
 	      }
 	    ];
-	    const layout = {
-	      title: 'Ajust del model',
-	      xaxis: { title: 'Índex de Raresa (IR)', gridcolor: '#ccc' },
-	      yaxis: { title: 'Nombre de cuños estimat', gridcolor: '#ccc' },
-	      legend: { x: 0.05, y: 1 },
-	      plot_bgcolor: '#fff',
-	      paper_bgcolor: '#fff'
-	    };
-		
-		const graf = Plotly.newPlot(regression_model_chart_container, traces, layout);
-
-	    return graf;
+	   
+	    return traces;
 	  },
 
 	// Calculation IR
-	calculation_IR: function (emblem){
+	calculation_IR_anv: function (emblem){
 		const index = emblem.full_coins_reference_calculable || [];
 		//Define counter
 		let ir = 0;
@@ -840,11 +858,11 @@ export const analysis =  {
 	return { ir, approx };
 	},
 
-	plot_points_regression : function(parsed_data, regression_model_chart_container){
+	plot_points_regression_anv : function(parsed_data, regression_model_chart_container){
 		let vect_tipos = [];
 		for(let i=1; i< parsed_data.length; i++){
 			let emblem = parsed_data[i]
-			const { ir,approx } = this.calculation_IR(emblem)
+			const { ir,approx } = this.calculation_IR_anv(emblem)
 
 			const tipo = {
             ir,
@@ -867,19 +885,168 @@ export const analysis =  {
 	        mode: 'markers',
 	        type: 'scatter',
 	        name: 'Aproximación',
-			customdata: vect_tipos.map(o => [o.id, o.ref_ceca, o.num]),
-    		hovertemplate: "MIB: %{customdata[0]} | %{customdata[1]} / %{customdata[2]}<br>" +
+			customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
+    		hovertemplate: "Ceca: %{customdata[0]}<br>"+"MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
             "Num. monedas: %{x}<br>" +
-            "Estimación cuños: %{y}<extra></extra>",
+            "Estimación cuños anverso: %{y}<extra></extra>",
 	        marker: {
 	            color: 'darkblue',
 	            size: 10,
 	            line: { width: 2, color: 'black' }
 	        },
+			xaxis: 'x1',
+    		yaxis: 'y1'
 	    };
-		this.plot(regression_model_chart_container);
-		Plotly.addTraces(regression_model_chart_container, pointsTrace);
+		return [pointsTrace];
 	},
+
+// Regression model to estimate reverse dies 
+
+plot_rev: function(regression_model_chart_container) {
+	        // Obtain coefficients
+	        const { a, b } = this.coefficients(this.IR, this.D_rev);
+
+	        
+	        const minIR = Math.min(...this.IR);
+	        const maxIR = Math.max(...this.IR);
+
+	        // Generate x_vals
+	        const x_vals = Array.from({ length: 2000 }, (_, i) => minIR + (i / 1999) * (maxIR - minIR));
+
+	        // Generate y_vals
+	        const y_vals = x_vals.map(x => a + b * x);
+
+			const traces = [
+	      {
+	        x: this.IR_ant,
+	        y: this.Revers,
+	        mode: 'markers',
+	        type: 'scatter',
+	        name: 'Datos observados',
+	        marker: { color: 'skyblue' },
+			hovertemplate: "Num. monedas: %{x}<br>" +
+            "Estimación cuños: %{y}<extra></extra>",
+			xaxis: 'x2',
+      		yaxis: 'y2'
+	      },
+	      {
+	        x: x_vals,
+	        y: y_vals,
+	        mode: 'lines',
+	        type: 'scatter',
+	        name: 'Modelo estimado',
+	        line: { color: 'lightsteelblue', width: 2 },
+			xaxis: 'x2',
+      		yaxis: 'y2'
+	      }
+	    ];
+	    
+	    return traces;
+	  },	  
+
+
+// Calculation IR
+calculation_IR_rev: function (emblem){
+	const index = emblem.full_coins_reference_calculable || [];
+	//Define counter
+	let ir = 0;
+	// Calculate number IR of each type
+	for (let i = 0; i < index.length; i++) {
+		if(index[i] === true){
+			ir ++;
+		}
+	}
+
+    //We have IR of the type (emblem)
+	// call function to use a and b valors
+	const { a, b } = this.coefficients(this.IR,this.D_rev);
+
+	//Calculate approximations
+	let approx; 
+	approx = a + b*ir;
+
+return { ir, approx };
+},
+
+
+plot_points_regression_rev : function(parsed_data, regression_model_chart_container){
+		let vect_tipos = [];
+		for(let i=1; i< parsed_data.length; i++){
+			let emblem = parsed_data[i]
+			const { ir,approx } = this.calculation_IR_rev(emblem)
+
+			const tipo = {
+            ir,
+            approx,
+            ceca: emblem.p_mint,
+            id: emblem.term_section_id,
+			num: emblem.ref_type_number,
+			ref_ceca: emblem.ref_mint_number
+       		};
+			vect_tipos.push(tipo);
+		}
+		
+
+		const xValues = vect_tipos.map(obj => obj.ir);
+		const yValues = vect_tipos.map(obj => obj.approx);
+		
+		const pointsTrace = {
+	        x: xValues,
+	        y: yValues,
+	        mode: 'markers',
+	        type: 'scatter',
+	        name: 'Aproximación',
+			customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
+    		hovertemplate: "Ceca: %{customdata[0]}<br>"+"MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
+            "Num. monedas: %{x}<br>" +
+            "Estimación cuños reverso: %{y}<extra></extra>",
+	        marker: {
+	            color: 'darkblue',
+	            size: 10,
+	            line: { width: 2, color: 'black' }
+	        },
+			xaxis: 'x2',
+    		yaxis: 'y2'
+	    };
+		
+		return [pointsTrace];
+	},
+
+plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
+  // Traces de Reverso
+  const tracesRev = [
+    ...this.plot_rev(), 
+    ...this.plot_points_regression_rev(parsed_data)
+  ];
+
+  // Traces de Anverso
+  const tracesAnv = [
+    ...this.plot_anv(),
+    ...this.plot_points_regression_anv(parsed_data)
+  ];
+
+  // Layout con 2 filas y 1 columna
+  const layout = {
+    grid: { rows: 2, columns: 1, pattern: 'independent' },
+    plot_bgcolor: '#fff',
+    paper_bgcolor: '#fff',
+    
+    annotations: [
+      { text: "Anverso", x: 0.5, y: 1.05, xref: "paper", yref: "paper", showarrow: false, font: { size: 16 } },
+      { text: "Reverso", x: 0.5, y: 0.45, xref: "paper", yref: "paper", showarrow: false, font: { size: 16 } }
+    ],
+    xaxis: { title: 'Índex de Raresa (IR)', gridcolor: '#ccc' },
+    yaxis: { title: 'Nombre de cuños estimat', gridcolor: '#ccc' },
+    xaxis2: { title: 'Índex de Raresa (IR)', gridcolor: '#ccc' },
+    yaxis2: { title: 'Nombre de cuños estimat', gridcolor: '#ccc' }
+  };
+
+  // Todos los traces juntos
+  const allTraces = [...tracesRev, ...tracesAnv];
+
+  // Dibujar todo en un solo newPlot
+  Plotly.newPlot(regression_model_chart_container, allTraces, layout);
+},
 
 
 
