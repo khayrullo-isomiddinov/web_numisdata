@@ -1765,4 +1765,114 @@ class page extends stdClass {
 
 
 
+	/**
+	* GET_RDF_DATA
+	* Make a GET request to the API to get the record data matching
+	* given section_id and table.
+	* @param string $table - Table name e.g. 'types','coins'
+	* @param int $section_id
+	* @return string|null $rdf_data
+	*/
+	public static function get_rdf_data( string $table, int $section_id ) : ?string {
+
+		$options = new stdClass();
+			$options->dedalo_get 		= 'records';
+			$options->lang 				= WEB_CURRENT_LANG_CODE;
+			$options->table 			= $table;
+			$options->ar_fields 		= ['nomisma_rdf'];
+			$options->sql_filter 		= "section_id = {$section_id}";
+			$options->limit 			= 1;
+		// HTTP request in php to the API
+		$response = json_web_data::get_data( $options );
+
+		$rdf_data = $response->result[0]->nomisma_rdf ?? null;
+
+
+		return $rdf_data;
+	}//end get_rdf_data
+
+
+
+	/**
+	* GET_JSON_DATA
+	* Make a GET request to the API to get the record data matching
+	* given section_id and table.
+	* Parses the result as safe JSON data.
+	* @param string $table - Table name e.g. 'types','coins'
+	* @param int $section_id
+	* @return object|null $json_data
+	*/
+	public static function get_json_data( string $table, int $section_id ) : ?object {
+
+		$options = new stdClass();
+			$options->dedalo_get 		= 'records';
+			$options->lang 				= WEB_CURRENT_LANG_CODE;
+			$options->table 			= $table;
+			$options->ar_fields 		= ['*']; // all fields
+			$options->sql_filter 		= "section_id = {$section_id}";
+			$options->limit 			= 1;
+		// HTTP request in php to the API
+		$response = json_web_data::get_data( $options );
+
+		$row_data = $response->result[0] ?? null;
+
+		if (empty($row_data)) {
+			return null;
+		}
+
+		$json_data = new stdClass();
+
+		$excude_columns	= ['nomisma_rdf','table','dd_tm','dd_relations'];
+		$url_columns	= ['image_obverse','image_reverse','ref_coins_image_obverse','ref_coins_image_reverse'];
+
+		$separator = ' | ';
+
+		try {
+			foreach ($row_data as $key => $value) {
+
+				if (in_array($key, $excude_columns)) {
+					continue;
+				}
+
+				if (in_array($key, $url_columns)) {
+
+					$safe_value = !empty($value)
+						? __WEB_BASE_URL__ . $value
+						: $value;
+
+				}else if (strpos($value ?? '', $separator) !== false) {
+
+					$safe_value = [];
+					$ar_value = explode($separator, ($value ?? ''));
+					foreach ($ar_value as $current_value) {
+						$current_json_decoded = is_string($current_value)
+							? (json_decode($current_value) ?? $current_value)
+							: $current_value;
+						$safe_value[] = $current_json_decoded;
+					}
+
+				}else{
+
+					$safe_value = is_string($value)
+						? (json_decode($value) ?? $value)
+						: $value;
+				}
+
+				// Unify empty values
+				if ($safe_value === '') {
+					$safe_value = null;
+				}
+
+				$json_data->{$key} = $safe_value;
+			}
+		} catch (Exception $e) {
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		}
+
+
+		return $json_data;
+	}//end get_json_data
+
+
+
 }//end class page
