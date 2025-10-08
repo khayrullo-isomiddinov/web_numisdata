@@ -37,15 +37,15 @@ function autocomplete($json_data) {
 	// limit
 		if ($limit===false) {
 			$limit = 30;
-		}	
-	
+		}
+
 	// Filter
 		$filter = '';
 		switch ($q_name) {
 			case 'combined_field_cases':
 				$filter  = "CONCAT_WS(' ', `leyenda_anverso`, `leyenda_reverso`) LIKE '%".trim($q)."%'";
 				$filter .= " AND LENGTH(CONCAT_WS('', `leyenda_anverso`, `leyenda_reverso`))>3";
-				break;			
+				break;
 			default:
 				// empty q case select all not empty values
 				if (empty($q)) {
@@ -71,7 +71,7 @@ function autocomplete($json_data) {
 		switch ($q_name) {
 			case 'combined_field_cases':
 				$ar_fields = ['CONCAT_WS(\' \', `leyenda_anverso`, `leyenda_reverso`) AS leyenda', 'section_id'];
-				break;			
+				break;
 			default:
 				$ar_fields = [$q_name,'section_id'];
 				break;
@@ -79,11 +79,11 @@ function autocomplete($json_data) {
 
 	// group
 		$group = $q_name;
-		
+
 	// order
 		$order = $q_name . ' ASC';
-		
-	# Search	
+
+	# Search
 	# API Query
 	$options = new stdClass();
 		$options->dedalo_get 	= 'records';
@@ -94,7 +94,7 @@ function autocomplete($json_data) {
 		$options->sql_filter 	= $filter;
 		$options->group 		= $group;
 		$options->order 		= $order;
-	
+
 	# Http request in php to the API
 	$web_data = json_web_data::get_data($options);
 		#dump($web_data, ' web_data ++ '.to_string($options));
@@ -106,19 +106,19 @@ function autocomplete($json_data) {
 			if (isset($ar_group[$row->{$q_name}])) {
 				# Add section_id
 				$ar_group[$row->{$q_name}]->section_id[] = $row->section_id;
-				
-			}else{				
-		
-				// split					
+
+			}else{
+
+				// split
 					#if (strpos($row->{$q_name},',')!==false) {
 					#	$ar_elements = explode(',', $row->{$q_name}); // One for each element
 					#}else{
 						$ar_elements = [$row->{$q_name}]; // Only one always
 					#}
-					
+
 
 				foreach ($ar_elements as $key => $name) {
-		
+
 					#if (stripos($name, $q)===false) continue;
 
 					$element = new stdClass();
@@ -164,7 +164,7 @@ function search_rows($json_data) {
 		$response->result 	= false;
 		$response->msg 		= 'Error. Request failed ['.__FUNCTION__.']';
 
-	# set vars 
+	# set vars
 		$vars = array('ar_query','limit','offset','count','total','order');
 			foreach($vars as $name) {
 				$$name = common::setVarData($name, $json_data);
@@ -175,10 +175,10 @@ function search_rows($json_data) {
 					return $response;
 				}
 			}
-			
+
 	require(dirname(dirname(__FILE__)) .'/page/class.cost_huma.php');
 
-	// search 
+	// search
 		$search_options = new stdClass();
 			$search_options->ar_query 	= $ar_query;
 			$search_options->limit 		= $limit;
@@ -186,14 +186,14 @@ function search_rows($json_data) {
 			$search_options->count 		= $count;
 			$search_options->total 		= $total;
 			$search_options->order 		= $order;
-		
+
 		$result = cost_huma::search_rows($search_options);
-				
+
 
 	$response->result 	= $result;
 	$response->msg 		= 'Ok. Success ['.__FUNCTION__.']';
 
-	# Debug 
+	# Debug
 		if(SHOW_DEBUG===true) {
 			$debug = new stdClass();
 				$debug->exec_time	= exec_time_unit($start_time,'ms')." ms";
@@ -205,56 +205,3 @@ function search_rows($json_data) {
 
 	return (object)$response;
 }//end search_rows
-
-
-
-/**
-* SEARCH_DETAIL
-* @return object $response
-*/
-function search_detail($json_data) {
-	global $start_time;
-
-	$response = new stdClass();
-		$response->result 	= false;
-		$response->msg 		= 'Error. Request failed ['.__FUNCTION__.']';
-
-	# set vars 
-		$vars = array('section_id');
-			foreach($vars as $name) {
-				$$name = common::setVarData($name, $json_data);
-				# DATA VERIFY
-				if ($name==='ar_query') continue; # Skip non mandatory
-				if (empty($$name)) {
-					$response->msg = 'Trigger Error: ('.__FUNCTION__.') Empty '.$name.' (is mandatory)';
-					return $response;
-				}
-			}
-			
-	require(dirname(dirname(__FILE__)) .'/page/class.cost_huma.php');
-
-	// search 
-		$search_options = new stdClass();
-			$search_options->section_id = $section_id;
-			
-		
-		$result = cost_huma::search_detail($search_options);
-				
-
-	$response->result 	= $result;
-	$response->msg 		= 'Ok. Success ['.__FUNCTION__.']';
-
-	# Debug 
-		if(SHOW_DEBUG===true) {
-			$debug = new stdClass();
-				$debug->exec_time	= exec_time_unit($start_time,'ms')." ms";
-				foreach($vars as $name) {
-					$debug->{$name} = $$name;
-				}
-			$response->debug = $debug;
-		}
-
-	return (object)$response;
-}//end search_detail
-
-
