@@ -833,6 +833,16 @@ function tree_factory() {
 				resolve(false)
 			}
 
+			if (!self.caller) {
+				console.error('Caller is mandatory! Ignored render_indexation_nodes. self: ', self);
+				resolve(false)
+			}
+
+			if (typeof self.caller.get_indexation_data === 'undefined') {
+				console.log('Ignored callback "get_indexation_data". Caller do not has this function. Caller: ', self.caller);
+				resolve(false)
+			}
+
 			// get fragments
 				self.caller.get_indexation_data(row.indexation)
 				.then(function(response){
