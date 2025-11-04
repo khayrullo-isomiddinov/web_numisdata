@@ -659,45 +659,47 @@ export const analysis =  {
 				}
 
 				// Modelo_Regresión
-				if (reference_calculable.length) {
+				if (!IS_PRODUCTION) { // Only display in PRE from now (!)
+					if (reference_calculable.length) {
 
-					// Show hidden DOM node 'regression_model_chart_container'
-					section_container.regression_model.classList.remove('hide')
+						// Show hidden DOM node 'regression_model_chart_container'
+						section_container.regression_model.classList.remove('hide')
 
-					// const render_sample = () => {
-					// 	//Data
-					// 	  var trace1 = {
-					// 	    x: [1, 2, 3, 4, 5],
-					// 	    y: [10, 14, 18, 24, 30],
-					// 	    type: 'scatter',
-					// 	    mode: 'lines+markers',
-					// 	    marker: {color: 'blue'}
-					// 	  };
+						// const render_sample = () => {
+						// 	//Data
+						// 	  var trace1 = {
+						// 	    x: [1, 2, 3, 4, 5],
+						// 	    y: [10, 14, 18, 24, 30],
+						// 	    type: 'scatter',
+						// 	    mode: 'lines+markers',
+						// 	    marker: {color: 'blue'}
+						// 	  };
 
-					// 	  var test_data = [trace1];
+						// 	  var test_data = [trace1];
 
-					// 	  // Layout
-					// 	  var layout = {
-					// 	    title: 'Simple Line Chart',
-					// 	    xaxis: {title: 'X Axis'},
-					// 	    yaxis: {title: 'Y Axis'}
-					// 	  };
+						// 	  // Layout
+						// 	  var layout = {
+						// 	    title: 'Simple Line Chart',
+						// 	    xaxis: {title: 'X Axis'},
+						// 	    yaxis: {title: 'Y Axis'}
+						// 	  };
 
-					// 	  // Render the plot
-					// 	  Plotly.newPlot(
-					// 	  	regression_model_chart_container, // DOM node where to place the graph
-					// 	  	test_data, // data to draw
-					// 	  	layout // graph layout setup
-					// 	  );
-					// }
-					// render_sample()
+						// 	  // Render the plot
+						// 	  Plotly.newPlot(
+						// 	  	regression_model_chart_container, // DOM node where to place the graph
+						// 	  	test_data, // data to draw
+						// 	  	layout // graph layout setup
+						// 	  );
+						// }
+						// render_sample()
 
-					// plot_points_regression. Do the hard work
-					//console.log(self.regression_model_chart_container)
-					//const points_data = self.plot_points_regression_anv(parsed_data, self.regression_model_chart_container)
-					//const points_data_rev = self.plot_points_regression_rev(parsed_data, self.regression_model_chart_container)
-					const points_dats = self.plot_rev_and_anv(this.regression_model_chart_container,parsed_data)
-					//this.plot_rev_and_anv("miDiv", parsed_data);
+						// plot_points_regression. Do the hard work
+						//console.log(self.regression_model_chart_container)
+						//const points_data = self.plot_points_regression_anv(parsed_data, self.regression_model_chart_container)
+						//const points_data_rev = self.plot_points_regression_rev(parsed_data, self.regression_model_chart_container)
+						const points_dats = self.plot_rev_and_anv(this.regression_model_chart_container,parsed_data)
+						//this.plot_rev_and_anv("miDiv", parsed_data);
+					}
 				}
 			})
 
