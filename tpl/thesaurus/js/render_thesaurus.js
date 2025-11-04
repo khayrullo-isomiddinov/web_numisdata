@@ -465,7 +465,6 @@ thesaurus.render_tree_node = function(row) {
 							if (mutation.type==='attributes' && mutation.attributeName==='class') {
 
 								if (!mutationsList[0].target.classList.contains("hide")) {
-
 									// draw nodes
 									self.render_indexation_nodes(row, indexation_container, self)
 

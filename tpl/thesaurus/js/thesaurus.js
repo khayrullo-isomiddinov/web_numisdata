@@ -130,6 +130,9 @@ var thesaurus =  {
 					body : body
 				})
 				.then(function(response){
+					if(SHOW_DEBUG===true) {
+						console.log('authorship API response:', self.table, response);
+					}
 
 					if (!response.result || !response.result.length) {
 						if (body_text) {
@@ -410,7 +413,7 @@ var thesaurus =  {
 						data		: self.data_clean,
 						root_term	: root_term,
 						set_hilite	: set_hilite,
-						render_node : self.render_tree_node
+						render_node	: self.render_tree_node
 					})
 					self.tree.render()
 					.then(function(){
@@ -1220,9 +1223,12 @@ var thesaurus =  {
 	/**
 	* SHOW_LINK
 	* Determines it current row has link or not
-	* based on term model (tyoplogy)
+	* based on term model (typology)
+	* @see render_thesaurus.js -> render_tree_node()
 	* @param object row
+	* 	Database parsed record.
 	* @return bool
+	* 	On true, the thesaurus node display the link button.
 	*/
 	show_link : (row) => {
 

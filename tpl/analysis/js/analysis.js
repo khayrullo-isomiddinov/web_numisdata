@@ -710,7 +710,7 @@ export const analysis =  {
 
 	//Plot points cloud and regresion line
 
-	
+
 	// Load library (html)
 	// Get coefficients of the straight line (a and b values)
 	coefficients: function(IR_Ant, D_A_Ant){
@@ -757,7 +757,7 @@ export const analysis =  {
 			 1.0000,1.0000,1.0000,1.0000,2.7108,4.0000,2.7108,2.7108,5.4216,1.0000,4.9632,1.0000,1.6818,5.0000,2.7108,4.0000,4.5861,
 			 2.0000,1.0000,3.7224,1.0000,3.4396,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,3.0000,1.0000,1.0000,1.0000,1.0000,
 			 1.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],
-	
+
 	D_rev :[22.5033,1.7388,1.4393,54.1924,5.5922,3.2366,24.6335,5.7914,3.2731,4.0126,4.7726,6.8792,10.3866,3.2528,2.8984,2.1349,3.6742,
 			5.9707,5.0454,4.8809,10.2680,38.2586,15.1204,23.0564,18.1794,60.7874,2.8284,1.2408,3.8612,2.5971,3.0430,2.8105,1.8879,15.4419,
 			2.1814,6.4449,25.3122,2.0306,0.1099,8.4090,1.8589,1.4669,17.4944,3.1177,2.7108,5.5267,4.4006,6.7971,2.4900,7.0813,8.9328,
@@ -769,7 +769,7 @@ export const analysis =  {
 			1.0000,1.0000,1.6818,1.0000,1.3554,6.7272,1.6818,1.2408,1.4756,1.0000,1.0000,1.0000,4.8297,2.0000,3.0000,5.3449,3.9088,2.7108,
 			1.6818,5.9645,5.4618,1.0000,2.0000,1.0000,1.0000,1.0000,2.7108,4.0000,2.7108,2.7108,4.0662,1.0000,3.7224,1.0000,1.6818,5.0000,
 			2.7108,4.0000,4.5861,2.0000,1.0000,3.7224,1.0000,4.5861,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,3.0000,1.0000,1.0000,
-			1.0000,1.0000,2.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],		 
+			1.0000,1.0000,2.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],
 
 	// IR values at the beginning
 	IR_ant : [111, 11, 8, 75, 34, 10, 29, 174, 14, 19, 14, 45, 19, 79, 25, 11, 4, 17, 8, 7, 18, 71, 74, 98, 48, 229, 2, 3, 30, 12,
@@ -786,20 +786,20 @@ export const analysis =  {
 			  2, 111, 4, 1, 3, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 3, 2, 3, 6,
 			  5, 5, 1, 3, 4, 2, 1, 1, 1, 1, 2, 4, 2, 2, 4, 1, 4, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1,
 			   1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-	// Exact number of reverse dies at IR_ant		 
+	// Exact number of reverse dies at IR_ant
 	Revers : [14, 1, 1, 30, 3, 2, 13, 4, 2, 3, 3, 6, 9, 3, 2, 2, 2, 4, 3, 2, 7, 27, 14, 21, 14, 52, 1, 1, 3, 2, 2, 3, 1, 15, 3, 4, 16, 1,
 			  1, 5, 1, 1, 12, 3, 2, 5, 3, 4, 1, 3, 6, 1, 2, 2, 2, 3, 2, 1, 5, 4, 13, 6, 14, 14, 1, 6, 3, 41, 2, 1, 2, 9, 2, 1, 1, 9, 17, 1,
 			  15, 3, 3, 2, 1, 4, 2, 2, 45, 57, 2, 1, 6, 2, 17, 3, 1, 1, 1, 12, 28, 3, 6, 1, 19, 61, 3, 18, 16, 7, 8, 1, 12, 1, 3, 119, 4, 3,
 			  2, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 4, 2, 3, 6, 3, 2, 1, 3, 5, 1, 2, 1,
 			  1,1, 2, 4, 2, 2, 3, 1, 3, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1],		   
+			  1, 1, 1, 1],
 
-	// Regression model to estimate head dies 
+	// Regression model to estimate head dies
 	plot_anv: function(regression_model_chart_container) {
 	        // Obtain coefficients
 	        const { a, b } = this.coefficients(this.IR, this.D_anv);
 
-	        
+
 	        const minIR = Math.min(...this.IR);
 	        const maxIR = Math.max(...this.IR);
 
@@ -833,7 +833,7 @@ export const analysis =  {
      		yaxis: 'y1'
 	      }
 	    ];
-	   
+
 	    return traces;
 	  },
 
@@ -854,7 +854,7 @@ export const analysis =  {
 		const { a, b } = this.coefficients(this.IR,this.D_anv);
 
 		//Calculate approximations
-		let approx; 
+		let approx;
 	  	approx = a + b*ir;
 
 	return { ir, approx };
@@ -876,11 +876,11 @@ export const analysis =  {
        		};
 			vect_tipos.push(tipo);
 		}
-		
+
 
 		const xValues = vect_tipos.map(obj => obj.ir);
 		const yValues = vect_tipos.map(obj => obj.approx);
-		
+
 		const pointsTrace = {
 	        x: xValues,
 	        y: yValues,
@@ -902,13 +902,13 @@ export const analysis =  {
 		return [pointsTrace];
 	},
 
-// Regression model to estimate reverse dies 
+// Regression model to estimate reverse dies
 
 plot_rev: function(regression_model_chart_container) {
 	        // Obtain coefficients
 	        const { a, b } = this.coefficients(this.IR, this.D_rev);
 
-	        
+
 	        const minIR = Math.min(...this.IR);
 	        const maxIR = Math.max(...this.IR);
 
@@ -942,9 +942,9 @@ plot_rev: function(regression_model_chart_container) {
       		yaxis: 'y2'
 	      }
 	    ];
-	    
+
 	    return traces;
-	  },	  
+	  },
 
 
 // Calculation IR
@@ -964,7 +964,7 @@ calculation_IR_rev: function (emblem){
 	const { a, b } = this.coefficients(this.IR,this.D_rev);
 
 	//Calculate approximations
-	let approx; 
+	let approx;
 	approx = a + b*ir;
 
 return { ir, approx };
@@ -987,11 +987,11 @@ plot_points_regression_rev : function(parsed_data, regression_model_chart_contai
        		};
 			vect_tipos.push(tipo);
 		}
-		
+
 
 		const xValues = vect_tipos.map(obj => obj.ir);
 		const yValues = vect_tipos.map(obj => obj.approx);
-		
+
 		const pointsTrace = {
 	        x: xValues,
 	        y: yValues,
@@ -1010,14 +1010,14 @@ plot_points_regression_rev : function(parsed_data, regression_model_chart_contai
 			xaxis: 'x2',
     		yaxis: 'y2'
 	    };
-		
+
 		return [pointsTrace];
 	},
 
 plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
   // Traces de Reverso
   const tracesRev = [
-    ...this.plot_rev(), 
+    ...this.plot_rev(),
     ...this.plot_points_regression_rev(parsed_data)
   ];
 
@@ -1032,7 +1032,7 @@ plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
     grid: { rows: 2, columns: 1, pattern: 'independent' },
     plot_bgcolor: '#fff',
     paper_bgcolor: '#fff',
-    
+
     annotations: [
       { text: "Anverso", x: 0.5, y: 1.05, xref: "paper", yref: "paper", showarrow: false, font: { size: 16 } },
       { text: "Reverso", x: 0.5, y: 0.45, xref: "paper", yref: "paper", showarrow: false, font: { size: 16 } }
