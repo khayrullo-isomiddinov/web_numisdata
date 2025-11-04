@@ -212,7 +212,7 @@ thesaurus.render_iconography_links = (row, buttons_additional, container_additio
 * @param HTMLelement container_additional
 * @return void
 */
-thesaurus.render_countermarks_links = (row, buttons_additional, container_additional) => {
+thesaurus.render_countermarks_links = (row, buttons_additional, container_additional, self) => {
 
 	// sign_group
 		const sign_group = [
