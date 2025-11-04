@@ -1348,8 +1348,11 @@ page.parse_tree_data = function(ar_rows, hilite_terms, root_term=[]) {
 			}
 		}
 		function set_status_as_opened(data_clean, row) {
-			const parent_term_id	= row.parent[0]
-			const parent_row		= data_clean.find(item => item.term_id==parent_term_id)
+			const parent_term_id = row.parent?.[0] || null
+			if (!parent_term_id) {
+				return
+			}
+			const parent_row = data_clean.find(item => item.term_id==parent_term_id)
 			if (parent_row) {
 				parent_row.status = "opened"
 				set_status_as_opened(data_clean, parent_row)
