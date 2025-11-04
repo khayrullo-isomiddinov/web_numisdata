@@ -229,19 +229,23 @@ thesaurus.render_countermarks_links = (row, buttons_additional, container_additi
 					: []
 
 			// sign_group case
-				if (is_sign_group) {
-					// get children data
-					const grouper_children = self.data.filter(el => row.children.includes(el.term_id))
-					// add every children legends to ar_legends array
-					const grouper_children_length = grouper_children.length
-					for (let i = 0; i < grouper_children_length; i++) {
-						const child = grouper_children[i]
-						const current_ar_relations = child.dd_relations && child.dd_relations.length > 0
-							? child.dd_relations.filter(el => el.section_tipo && el.section_tipo==='numisdata41') // legends = numisdata41
-							: []
-						ar_relations.push(...current_ar_relations)
-					}
-				}
+			// (!) COMMENTED UNTIL DATA GROPUER MODEL BE CHECKED.
+				// if (is_sign_group) {
+				// 	// get children data
+				// 	const grouper_children = self.data?.filter(el => row.children?.includes(el.term_id)) || []
+				// 	// add every children legends to ar_legends array
+				// 	const grouper_children_length = grouper_children.length
+				// 	for (let i = 0; i < grouper_children_length; i++) {
+				// 		const child = grouper_children[i]
+				// 		const current_ar_relations = child.dd_relations && child.dd_relations.length > 0
+				// 			? child.dd_relations.filter(el => el.section_tipo && el.section_tipo==='sccmk1') // legends = numisdata41 - sccmk1
+				// 			: []
+				// 		if (current_ar_relations.length>0) {
+				// 			console.log('))) current_ar_relations:', row.term_id, current_ar_relations);
+				// 			ar_relations.push(...current_ar_relations)
+				// 		}
+				// 	}
+				// }
 
 			if (ar_relations.length) {
 
