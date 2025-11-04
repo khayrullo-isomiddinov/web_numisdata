@@ -743,7 +743,7 @@ var thesaurus =  {
 				const result = found.map(item => {
 
 					// parent info (for desambiguation)
-						const parent_term_id	= item.parent[0]
+						const parent_term_id	= item.parent?.[0] || null
 						const parent_row		= self.data_clean.find(el => el.term_id===parent_term_id)
 						const parent_label		= parent_row ? (" (" + parent_row.term +")") : ''
 						const nd_text			= item.nd ? (' ['+item.nd.join(', ')+']') : ''
