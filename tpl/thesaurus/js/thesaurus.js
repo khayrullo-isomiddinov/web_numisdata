@@ -1232,33 +1232,37 @@ var thesaurus =  {
 	*/
 	show_link : (row) => {
 
-		switch (WEB_AREA) {
+		try {
 
-			// mints
-			case 'mints_hierarchy':
-				if (row.term_table && row.term_table==='mints' && row.term_data && row.term_data[0]) {
-					return true
-				}
-				break;
+			switch (WEB_AREA) {
 
-			// other thesaurus
-			default:
-				if (!row.model) {
-					return true
-				}
+				// mints
+				case 'mints_hierarchy':
+					if (row.term_table && row.term_table==='mints' && row.term_data && row.term_data[0]) {
+						return true
+					}
+					break;
 
-				try {
+				// other thesaurus
+				default:
+
+					// Not model defined case (allow display link)
+					if (!row.model) {
+						return true
+					}
+
 					const regex			= /\d+$/;
 					const section_id	= parseInt(regex.exec(row.model))
+
 					if (section_id>2) {
 						return true
 					}
-				} catch (error) {
-					console.error(error)
-				}
-				break;
-		}
+					break;
+			}
 
+		} catch (error) {
+			console.error(error)
+		}
 
 		return false
 	}//end show_link
