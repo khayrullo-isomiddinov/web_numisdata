@@ -94,20 +94,19 @@ var coin_row = {
 						for (let i = 0; i < row.ref_auction_group.length; i++) {
 							const auction = row.ref_auction_group[i]
 							let auctionGalleryAttributes = ""
-						// name
+							// name
 							if (auction.name) {
 								auctionGalleryAttributes += auction.name
 							}
-						// ref_auction_date
+							// ref_auction_date
 							if (auction.date) {
 								auctionGalleryAttributes += " " + auction.date
 							}
-						// number
+							// number
 							if (auction.number) {
 								auctionGalleryAttributes += ", "+ auction.number
 							}
-
-						// lot
+							// lot
 							if (row.number) {
 								auctionGalleryAttributes += ", "+(tstring.lot || 'lot') +" "+ row.number
 							}
@@ -218,23 +217,22 @@ var coin_row = {
 			// 	}
 			//	}
 			if (row.ref_auction_group){
-				const label_auctions = []
 
-				label_auctions.push(tstring.auction || "Auction")
-				// label_auctions.push(tstring.date || "Date")
-				// label_auctions.push(tstring.number || "Number")
-
-				const label_auctions_node = common.create_dom_element({
+				// label_auctions_node
+				common.create_dom_element({
 					element_type	: "label",
 					class_name		: "left-labels",
-					text_content	: label_auctions.join(' | '),
+					text_content	: tstring.auction || "Auction",
 					parent			: info_container
 				})
 
+				// right values nodes
 				for (let i = 0; i < row.ref_auction_group.length; i++) {
+
 					const auction = row.ref_auction_group[i]
 
 					const auction_label = []
+
 					if (auction.name){
 						auction_label.push(auction.name)
 						auction_label.push(" ")
@@ -258,12 +256,11 @@ var coin_row = {
 					common.create_dom_element({
 						element_type	: "span",
 						class_name		: "rigth-values",
-						inner_html  	: auction_label.join(''),
-						parent 			: info_container
+						inner_html		: auction_label.join(''),
+						parent			: info_container
 					})
 				}
 			}//end if (row.ref_auction_group)
-
 
 			// if (row.number && row.number.length>0) {
 			// 	label_collection.push( tstring.number || "Number")
@@ -282,7 +279,9 @@ var coin_row = {
 			if (row.ref_related_coin_auction_group && row.ref_related_coin_auction_group.length>0) {
 
 				for (let i=0;i<row.ref_related_coin_auction_group.length;i++){
+
 					const current_value_equivalents = []
+
 					if (row.ref_related_coin_auction_group[i].name.length>0){
 
 						const item = row.ref_related_coin_auction_group[i]
@@ -307,7 +306,7 @@ var coin_row = {
 							)
 						}
 					}
-					value_equivalents.push(current_value_equivalents.join(' | '))
+					value_equivalents.push(current_value_equivalents.join(', '))
 				}
 			}
 			const value_equivalents_node = common.create_dom_element({
