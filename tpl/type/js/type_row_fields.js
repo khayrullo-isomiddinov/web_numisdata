@@ -1624,9 +1624,6 @@ export const type_row_fields = {
 			if (data.ref_related_coin_auction_group) {
 				for (let i = 0; i < data.ref_related_coin_auction_group.length; i++) {
 
-					// re-enable add lot 26-10-2024
-					data.ref_related_coin_auction_group[i].lot = data.number
-
 					draw_auction(data.ref_related_coin_auction_group[i], wrapper, "identify_coin", '= ')
 				}
 			}

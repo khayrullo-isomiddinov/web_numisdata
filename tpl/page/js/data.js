@@ -450,23 +450,45 @@ page.parse_coin_data = function(data) {
 			row.ref_related_coin_auction_number = row.ref_related_coin_auction_number
 				? JSON.parse(row.ref_related_coin_auction_number)
 				: null
+			row.ref_related_coin_number = row.ref_related_coin_number
+				? JSON.parse(row.ref_related_coin_number)
+				: null
 
 			row.ref_related_coin_auction_group = null
 
 			if (row.ref_related_coin_auction && row.ref_related_coin_auction.length>0) {
 				row.ref_related_coin_auction_group = []
 				for (let g = 0; g < row.ref_related_coin_auction.length; g++) {
-					row.ref_related_coin_auction_group.push({
-						name	: row.ref_related_coin_auction && typeof row.ref_related_coin_auction[g]!=="undefined"
-							? row.ref_related_coin_auction[g]
-							: '',
-						date	: row.ref_related_coin_auction_date && typeof row.ref_related_coin_auction_date[g]!=="undefined"
-							? self.parse_date(row.ref_related_coin_auction_date[g])
-							: '',
-						number	: row.ref_related_coin_auction_number && typeof row.ref_related_coin_auction_number[g]!=="undefined"
-							? row.ref_related_coin_auction_number[g]
-							: ''
-					})
+
+					// date. Could be multiple
+					const dates = row.ref_related_coin_auction_date?.[g]
+						? row.ref_related_coin_auction_date[g].split(',')
+						: []
+					const parsed_date = dates.map(self.parse_date).join(' <> ')
+
+					// name
+					const parsed_name = row.ref_related_coin_auction && typeof row.ref_related_coin_auction[g]!=="undefined"
+						? row.ref_related_coin_auction[g]
+						: ''
+
+					// number
+					const parsed_number	= row.ref_related_coin_auction_number && typeof row.ref_related_coin_auction_number[g]!=="undefined"
+						? row.ref_related_coin_auction_number[g]
+						: ''
+
+					// lot
+					const parsed_lot = row.ref_related_coin_number && typeof row.ref_related_coin_number[g]!=="undefined"
+						? row.ref_related_coin_number[g]
+						: ''
+
+					const object = {
+						name	: parsed_name,
+						date	: parsed_date,
+						number	: parsed_number,
+						lot		: parsed_lot
+					}
+
+					row.ref_related_coin_auction_group.push(object)
 				}
 			}
 

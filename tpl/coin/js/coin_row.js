@@ -284,10 +284,27 @@ var coin_row = {
 				for (let i=0;i<row.ref_related_coin_auction_group.length;i++){
 					const current_value_equivalents = []
 					if (row.ref_related_coin_auction_group[i].name.length>0){
-						current_value_equivalents.push('= '+row.ref_related_coin_auction_group[i].name)
 
-						if (row.ref_related_coin_auction_group[i].number && row.ref_related_coin_auction_group[i].number.length>0) {
-							current_value_equivalents.push(row.ref_related_coin_auction_group[i].number)
+						const item = row.ref_related_coin_auction_group[i]
+
+						// name
+						current_value_equivalents.push('= '+item.name)
+
+						// date
+						if (item.date && item.date.length>0) {
+							current_value_equivalents.push(item.date)
+						}
+
+						// number
+						if (item.number && item.number.length>0) {
+							current_value_equivalents.push(item.number)
+						}
+
+						// lot
+						if (item.lot && item.lot.length>0) {
+							current_value_equivalents.push(
+								(tstring.lot || 'lot') +' '+ item.lot
+							)
 						}
 					}
 					value_equivalents.push(current_value_equivalents.join(' | '))
