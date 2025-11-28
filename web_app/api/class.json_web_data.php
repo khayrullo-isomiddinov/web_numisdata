@@ -170,29 +170,85 @@ class json_web_data {
 
 
 	/**
-	* HTTP_POST
-	*	Make an http POST request and return the response content and headers
-	*	@param string $url    url of the requested script
-	*	@param array $data    hash array of request variables
-	*	@return returns a hash array with response content and headers in the following form:
-	*    array ('content'=>'my string json data'
-	*          ,'headers'=>array ('HTTP/1.1 200 OK', 'Connection: close', ...)
-	*          )
-	*/
-	public static function http_post($url, $data) {
+	 * HTTP_POST
+	 * Make an http POST request and return the response content and headers
+	 *
+	 * @param string $url URL of the requested script
+	 * @param array $data Hash array of request variables
+	 * @param array $options Additional options for the request
+	 * @return array Returns a hash array with response content and headers in the following form:
+	 *     array (
+	 *         'content' => 'my string json data',
+	 *         'headers' => array ('HTTP/1.1 200 OK', 'Connection: close', ...),
+	 *         'status_code' => 200
+	 *     )
+	 * @throws RuntimeException If the HTTP request fails
+	 */
+	public static function http_post(string $url, array $data, array $options = []): array {
+	    // Validate URL
+	    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+	        throw new InvalidArgumentException("Invalid URL provided: $url");
+	    }
 
-	    $data_url = http_build_query ($data);
-	    $data_len = strlen ($data_url);
+	    $data_url = http_build_query($data);
+	    $data_len = strlen($data_url);
 
-	    return array ('content'=>file_get_contents ($url, false, stream_context_create (array ('http'=>array (
-	    		  'method'=>'POST'
-	            , 'header'=>"Connection: close\r\nContent-Length: $data_len\r\nContent-Type: application/x-www-form-urlencoded\r\n"
-	            , 'content'=>$data_url
-	            ))))
-	        , 'headers'=>$http_response_header
-	        );
+	    // Default context options
+	    $context_options = [
+	        'http' => [
+	            'method' => 'POST',
+	            'header' => "Connection: close\r\nContent-Length: $data_len\r\nContent-Type: application/x-www-form-urlencoded\r\n",
+	            'content' => $data_url,
+	            'ignore_errors' => true, // Don't fail on HTTP error status codes
+	            'timeout' => $options['timeout'] ?? 30,
+	            'user_agent' => $options['user_agent'] ?? 'PHP-HTTP-Client/1.0'
+	        ]
+	    ];
+
+	    // Merge custom options if provided
+	    if (isset($options['http']) && is_array($options['http'])) {
+	        $context_options['http'] = array_merge($context_options['http'], $options['http']);
+	    }
+
+	    $context = stream_context_create($context_options);
+
+	    // Suppress warnings and handle errors properly
+	    set_error_handler(function($errno, $errstr) {
+	        throw new RuntimeException("HTTP request failed: $errstr");
+	    });
+
+	    try {
+	        $content = file_get_contents($url, false, $context);
+	        restore_error_handler();
+	    } catch (Throwable $e) {
+	        restore_error_handler();
+	        throw new RuntimeException("HTTP request failed: " . $e->getMessage(), 0, $e);
+	    }
+
+	    // Get response headers - handle both old and new PHP versions
+		if (function_exists('http_get_last_response_headers')) {
+		    // PHP 8.5+
+		    $response_headers = http_get_last_response_headers() ?? [];
+		} else {
+		    // PHP < 8.5 - use the deprecated variable
+		    $response_headers = $http_response_header ?? [];
+		}
+
+	    // Extract HTTP status code from response headers
+	    $status_code = 0;
+	    if (!empty($response_headers)) {
+	        $status_line = $response_headers[0];
+	        if (preg_match('/HTTP\/\d\.\d\s+(\d+)/', $status_line, $matches)) {
+	            $status_code = (int)$matches[1];
+	        }
+	    }
+
+	    return [
+	        'content' => $content !== false ? $content : '',
+	        'headers' => $response_headers ?? [],
+	        'status_code' => $status_code
+	    ];
 	}//end http_post
-
 
 
 
