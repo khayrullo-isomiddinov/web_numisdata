@@ -24,13 +24,13 @@ var hoard =  {
 	*/
 	set_up : function(options) {
 
-		const self = this
+		const self = this;
 
 		// options
-			self.export_data_container	= options.export_data_container
-			self.row_detail_container	= options.row_detail_container
-			self.section_id				= options.section_id
-			self.table					= options.table
+			self.export_data_container	= options.export_data_container;
+			self.row_detail_container	= options.row_detail_container;
+			self.section_id				= options.section_id;
+			self.table					= options.table;
 
 		// export_data_buttons added once
 			// const export_data_buttons = page.render_export_data_buttons()
@@ -52,25 +52,25 @@ var hoard =  {
 					if (ar_rows && ar_rows.length>0) {
 
 						// self row fix
-							self.row = ar_rows[0]
+							self.row = ar_rows[0];
 
 						// row render
 							const hoard_node = render_hoard.draw_hoard({
 								row : self.row
-							})
-							const container = self.row_detail_container
+							});
+							const container = self.row_detail_container;
 							// container. clean container div
 								while (container.hasChildNodes()) {
 									container.removeChild(container.lastChild);
 								}
-							container.appendChild(hoard_node)
+							container.appendChild(hoard_node);
 
 						// map draw. Init default map
 							render_hoard.draw_map({
 								map_data	: self.row.map,
 								container	: document.getElementById("map_container"),
 								self		: self
-							})
+							});
 
 						// types
 							const rows_container = document.getElementById('rows_container')
@@ -95,7 +95,7 @@ var hoard =  {
 			// 	}
 			// }
 
-		return true
+		return true;
 	},//end set_up
 
 
@@ -106,17 +106,17 @@ var hoard =  {
 	*/
 	get_row_data : async function(options) {
 
-		const self = this
+		const self = this;
 
 		// options
-			const section_id = options.section_id
+			const section_id = options.section_id;
 
 		// short vars
 			const ar_fields		= ['*']
 			const sql_filter	= 'section_id=' + parseInt(section_id);
 			const table = self.table==='findspots'
 				? 'findspots'
-				: 'hoards'
+				: 'hoards';
 
 		// request
 			return data_manager.request({
@@ -140,13 +140,13 @@ var hoard =  {
 
 				if (!api_response.result) {
 					console.warn("Empty result:", api_response);
-					return null
+					return null;
 				}
 
-				const ar_rows = page.parse_hoard_data(api_response.result)
+				const ar_rows = page.parse_hoard_data(api_response.result);
 
-				return ar_rows
-			})
+				return ar_rows;
+			});
 	},//end get_row_data
 
 
@@ -160,14 +160,14 @@ var hoard =  {
 		// term_id
 			const term_id = (row.table==='hoards')
 				? 'numisdata5_'   + row.section_id // hoards
-				: 'numisdata279_' + row.section_id // findspots
+				: 'numisdata279_' + row.section_id; // findspots
 
 		// spinner
 			const spinner = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "spinner",
 				parent			: rows_container
-			})
+			});
 
 		const selected_element = {
 			term_id				: term_id //"numisdata5_94",
@@ -180,17 +180,17 @@ var hoard =  {
 			// table			: "hoards",
 			// title			: "<span class=\"note\">Tesoro</span> Idanha-a-Velha",
 			// types_total		: 11
-		}
+		};
 
 		const global_data_item = {
 			coins_list : row.coins, // ['92797', '92842', '92850', '92893', '138826'],
 			types_list : row.types // ['1963', '4682', '15868', '1966', '4685', '15872', '1967', '4686', '15873', '2083', '4802']
-		}
+		};
 
 		map.load_map_selection_info(selected_element, global_data_item)
 		.then(function(response) {
 
-			spinner.remove()
+			spinner.remove();
 
 			if (response) {
 
@@ -203,8 +203,8 @@ var hoard =  {
 					// render data
 						const types_list_node = render_hoard.draw_types_list_node({
 							response : response
-						})
-						rows_container.appendChild(types_list_node)
+						});
+						rows_container.appendChild(types_list_node);
 
 				// 	}
 				// }, { threshold: [0] });
@@ -212,17 +212,17 @@ var hoard =  {
 
 				// activate images lightbox
 					setTimeout(function(){
-						const images_gallery_containers = rows_container
-						page.activate_images_gallery(images_gallery_containers, true)
-					},600)
+						const images_gallery_containers = rows_container;
+						page.activate_images_gallery(images_gallery_containers, true);
+					},600);
 			}
-		})
+		});
 
 
 
-		return true
+		return true;
 	},//end get_types_data
 
 
 
-}//end hoard
+};//end hoard
