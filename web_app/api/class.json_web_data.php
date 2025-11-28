@@ -162,7 +162,7 @@ class json_web_data {
 		$result = curl_exec($ch);
 
 		//close connection
-		curl_close($ch);
+		// curl_close($ch);
 
 		return $result;
 	}//end file_get_contents_curl
