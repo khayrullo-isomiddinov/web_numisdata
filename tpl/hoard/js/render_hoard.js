@@ -31,15 +31,18 @@ var render_hoard = {
 			const line = common.create_dom_element({
 				element_type	: "div",
 				parent			: fragment
-			})
+			});
 
 		// section_id
 			if (dedalo_logged===true) {
+				const target_section_tipo = row.table === 'hoards'
+					? 'numisdata5' // hoards uses section 'Complex' [numisdata5]
+					: 'tchi1'; // findspots uses section 'Immovables' [tchi1]
 				const link = common.create_dom_element({
 					element_type	: "a",
 					class_name		: "section_id go_to_dedalo",
 					text_content	: row.section_id,
-					href			: '/dedalo/core/page/?tipo=numisdata5&id=' + row.section_id,
+					href			: `/dedalo/core/page/?tipo=${target_section_tipo}&id=${row.section_id}`,
 					parent			: line
 				});
 				link.setAttribute('target', '_blank');
