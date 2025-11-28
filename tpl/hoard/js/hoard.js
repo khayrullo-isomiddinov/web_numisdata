@@ -73,15 +73,15 @@ var hoard =  {
 							});
 
 						// types
-							const rows_container = document.getElementById('rows_container')
-							self.get_types_data(self.row, rows_container)
+							const rows_container = document.getElementById('rows_container');
+							self.get_types_data(self.row, rows_container);
 
 					}else{
-						self.row_detail.innerHTML = 'Sorry. Empty result for section_id: ' + self.section_id
+						self.row_detail_container.innerHTML = 'Sorry. Empty result for section_id: ' + self.section_id;
 					}
 				})
 		}else{
-			self.row_detail.innerHTML = 'Error. Invalid section_id'
+			self.row_detail_container.innerHTML = 'Error. Invalid section_id';
 		}
 
 		// navigate across records group
