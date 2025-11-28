@@ -16,16 +16,16 @@ var render_hoard = {
 	*/
 	draw_hoard : function(options) {
 
+		const fragment = new DocumentFragment();
+
 		// options
-			const row = options.row
+			const row = options.row;
 
 		// check row
 			if (!row) {
 				console.warn("Warning! draw_row row no found in options");
 				return fragment;
 			}
-
-		const fragment = new DocumentFragment();
 
 		// line
 			const line = common.create_dom_element({
