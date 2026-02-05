@@ -732,7 +732,7 @@ export const analysis =  {
 		return { a: a_R, b: b_R };
 	},
 
-	//Define IR values vector and estimation head dies values vector
+	// Define IR values vector and estimation head dies values vector
 	IR : [ 209, 23, 13, 165, 78, 19, 68, 285, 27, 28, 26, 54, 23, 88, 41, 12, 9, 29, 16, 23, 30, 113, 82, 111, 68,
 		   282, 8, 4, 42, 17, 21, 33, 21, 79, 17, 17, 153, 18, 1, 66, 16, 10, 81, 20, 6, 24, 20, 73, 27, 44, 17, 40,
 		   14, 27, 27, 40, 57, 83, 23, 51, 228, 82, 250, 191, 32, 46, 53, 334, 20, 7, 39, 145, 18, 3, 5, 55, 265, 12,
