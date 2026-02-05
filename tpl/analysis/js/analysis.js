@@ -10,7 +10,7 @@ import { clock_chart_wrapper } from "../../lib/charts/d3/clock/clock-chart-wrapp
 
 
 /**
- * Default color when Dedalo API does not provide one
+ * Default color when Dedalo API does not provide one.
  * @type {string}
  */
 const DEFAULT_COLOR = '#1f77b4'
