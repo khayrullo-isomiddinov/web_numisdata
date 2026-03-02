@@ -335,6 +335,12 @@ function map_factory() {
 						.setContent(popup_content)
 						// .openOn(self.map);	// auto open first marker
 
+				// Debug . Remove other than mints from map
+					// const table = element.group[0].table || null
+					// if (table !== 'mints') {
+					// 	continue
+					// }
+
 				// console.log("+++++++++++++++ element.geojson:",element.geojson, element);
 				if (element.geojson) {
 

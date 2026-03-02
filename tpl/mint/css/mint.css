@@ -221,6 +221,7 @@
     margin: 0px !important;
     padding: 0px !important;
     width: 160mm;
+    margin-left: 2.5cm !important;
   }
   #wrapper #main > .inner .result > .row_detail {
     margin-bottom: 30pt;
@@ -296,6 +297,18 @@
   }
   .types_print .row_node.mints > .children_contanier > .row_node {
     margin-top: 0.5em;
+  }
+  .types_print .row_node {
+    position: relative;
+  }
+  .types_print .row_node .qr_code_node {
+    position: absolute;
+    width: 1cm;
+    height: 1cm;
+    left: -1.4cm;
+    top: 0.1cm;
+    opacity: 0.3;
+    text-align: end;
   }
   .types_print .row_node .term_grouper {
     display: none;
@@ -413,6 +426,7 @@
     vertical-align: middle;
   }
   .types_print .type_container {
+    position: relative;
     width: 160mm;
     overflow: visible;
     -webkit-column-break-inside: avoid;
