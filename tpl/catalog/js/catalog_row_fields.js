@@ -144,6 +144,26 @@ var catalog_row_fields = {
 						parent			: ar_gropper_nodes_len>0 ? type_container_deep : fragment
 					})
 
+
+					// QR code. Add QR code at left of the type fro print
+						const qr_code_node = common.create_dom_element({
+							element_type	: "div",
+							class_name		: "qr_code_node",
+							parent			: type_container
+						})
+						if (item.catalog_info?.section_id) {
+							const qr_url = page_globals.__WEB_BASE_URL__ + '/type/' + item.catalog_info.section_id
+							// Create QRCode Object
+							new QRCode(qr_code_node, {
+								text			: qr_url,
+								width			: 20,
+								height			: 20,
+								drawer			: 'svg',
+								correctLevel	: QRCode.CorrectLevel.L, // L, M, Q, H
+							});
+						}
+
+
 					const type_info = common.create_dom_element({
 						element_type	: "div",
 						class_name		: "type_info",
