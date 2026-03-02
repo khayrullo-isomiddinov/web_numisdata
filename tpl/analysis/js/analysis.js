@@ -1006,40 +1006,245 @@ export const analysis =  {
 		return [pointsTrace];
 	},
 
-	plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
-		// Traces de Reverso
-		const tracesRev = [
-			...this.plot_rev(),
-			...this.plot_points_regression_rev(parsed_data)
-		];
+plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
+  return Promise.all([
+    this.plot_rev(regression_model_chart_container),
+    this.plot_points_regression_rev(parsed_data, regression_model_chart_container),
+    this.plot_anv(regression_model_chart_container),
+    this.plot_points_regression_anv(parsed_data, regression_model_chart_container)
+  ]).then(([revModel, revPoints, anvModel, anvPoints]) => {
+    const tracesRev = [...revModel, ...revPoints];
+    const tracesAnv = [...anvModel, ...anvPoints];
 
-		// Traces de Anverso
-		const tracesAnv = [
-			...this.plot_anv(),
-			...this.plot_points_regression_anv(parsed_data)
-		];
+    this._render_rev_anv_d3(regression_model_chart_container, tracesAnv, tracesRev, {
+      xLabel: "Índice de Rareza (IR)",
+      yLabel: "Número de cuños estimado"
+    });
+  });
+},
 
-		// Layout con 2 filas y 1 columna
-		const layout = {
-			grid: { rows: 2, columns: 1, pattern: 'independent' },
-			plot_bgcolor: '#fff',
-			paper_bgcolor: '#fff',
-			annotations: [
-			  { text: "Anverso", x: 0.5, y: 1.05, xref: "paper", yref: "paper", showarrow: false, font: { size: 16 } },
-			  { text: "Reverso", x: 0.5, y: 0.45, xref: "paper", yref: "paper", showarrow: false, font: { size: 16 } }
-			],
-			xaxis: { title: 'Índex de Raresa (IR)', gridcolor: '#ccc' },
-			yaxis: { title: 'Nombre de cuños estimat', gridcolor: '#ccc' },
-			xaxis2: { title: 'Índex de Raresa (IR)', gridcolor: '#ccc' },
-			yaxis2: { title: 'Nombre de cuños estimat', gridcolor: '#ccc' }
-		};
 
-		// Todos los traces juntos
-		const allTraces = [...tracesRev, ...tracesAnv];
+_render_rev_anv_d3: function(container, tracesAnv, tracesRev, labels) {
+  const root = (typeof container === "string") ? document.querySelector(container) : container;
+  if (!root) return;
 
-		// Dibujar todo en un solo newPlot
-		Plotly.newPlot(regression_model_chart_container, allTraces, layout);
-	},
+  root.innerHTML = "";
+  root.style.overflowX = "auto";
+  root.style.overflowY = "hidden";
+  root.style.maxWidth  = "100%";
+  if (getComputedStyle(root).position === "static") root.style.position = "relative";
+
+  // tooltip
+  const tooltip = d3.select(root)
+    .append("div")
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("opacity", 0)
+    .style("background", "rgba(226, 227, 227, 0.98)")
+    .style("border", "1px solid #ccc")
+    .style("border-radius", "6px")
+    .style("padding", "8px 10px")
+    .style("font", "12px sans-serif")
+    .style("box-shadow", "0 4px 14px rgba(0,0,0,0.12)");
+
+  //const width = root.clientWidth || 900;
+  const viewportW = root.clientWidth || 900;
+  const width = Math.max(1200, Math.floor(viewportW * 90)); 
+  const panelHeight = 260;
+  const gap = 40;
+  const margin = { top: 40, right: 20, bottom: 45, left: 65 };
+
+  const panels = [
+    { title: "Anverso", traces: tracesAnv },
+    { title: "Reverso", traces: tracesRev }
+  ];
+
+  const height = panels.length * panelHeight + (panels.length - 1) * gap;
+
+  const svg = d3.select(root)
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  panels.forEach((p, i) => {
+    const yOffset = i * (panelHeight + gap);
+
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", yOffset + 22)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 16)
+      .attr("fill", "#000")
+      .text(p.title);
+
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${yOffset + margin.top})`);
+
+    const innerW = width - margin.left - margin.right;
+    const innerH = panelHeight - margin.top - margin.bottom;
+
+    const series = this._traces_to_series(p.traces);
+    const allPts = series.flatMap(s => s.points);
+
+    const x = d3.scaleLinear()
+      .domain(d3.extent(allPts, d => d.x)).nice()
+      .range([0, innerW]);
+
+    const y = d3.scaleLinear()
+      .domain(d3.extent(allPts, d => d.y)).nice()
+      .range([innerH, 0]);
+
+    g.append("g")
+      .attr("transform", `translate(0,${innerH})`)
+      .call(d3.axisBottom(x).ticks(6));
+
+    g.append("g")
+      .call(d3.axisLeft(y).ticks(5));
+
+    g.append("text")
+      .attr("x", innerW / 2)
+      .attr("y", innerH + 38)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 12)
+      .text(labels.xLabel);
+
+    g.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -innerH / 2)
+      .attr("y", -50)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 12)
+      .text(labels.yLabel);
+
+    // líneas
+    const lineGen = d3.line()
+      .x(d => x(d.x))
+      .y(d => y(d.y));
+
+    series.filter(s => s.kind === "line").forEach(s => {
+      g.append("path")
+        .datum(s.points)
+        .attr("fill", "none")
+        .attr("stroke", s.style.stroke ?? "#9aa0a6")
+        .attr("stroke-width", s.style.strokeWidth ?? 2)
+        .attr("d", lineGen);
+    });
+
+    // puntos
+    series.filter(s => s.kind === "points").forEach(s => {
+      const circles = g.selectAll(null)
+        .data(s.points)
+        .join("circle")
+        .attr("cx", d => x(d.x))
+        .attr("cy", d => y(d.y))
+        .attr("r", s.style.r ?? 3)
+        .attr("fill", d => {
+          if (!s.keepColor) return "white";
+          return (typeof s.style.fill === "function") ? s.style.fill(d) : (s.style.fill ?? "white");
+        })
+        .attr("stroke", s.style.stroke ?? "#000")
+        .attr("stroke-width", s.style.strokeWidth ?? 2);
+
+      // tooltip 
+	  const TARGET = "rgb(20,80,200)"; 
+const norm = (v) => (v || "").replace(/\s+/g, "").toLowerCase();
+
+tooltip.style("opacity", 0);
+
+circles
+  .on("mouseenter.tooltip", null)
+  .on("mousemove.tooltip", null)
+  .on("mouseleave.tooltip", null);
+
+circles
+  .filter(function () {
+    const fillAttr = this.getAttribute("fill");          
+    const fillComp = getComputedStyle(this).fill;        
+    return norm(fillAttr) === norm(TARGET) || norm(fillComp) === norm(TARGET);
+  })
+  .on("mouseenter.tooltip", (event, d) => {
+    tooltip.style("opacity", 1);
+    tooltip.html(`
+      <div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
+      <div><b>MIB:</b> ${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
+      <div><b>Num. monedas:</b> ${d.x}</div>
+      <div><b>Estimación cuños:</b> ${d.y}</div>
+    `);
+  })
+  .on("mousemove.tooltip", (event) => {
+    const tt = tooltip.node();
+    const parent = tt.offsetParent || root;
+
+    const pRect = parent.getBoundingClientRect();
+    const cRect = event.currentTarget.getBoundingClientRect();
+
+    const ttW = tt.offsetWidth;
+    const ttH = tt.offsetHeight;
+
+    const xCenter = (cRect.left - pRect.left) + cRect.width / 2;
+
+    const sx = parent.scrollLeft || 0;
+    const sy = parent.scrollTop || 0;
+
+    const left = xCenter + sx - ttW / 2;
+    const top  = (cRect.top - pRect.top) + sy - ttH - 8;
+
+    tooltip.style("left", `${left}px`).style("top", `${top}px`);
+  })
+  .on("mouseleave.tooltip", () => tooltip.style("opacity", 0));
+    });
+  });
+},
+
+
+_traces_to_series: function(traces) {
+  const COLOR_TRACE_NAME = "Aproximación"; 
+
+  return (traces || []).map(t => {
+    const mode = (t.mode || "").toLowerCase();
+    const isLine = mode.includes("lines");
+
+    const points = (t.x || []).map((xVal, i) => ({
+      x: +xVal,
+      y: +(t.y?.[i]),
+      i,
+      name: t.name ?? "",
+      text: Array.isArray(t.text) ? (t.text[i] ?? "") : (t.text ?? ""),
+      customdata: Array.isArray(t.customdata) ? (t.customdata[i] ?? null) : (t.customdata ?? null)
+    }));
+
+    if (isLine) {
+      return {
+        kind: "line",
+        points,
+        name: t.name,
+        style: {
+          stroke: t.line?.color ?? "#9aa0a6",
+          strokeWidth: t.line?.width ?? 2
+        }
+      };
+    }
+
+	const markerColor = (t.name === "Aproximación") ? "rgb(20, 80, 200)" : t.marker?.color;
+    const getFill = (d) =>
+      Array.isArray(markerColor) ? (markerColor[d.i] ?? "white") : (markerColor ?? "white");
+
+    return {
+      kind: "points",
+      points,
+      name: t.name,
+      keepColor: (t.name === COLOR_TRACE_NAME), 
+      style: {
+        //r: (typeof t.marker?.size === "number") ? t.marker.size : 3,
+		 r: (t.name === "Aproximación") ? 4 : 5,
+        fill: getFill,
+        stroke: t.marker?.line?.color ?? "#000",
+        strokeWidth: t.marker?.line?.width ?? 2
+      }
+    };
+  });
+},
+
 
 	/**
 	 * SEARCH_ROWS
