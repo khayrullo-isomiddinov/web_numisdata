@@ -1047,7 +1047,7 @@ boxvio_chart_wrapper.prototype.tooltip_show = function (i) {
 		.html(metric_names)
 	self._graphics.tooltip_div.select('div.tooltip_metric_values_div')
 		.html(metric_values)
-	
+
 	// Call the tooltip callback
 	if (self._tooltip_callback) {
 		const options = {}

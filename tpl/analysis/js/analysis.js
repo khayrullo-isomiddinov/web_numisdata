@@ -1,4 +1,23 @@
-/*global tstring, page_globals, Promise, data_manager, common, event_manager, catalog_row_fields */
+/**
+ * @fileoverview Analysis module for MIB project.
+ * Handles the generation of charts (weight, diameter, clock) and regression models
+ * based on coin catalog data filtered via a user-facing search form.
+ *
+ * @module analysis
+ *
+ * @example
+ * // Basic setup
+ * import { analysis } from './tpl/analysis/js/analysis.js';
+ *
+ * analysis.set_up({
+ *   area_name: 'catalog_analysis',
+ *   form_items_container: document.getElementById('form_container'),
+ *   weight_chart_container: document.getElementById('weight_chart'),
+ *   // ... other containers
+ * });
+ */
+
+/*global tstring, page_globals, Promise, data_manager, common, event_manager, catalog_row_fields, form_factory */
 /*eslint no-undef: "error"*/
 
 "use strict";
@@ -8,6 +27,8 @@ import { chart_wrapper } from "../../lib/charts/chart-wrapper.js";
 import { boxvio_chart_wrapper } from "../../lib/charts/d3/boxvio/boxvio-chart-wrapper.js";
 import { clock_chart_wrapper } from "../../lib/charts/d3/clock/clock-chart-wrapper.js";
 
+import { analysis_regression } from "./analysis_regression.js";
+
 
 /**
  * Default color when Dedalo API does not provide one.
@@ -16,26 +37,51 @@ import { clock_chart_wrapper } from "../../lib/charts/d3/clock/clock-chart-wrapp
 const DEFAULT_COLOR = '#1f77b4'
 
 
+/**
+ * Main analysis controller object.
+ * Integrates regression analysis functions and manages the UI for data filtering and visualization.
+ */
 export const analysis =  {
 
-	// Form factory instance
+	// Include analysis_regression module functions
+	...analysis_regression,
+
+	/**
+	 * Form factory instance used to build the search interface.
+	 * @type {form_factory|null}
+	 */
 	form: null,
 
 	/**
-	 * Form submit button
-	 * @type {HTMLButtonElement}
+	 * Form submit button element.
+	 * @type {HTMLButtonElement|null}
 	 */
 	submit_button: null,
 
+	/**
+	 * Area name for the current context.
+	 * @type {string|null}
+	 */
 	area_name				: null,
+
+	/**
+	 * Current row data if applicable.
+	 * @type {Object|null}
+	 */
 	row						: null,
 
 	// DOM containers
+	/** @type {HTMLElement|null} Container for data export controls. */
 	export_data_container				: null,
+	/** @type {HTMLElement|null} Container where the form items are rendered. */
 	form_items_container				: null,
+	/** @type {HTMLElement|null} Container for the weight distribution chart. */
 	weight_chart_container				: null,
+	/** @type {HTMLElement|null} Container for the diameter distribution chart. */
 	diameter_chart_container			: null,
+	/** @type {HTMLElement|null} Container for the chronological/clock chart. */
 	clock_chart_container				: null,
+	/** @type {HTMLElement|null} Container for the regression model visualization. */
 	regression_model_chart_container	: null,
 
 	/**
@@ -63,6 +109,21 @@ export const analysis =  {
 	 */
 	clock_chart_wrapper: null,
 
+	/**
+	 * Initializes the analysis module by setting up DOM containers,
+	 * loading denomination colors, and rendering the search form.
+	 *
+	 * @param {Object} options - Configuration options for the module.
+	 * @param {string} options.area_name - Name of the current working area.
+	 * @param {HTMLElement} options.export_data_container - Container for export buttons.
+	 * @param {Object} options.row - Current record data.
+	 * @param {HTMLElement} options.form_items_container - Target container for the form.
+	 * @param {HTMLElement} options.weight_chart_container - Target container for the weight chart.
+	 * @param {HTMLElement} options.diameter_chart_container - Target container for the diameter chart.
+	 * @param {HTMLElement} options.clock_chart_container - Target container for the clock chart.
+	 * @param {HTMLElement} options.regression_model_chart_container - Target container for regression plot.
+	 * @returns {boolean} Returns true if setup was initiated successfully.
+	 */
 	set_up : function(options) {
 
 		const self = this
@@ -90,15 +151,22 @@ export const analysis =  {
 	/**
 	 * Call the Dedalo API and obtain colors for the different denominations
 	 */
+	/**
+	 * Loads color definitions for different coin denominations from the Dedalo API.
+	 * These colors are used for consistent visualization across different charts.
+	 * Once colors are loaded, the search submit button is enabled.
+	 *
+	 * @returns {void}
+	 */
 	load_denomination_colors : function() {
 
 		const self = this
 
 		const request_body = {
-			dedalo_get		: 'records',
-			table			: 'denomination',
-			ar_fields		: ['color', 'section_id', 'term'],
-			lang			: page_globals.WEB_CURRENT_LANG_CODE
+			dedalo_get	: 'records',
+			table		: 'denomination',
+			ar_fields	: ['color', 'section_id', 'term'],
+			lang		: page_globals.WEB_CURRENT_LANG_CODE
 		}
 		data_manager.request({
 			body : request_body
@@ -118,7 +186,11 @@ export const analysis =  {
 	},
 
 	/**
-	 * RENDER FORM
+	 * Renders the search form using the `form_factory`.
+	 * Configures multiple input fields like Mint, Number, Material, Denomination,
+	 * Culture, Iconography, and a Period range slider with auto-complete functionality.
+	 *
+	 * @returns {HTMLFormElement} The constructed form element.
 	 */
 	render_form : function() {
 
@@ -292,12 +364,18 @@ export const analysis =  {
 					const range_slider_value_in		= node_input.parentNode.querySelector('#range_slider_in')
 					const range_slider_value_out	= node_input.parentNode.querySelector('#range_slider_out')
 
+					/**
+					 * Configures and initializes the jQuery UI range slider for period filtering.
+					 * Fetches the available year range from the catalog and updates the UI inputs.
+					 */
 					function set_up_slider() {
 
 						// compute range years
 						self.get_catalog_range_years()
 						.then(function(range_data){
-							// console.log("range_data:",range_data);
+							if(SHOW_DEBUG===true) {
+								console.log('---> range_data', range_data)
+							}
 
 							// destroy current slider instance if already exists
 								if ($(node_input).slider("instance")) {
@@ -406,8 +484,18 @@ export const analysis =  {
 	},//end render_form
 
 	/**
-	 * FORM SUBMIT
-	 * Form submit launch search
+	 * Handles form submission and search execution.
+	 * 1. Collects and builds filters from form items.
+	 * 2. Cleans up previous results and UI state (show/hide sections, clear charts).
+	 * 3. Executes API request for catalog rows.
+	 * 4. Processes the results into datasets for weights, diameters, axes, and regression.
+	 * 5. Instantiates and renders chart wrappers for each data category.
+	 *
+	 * @param {Object} form_obj - The form element or object (reserved for future use).
+	 * @param {Object} [options={}] - Optional parameters.
+	 * @param {boolean} [options.scroll_result=true] - Whether to scroll to results after search.
+	 * @param {Object[]} [options.form_items] - Custom form items to use for filter building.
+	 * @returns {Promise<Object[]>} A promise that resolves with the parsed and processed search data.
 	 */
 	form_submit : function(form_obj, options={}) {
 
@@ -477,7 +565,7 @@ export const analysis =  {
 			})
 			.then((parsed_data)=>{
 				if(SHOW_DEBUG===true) {
-					console.log(parsed_data)
+					console.log('---> parsed_data', parsed_data)
 				}
 
 				event_manager.publish('form_submit', parsed_data)
@@ -705,626 +793,14 @@ export const analysis =  {
 		return js_promise
 	},
 
-
-	// Plot points cloud and regression line
-
-
-	// Load library (html)
-	// Get coefficients of the straight line (a and b values)
-	coefficients: function(IR_Ant, D_A_Ant){
-		const n = IR_Ant.length;
-
-		const IR_Mitja = IR_Ant.reduce((a, b) => a + b, 0) / n;
-		const D_A_Mitja = D_A_Ant.reduce((a, b) => a + b, 0) / n;
-
-		let N = 0;
-		let D = 0;
-
-		for (let i = 0; i < n; i++) {
-			N += (IR_Ant[i] - IR_Mitja) * (D_A_Ant[i] - D_A_Mitja);
-			D += Math.pow(IR_Ant[i] - IR_Mitja, 2);
-
-		}
-
-		const b_R = N / D;
-		const a_R = D_A_Mitja - b_R * IR_Mitja;
-
-		return { a: a_R, b: b_R };
-	},
-
-	/*
-	// Define IR values vector and estimation head dies values vector
-	IR : [ 209, 23, 13, 165, 78, 19, 68, 285, 27, 28, 26, 54, 23, 88, 41, 12, 9, 29, 16, 23, 30, 113, 82, 111, 68,
-		   282, 8, 4, 42, 17, 21, 33, 21, 79, 17, 17, 153, 18, 1, 66, 16, 10, 81, 20, 6, 24, 20, 73, 27, 44, 17, 40,
-		   14, 27, 27, 40, 57, 83, 23, 51, 228, 82, 250, 191, 32, 46, 53, 334, 20, 7, 39, 145, 18, 3, 5, 55, 265, 12,
-		   93, 24, 42, 31, 29, 32, 26, 13, 198, 698, 59, 23, 39, 6, 75, 12, 34, 10, 11, 99, 132, 22, 12, 5, 58, 255,
-		   60, 316, 440, 143, 107, 20, 184, 18, 73, 676, 32, 31, 65, 3, 1, 2, 9, 3, 1, 6, 1, 1, 1, 1, 2, 1, 1, 2, 1,
-		   1, 1, 1, 1, 1, 2, 1, 3, 10, 2, 4, 2, 1, 1, 1, 9, 2, 4, 6, 37, 24, 2, 10, 9, 2, 2, 1, 1, 3, 3, 5, 3, 3, 6,
-		   1, 16, 1, 2, 10, 3, 6, 6, 2, 1, 4, 1, 6, 2, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 1, 2, 4, 1, 1, 1, 2, 1, 1, 1, 1,
-		   1, 1, 1, 1, 1, 1],
-
-	D_anv : [19.288,1.7388,1.4393,32.5154,9.3203,1.6183,13.2642,4.3435,1.6365,1.3375,3.1817,2.2931,10.3866,4.3371,2.8984,
-			 2.1349,3.6742,5.9707,3.3636,4.8809,8.8011,31.1737,16.2005,21.9585,16.8808,54.9425,2.8284,1.2408,2.5741,3.8956,
-			 4.5646,3.7473,1.8879,20.5892,2.9085,11.2785,12.6561,4.0613,0.1099,8.4090,3.7179,4.4006,13.1208,1.0392,1.3554,
-			 1.1053,1.4669,6.7971,2.4900,2.3604,1.4888,1.5658,1.1983,1.6365,2.5048,6.2040,2.7656,3.0158,2.4037,5.8363,16.3876,
-			 13.4484,24.9023,16.1263,3.2141,6.1362,13.5359,38.4715,1.8201,1.5215,1.1599,10.0102,1.2764,1.0000,0.7770,3.7011,
-			 15.8002,1.4982,17.5551,2.3830,1.3929,2.2820,1.0853,5.5768,3.3636,2.0475,26.6653,52.3163,2.2310,1.6290,7.9543,2.2795,
-			 6.9208,2.4816,1.8473,1.9882,1.5755,2.9867,18.2778,1.2133,4.7087,1.9882,6.0597,69.6541,1.2838,34.8405,31.4052,12.2125,
-			 7.7861,3.3437,16.6990,3.0897,6.2436,134.7504,12.5054,2.5284,7.5464,2.2795,1.0000,1.6818,5.4216,2.2795,1.0000,4.5590,
-			 1.0000,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.6818,1.0000,1.3554,
-			 6.7272,1.6818,1.2408,1.4756,1.0000,1.0000,1.0000,3.6223,2.0000,3.0000,5.3449,6.5147,6.7770,1.6818,5.9645,4.3694,2.0000,
-			 1.0000,1.0000,1.0000,1.0000,2.7108,4.0000,2.7108,2.7108,5.4216,1.0000,4.9632,1.0000,1.6818,5.0000,2.7108,4.0000,4.5861,
-			 2.0000,1.0000,3.7224,1.0000,3.4396,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,3.0000,1.0000,1.0000,1.0000,1.0000,
-			 1.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],
-
-	D_rev :[22.5033,1.7388,1.4393,54.1924,5.5922,3.2366,24.6335,5.7914,3.2731,4.0126,4.7726,6.8792,10.3866,3.2528,2.8984,2.1349,3.6742,
-			5.9707,5.0454,4.8809,10.2680,38.2586,15.1204,23.0564,18.1794,60.7874,2.8284,1.2408,3.8612,2.5971,3.0430,2.8105,1.8879,15.4419,
-			2.1814,6.4449,25.3122,2.0306,0.1099,8.4090,1.8589,1.4669,17.4944,3.1177,2.7108,5.5267,4.4006,6.7971,2.4900,7.0813,8.9328,
-			1.5658,2.3965,3.2731,2.5048,3.7224,2.7656,1.5079,6.0091,7.7817,19.3672,8.9656,24.9023,22.5768,1.6070,9.2043,5.8011,75.1111,
-			3.6402,1.5215,2.3199,12.8702,2.5529,1.0000,0.7770,8.3275,26.8603,1.4982,21.9438,3.5745,4.1786,2.2820,1.0853,7.4358,3.3636,
-			4.0951,57.1399,74.5507,2.2310,1.6290,9.5452,4.5590,19.6088,3.7224,1.8473,1.9882,1.5755,17.9199,26.9356,3.6400,5.6504,1.9882,
-			14.3918,70.8150,3.8515,34.8405,41.8735,28.4959,20.7628,3.3437,33.3981,3.0897,9.3653,144.4622,12.5054,7.5851,5.0309,2.2795,
-			1.0000,1.6818,5.4216,2.2795,1.0000,2.2795,1.0000,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,
-			1.0000,1.0000,1.6818,1.0000,1.3554,6.7272,1.6818,1.2408,1.4756,1.0000,1.0000,1.0000,4.8297,2.0000,3.0000,5.3449,3.9088,2.7108,
-			1.6818,5.9645,5.4618,1.0000,2.0000,1.0000,1.0000,1.0000,2.7108,4.0000,2.7108,2.7108,4.0662,1.0000,3.7224,1.0000,1.6818,5.0000,
-			2.7108,4.0000,4.5861,2.0000,1.0000,3.7224,1.0000,4.5861,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,3.0000,1.0000,1.0000,
-			1.0000,1.0000,2.0000,3.7224,1.0000,1.0000,1.0000,1.6818,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000],
-
-	// IR values at the beginning
-	IR_ant : [111, 11, 8, 75, 34, 10, 29, 174, 14, 19, 14, 45, 19, 79, 25, 11, 4, 17, 8, 7, 18, 71, 74, 98, 48, 229, 2, 3, 30, 12,
-			  12, 36, 9, 76, 26, 9, 83, 7, 19, 33, 7, 6, 49, 19, 4, 21, 12, 36, 8, 14, 10, 22, 11, 14, 20,30, 37, 48, 18, 21, 134,
-			  48, 116, 101, 17, 26, 22, 149, 9, 4, 32, 90, 13, 3, 7, 61, 144, 7, 56, 19, 27, 26, 26, 14, 13, 5, 144, 488, 51, 12,
-			  21, 2, 62, 9, 15, 4, 6, 58, 22, 17, 13, 2, 84, 209, 43, 131, 122, 22, 30, 4, 47, 4, 16, 522, 7, 9, 19, 1, 1, 1, 6, 1,
-			  1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 5, 1, 3, 3, 1, 1, 1, 7, 2, 4, 7, 26, 16, 1, 4, 8, 2, 2, 1, 1, 3,
-			  2, 5, 2, 2, 4, 1, 12, 1, 1, 10, 2, 6, 5, 2, 1, 3, 1, 5, 1, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1, 1, 1, 1],
-	// Exact number of head dies at IR_ant
-	Anvers : [12, 1, 1, 18, 5, 1, 7, 3, 1, 1, 2, 2, 9, 4, 2, 2, 2, 4, 2, 2, 6, 22, 15, 20, 13, 47, 1, 1, 2, 3, 3, 4, 1, 20, 4, 7, 8,
-			  2, 1, 5, 2, 3, 9, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 2, 5, 2, 2, 2, 3, 11, 9, 14, 10, 2, 4, 7, 21, 1, 1, 1, 7, 1, 1, 1,
-			  4, 10, 1, 12, 2, 1, 2, 1, 3, 2, 1, 21, 40, 2, 1, 5, 1, 6, 2, 1, 1, 1, 2, 19, 1, 5, 1, 8, 60, 1, 18, 12, 3, 3, 1,6, 1,
-			  2, 111, 4, 1, 3, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 3, 2, 3, 6,
-			  5, 5, 1, 3, 4, 2, 1, 1, 1, 1, 2, 4, 2, 2, 4, 1, 4, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1,
-			   1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-	// Exact number of reverse dies at IR_ant
-	Revers : [14, 1, 1, 30, 3, 2, 13, 4, 2, 3, 3, 6, 9, 3, 2, 2, 2, 4, 3, 2, 7, 27, 14, 21, 14, 52, 1, 1, 3, 2, 2, 3, 1, 15, 3, 4, 16, 1,
-			  1, 5, 1, 1, 12, 3, 2, 5, 3, 4, 1, 3, 6, 1, 2, 2, 2, 3, 2, 1, 5, 4, 13, 6, 14, 14, 1, 6, 3, 41, 2, 1, 2, 9, 2, 1, 1, 9, 17, 1,
-			  15, 3, 3, 2, 1, 4, 2, 2, 45, 57, 2, 1, 6, 2, 17, 3, 1, 1, 1, 12, 28, 3, 6, 1, 19, 61, 3, 18, 16, 7, 8, 1, 12, 1, 3, 119, 4, 3,
-			  2, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 4, 2, 3, 6, 3, 2, 1, 3, 5, 1, 2, 1,
-			  1,1, 2, 4, 2, 2, 3, 1, 3, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1],
-	*/
-
-
-
-load_regression_vars: function() {
-  const self = this;
-
-  const request_body = {
-    dedalo_get : 'records',
-	db_name: "web_numisdata_mib_pre",
-    table      : 'ts_web',
-    ar_fields  : ['titulo', 'cuerpo', 'norder', 'web_path'],
-    lang       : 'lg-spa',
-    sql_filter : "web_path = 'regression_vars'",
-    order      : 'norder ASC',
-    limit      : 1000
-  };
-
-  return data_manager.request({ body: request_body })
-    .then((response) => {
-      self.regression_vars = Object.fromEntries(
-        response.result
-          .filter(r => r.titulo && r.cuerpo)
-          .map(r => [r.titulo, JSON.parse(r.cuerpo)])
-      );
-      return self.regression_vars;
-    });
-},
-
-
-init: function() {
-  const self = this;
-
-  return this.load_regression_vars().then(() => {
-    console.log("keys:", Object.keys(self.regression_vars));
-    console.log("ir length:", self.regression_vars.ir ? self.regression_vars.ir.length : undefined);
-  });
-},
-
-// Regression model to estimate head dies
-plot_anv: function(regression_model_chart_container) {
-
-  return this.load_regression_vars().then(() => {
-
-    // Si quieres mantener nombres como antes:
-    const IR = this.regression_vars.ir;
-    const D_anv = this.regression_vars.d_anv;
-
-    // Si estos también vienen de regression_vars:
-    const IR_ant = this.regression_vars.ir_ant;   
-    const Anvers = this.regression_vars.anvers;   
-
-    // Obtain coefficients
-    const { a, b } = this.coefficients(IR, D_anv);
-
-    const minIR = Math.min(...IR);
-    const maxIR = Math.max(...IR);
-
-    // Generate x_vals
-    const x_vals = Array.from(
-      { length: 2000 },
-      (_, i) => minIR + (i / 1999) * (maxIR - minIR)
-    );
-
-    // Generate y_vals
-    const y_vals = x_vals.map(x => a + b * x);
-
-    const traces = [
-      {
-        x: IR_ant,
-        y: Anvers,
-        mode: 'markers',
-        type: 'scatter',
-        name: 'Datos observados',
-        marker: { color: 'skyblue' },
-        hovertemplate:
-          "Num. monedas: %{x}<br>" +
-          "Estimación cuños: %{y}<extra></extra>",
-        xaxis: 'x1',
-        yaxis: 'y1'
-      },
-      {
-        x: x_vals,
-        y: y_vals,
-        mode: 'lines',
-        type: 'scatter',
-        name: 'Modelo estimado',
-        line: { color: 'lightsteelblue', width: 2 },
-        xaxis: 'x1',
-        yaxis: 'y1'
-      }
-    ];
-
-    return traces;
-  });
-},
-
-// Calculation IR
-calculation_IR_anv: function (emblem) {
-  const index = emblem.full_coins_reference_calculable || [];
-
-  // Define counter
-  let ir = 0;
-  for (let i = 0; i < index.length; i++) {
-    if (index[i] === true) ir++;
-  }
-
-  // Asegurar que regression_vars está cargado
-  return this.load_regression_vars().then(() => {
-    const IR = this.regression_vars.ir;
-    const D_anv = this.regression_vars.d_anv;
-
-    const { a, b } = this.coefficients(IR, D_anv);
-
-    const approx = a + b * ir;
-
-    return { ir, approx };
-  });
-},
-
-plot_points_regression_anv: function(parsed_data, regression_model_chart_container){
-
-  const self = this;
-  const emblems = parsed_data.slice(1); // saltas el 0 como antes
-
-  return Promise.all(
-    emblems.map(emblem => self.calculation_IR_anv(emblem).then(({ ir, approx }) => {
-      return {
-        ir,
-        approx,
-        ceca: emblem.p_mint,
-        id: emblem.term_section_id,
-        num: emblem.ref_type_number,
-        ref_ceca: emblem.ref_mint_number
-      };
-    }))
-  ).then((vect_tipos) => {
-
-    const xValues = vect_tipos.map(obj => obj.ir);
-    const yValues = vect_tipos.map(obj => obj.approx);
-
-    const pointsTrace = {
-      x: xValues,
-      y: yValues,
-      mode: 'markers',
-      type: 'scatter',
-      name: 'Aproximación',
-      customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
-      hovertemplate:
-        "Ceca: %{customdata[0]}<br>" +
-        "MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
-        "Num. monedas: %{x}<br>" +
-        "Estimación cuños anverso: %{y}<extra></extra>",
-      marker: {
-        color: 'darkblue',
-        size: 10,
-        line: { width: 2, color: 'black' }
-      },
-      xaxis: 'x1',
-      yaxis: 'y1'
-    };
-
-    return [pointsTrace];
-  });
-},
-
-// Regression model to estimate reverse dies
-plot_rev: function(regression_model_chart_container) {
-
-  return this.load_regression_vars().then(() => {
-
-    const IR    = this.regression_vars.ir;
-    const D_rev = this.regression_vars.d_rev;
-
-    // Si estos también vienen de regression_vars:
-    const IR_ant = this.regression_vars.ir_ant;  // o this.IR_ant si lo sigues cargando por otro lado
-    const Revers = this.regression_vars.revers;  // o this.Revers
-
-    // Obtain coefficients
-    const { a, b } = this.coefficients(IR, D_rev);
-
-    const minIR = Math.min(...IR);
-    const maxIR = Math.max(...IR);
-
-    // Generate x_vals
-    const x_vals = Array.from(
-      { length: 2000 },
-      (_, i) => minIR + (i / 1999) * (maxIR - minIR)
-    );
-
-    // Generate y_vals
-    const y_vals = x_vals.map(x => a + b * x);
-
-    const traces = [
-      {
-        x: IR_ant,
-        y: Revers,
-        mode: 'markers',
-        type: 'scatter',
-        name: 'Datos observados',
-        marker: { color: 'skyblue' },
-        hovertemplate:
-          "Num. monedas: %{x}<br>" +
-          "Estimación cuños: %{y}<extra></extra>",
-        xaxis: 'x2',
-        yaxis: 'y2'
-      },
-      {
-        x: x_vals,
-        y: y_vals,
-        mode: 'lines',
-        type: 'scatter',
-        name: 'Modelo estimado',
-        line: { color: 'lightsteelblue', width: 2 },
-        xaxis: 'x2',
-        yaxis: 'y2'
-      }
-    ];
-
-    return traces;
-  });
-},
-
-// Calculation IR
-calculation_IR_rev: function (emblem) {
-  const index = emblem.full_coins_reference_calculable || [];
-
-  let ir = 0;
-  for (let i = 0; i < index.length; i++) {
-    if (index[i] === true) ir++;
-  }
-
-  return this.load_regression_vars().then(() => {
-    const IR = this.regression_vars.ir;
-    const D_rev = this.regression_vars.d_rev;
-
-    const { a, b } = this.coefficients(IR, D_rev);
-
-    const approx = a + b * ir;
-
-    return { ir, approx };
-  });
-},
-
-plot_points_regression_rev : function(parsed_data, regression_model_chart_container){
-
-  const self = this;
-  const emblems = parsed_data.slice(1);
-
-  return Promise.all(
-    emblems.map(emblem =>
-      self.calculation_IR_rev(emblem).then(({ ir, approx }) => ({
-        ir,
-        approx,
-        ceca: emblem.p_mint,
-        id: emblem.term_section_id,
-        num: emblem.ref_type_number,
-        ref_ceca: emblem.ref_mint_number
-      }))
-    )
-  ).then((vect_tipos) => {
-
-    const xValues = vect_tipos.map(obj => obj.ir);
-    const yValues = vect_tipos.map(obj => obj.approx);
-
-    const pointsTrace = {
-      x: xValues,
-      y: yValues,
-      mode: 'markers',
-      type: 'scatter',
-      name: 'Aproximación',
-      customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
-      hovertemplate:
-        "Ceca: %{customdata[0]}<br>" +
-        "MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
-        "Num. monedas: %{x}<br>" +
-        "Estimación cuños reverso: %{y}<extra></extra>",
-      marker: {
-        color: 'darkblue',
-        size: 10,
-        line: { width: 2, color: 'black' }
-      },
-      xaxis: 'x2',
-      yaxis: 'y2'
-    };
-
-    return [pointsTrace];
-  });
-},
-
-plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
-  return Promise.all([
-    this.plot_rev(regression_model_chart_container),
-    this.plot_points_regression_rev(parsed_data, regression_model_chart_container),
-    this.plot_anv(regression_model_chart_container),
-    this.plot_points_regression_anv(parsed_data, regression_model_chart_container)
-  ]).then(([revModel, revPoints, anvModel, anvPoints]) => {
-    const tracesRev = [...revModel, ...revPoints];
-    const tracesAnv = [...anvModel, ...anvPoints];
-
-    this._render_rev_anv_d3(regression_model_chart_container, tracesAnv, tracesRev, {
-      xLabel: "Índice de Rareza (IR)",
-      yLabel: "Número de cuños estimado"
-    });
-  });
-},
-
-
-_render_rev_anv_d3: function(container, tracesAnv, tracesRev, labels) {
-  const root = (typeof container === "string") ? document.querySelector(container) : container;
-  if (!root) return;
-
-  root.innerHTML = "";
-  root.style.overflowX = "auto";
-  root.style.overflowY = "hidden";
-  root.style.maxWidth  = "100%";
-  if (getComputedStyle(root).position === "static") root.style.position = "relative";
-
-  // tooltip
-  const tooltip = d3.select(root)
-    .append("div")
-    .style("position", "absolute")
-    .style("pointer-events", "none")
-    .style("opacity", 0)
-    .style("background", "rgba(226, 227, 227, 0.98)")
-    .style("border", "1px solid #ccc")
-    .style("border-radius", "6px")
-    .style("padding", "8px 10px")
-    .style("font", "12px sans-serif")
-    .style("box-shadow", "0 4px 14px rgba(0,0,0,0.12)");
-
-  //const width = root.clientWidth || 900;
-  const viewportW = root.clientWidth || 900;
-  const width = Math.max(1200, Math.floor(viewportW * 90)); 
-  const panelHeight = 260;
-  const gap = 40;
-  const margin = { top: 40, right: 20, bottom: 45, left: 65 };
-
-  const panels = [
-    { title: "Anverso", traces: tracesAnv },
-    { title: "Reverso", traces: tracesRev }
-  ];
-
-  const height = panels.length * panelHeight + (panels.length - 1) * gap;
-
-  const svg = d3.select(root)
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-  panels.forEach((p, i) => {
-    const yOffset = i * (panelHeight + gap);
-
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", yOffset + 22)
-      .attr("text-anchor", "middle")
-      .attr("font-size", 16)
-      .attr("fill", "#000")
-      .text(p.title);
-
-    const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${yOffset + margin.top})`);
-
-    const innerW = width - margin.left - margin.right;
-    const innerH = panelHeight - margin.top - margin.bottom;
-
-    const series = this._traces_to_series(p.traces);
-    const allPts = series.flatMap(s => s.points);
-
-    const x = d3.scaleLinear()
-      .domain(d3.extent(allPts, d => d.x)).nice()
-      .range([0, innerW]);
-
-    const y = d3.scaleLinear()
-      .domain(d3.extent(allPts, d => d.y)).nice()
-      .range([innerH, 0]);
-
-    g.append("g")
-      .attr("transform", `translate(0,${innerH})`)
-      .call(d3.axisBottom(x).ticks(6));
-
-    g.append("g")
-      .call(d3.axisLeft(y).ticks(5));
-
-    g.append("text")
-      .attr("x", innerW / 2)
-      .attr("y", innerH + 38)
-      .attr("text-anchor", "middle")
-      .attr("font-size", 12)
-      .text(labels.xLabel);
-
-    g.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -innerH / 2)
-      .attr("y", -50)
-      .attr("text-anchor", "middle")
-      .attr("font-size", 12)
-      .text(labels.yLabel);
-
-    // líneas
-    const lineGen = d3.line()
-      .x(d => x(d.x))
-      .y(d => y(d.y));
-
-    series.filter(s => s.kind === "line").forEach(s => {
-      g.append("path")
-        .datum(s.points)
-        .attr("fill", "none")
-        .attr("stroke", s.style.stroke ?? "#9aa0a6")
-        .attr("stroke-width", s.style.strokeWidth ?? 2)
-        .attr("d", lineGen);
-    });
-
-    // puntos
-    series.filter(s => s.kind === "points").forEach(s => {
-      const circles = g.selectAll(null)
-        .data(s.points)
-        .join("circle")
-        .attr("cx", d => x(d.x))
-        .attr("cy", d => y(d.y))
-        .attr("r", s.style.r ?? 3)
-        .attr("fill", d => {
-          if (!s.keepColor) return "white";
-          return (typeof s.style.fill === "function") ? s.style.fill(d) : (s.style.fill ?? "white");
-        })
-        .attr("stroke", s.style.stroke ?? "#000")
-        .attr("stroke-width", s.style.strokeWidth ?? 2);
-
-      // tooltip 
-	  const TARGET = "rgb(20,80,200)"; 
-const norm = (v) => (v || "").replace(/\s+/g, "").toLowerCase();
-
-tooltip.style("opacity", 0);
-
-circles
-  .on("mouseenter.tooltip", null)
-  .on("mousemove.tooltip", null)
-  .on("mouseleave.tooltip", null);
-
-circles
-  .filter(function () {
-    const fillAttr = this.getAttribute("fill");          
-    const fillComp = getComputedStyle(this).fill;        
-    return norm(fillAttr) === norm(TARGET) || norm(fillComp) === norm(TARGET);
-  })
-  .on("mouseenter.tooltip", (event, d) => {
-    tooltip.style("opacity", 1);
-    tooltip.html(`
-      <div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
-      <div><b>MIB:</b> ${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
-      <div><b>Num. monedas:</b> ${d.x}</div>
-      <div><b>Estimación cuños:</b> ${d.y}</div>
-    `);
-  })
-  .on("mousemove.tooltip", (event) => {
-    const tt = tooltip.node();
-    const parent = tt.offsetParent || root;
-
-    const pRect = parent.getBoundingClientRect();
-    const cRect = event.currentTarget.getBoundingClientRect();
-
-    const ttW = tt.offsetWidth;
-    const ttH = tt.offsetHeight;
-
-    const xCenter = (cRect.left - pRect.left) + cRect.width / 2;
-
-    const sx = parent.scrollLeft || 0;
-    const sy = parent.scrollTop || 0;
-
-    const left = xCenter + sx - ttW / 2;
-    const top  = (cRect.top - pRect.top) + sy - ttH - 8;
-
-    tooltip.style("left", `${left}px`).style("top", `${top}px`);
-  })
-  .on("mouseleave.tooltip", () => tooltip.style("opacity", 0));
-    });
-  });
-},
-
-
-_traces_to_series: function(traces) {
-  const COLOR_TRACE_NAME = "Aproximación"; 
-
-  return (traces || []).map(t => {
-    const mode = (t.mode || "").toLowerCase();
-    const isLine = mode.includes("lines");
-
-    const points = (t.x || []).map((xVal, i) => ({
-      x: +xVal,
-      y: +(t.y?.[i]),
-      i,
-      name: t.name ?? "",
-      text: Array.isArray(t.text) ? (t.text[i] ?? "") : (t.text ?? ""),
-      customdata: Array.isArray(t.customdata) ? (t.customdata[i] ?? null) : (t.customdata ?? null)
-    }));
-
-    if (isLine) {
-      return {
-        kind: "line",
-        points,
-        name: t.name,
-        style: {
-          stroke: t.line?.color ?? "#9aa0a6",
-          strokeWidth: t.line?.width ?? 2
-        }
-      };
-    }
-
-	const markerColor = (t.name === "Aproximación") ? "rgb(20, 80, 200)" : t.marker?.color;
-    const getFill = (d) =>
-      Array.isArray(markerColor) ? (markerColor[d.i] ?? "white") : (markerColor ?? "white");
-
-    return {
-      kind: "points",
-      points,
-      name: t.name,
-      keepColor: (t.name === COLOR_TRACE_NAME), 
-      style: {
-        //r: (typeof t.marker?.size === "number") ? t.marker.size : 3,
-		 r: (t.name === "Aproximación") ? 4 : 5,
-        fill: getFill,
-        stroke: t.marker?.line?.color ?? "#000",
-        strokeWidth: t.marker?.line?.width ?? 2
-      }
-    };
-  });
-},
-
-
 	/**
-	 * SEARCH_ROWS
-	 * Call to API and load JSON data results of search
+	 * Performs a search in the catalog records.
+	 * @param {Object} options - Search options.
+	 * @param {Object} [options.filter] - Search filter.
+	 * @param {Array<string>} [options.ar_fields=['*']] - Fields to retrieve.
+	 * @param {string} [options.order='norder ASC'] - Sort order.
+	 * @param {number} [options.limit=100] - Result limit.
+	 * @returns {Promise<Array<Object>>} A promise that resolves to the parsed catalog data.
 	 */
 	search_rows : function(options) {
 
@@ -1372,9 +848,9 @@ _traces_to_series: function(traces) {
 	},
 
 	/**
-	* GET_CATALOG_RANGE_YEARS
-	* @return
-	*/
+	 * Retrieves the minimum and maximum year range from the catalog.
+	 * @returns {Promise<{min: number, max: number}>}
+	 */
 	get_catalog_range_years : function() {
 
 		return new Promise(function(resolve){
@@ -1422,19 +898,27 @@ _traces_to_series: function(traces) {
 				resolve(data)
 			})
 		})
-	}//end get_catalog_range_years
+	}, //end get_catalog_range_years
 
 }//end analysis
 
 
-
 /**
- * Callback for tooptip in violin-boxplot
- * @param {{id: string, type_number: string, mint: string}} options
- * @returns {Promise<Element>} the html element to add to the tooltip
+ * Callback for tooltip rendering in violin-boxplot visualizations.
+ * Fetches additional catalog data for a specific type and returns its rendered representation.
+ * @param {Object} options - Tooltip options.
+ * @param {string} options.id - Section ID of the record.
+ * @param {string} options.type_number - Type number string.
+ * @param {string} options.mint - Mint name.
+ * @returns {Promise<Element>} The DOM element representing the tooltip content.
+ * @example
+ * // Often used as a callback passed to a chart wrapper
+ * const tooltipHtml = await type_tooltip_callback({ id: '123', type_number: 'Ref 1', mint: 'Roma' });
  */
-async function type_tooltip_callback(options) {
-
+export async function type_tooltip_callback(options) {
+	if(SHOW_DEBUG===true) {
+		console.warn('---> type_tooltip_callback options', options)
+	}
 	const section_id	= options.id
 	const type_number	= options.type_number
 	const mint			= options.mint
@@ -1458,7 +942,7 @@ async function type_tooltip_callback(options) {
 	}
 
 	const api_response = await data_manager.request({
-		body: catalog_request_options
+		body : catalog_request_options
 	})
 	const type_data = api_response.result || null
 
@@ -1477,6 +961,7 @@ async function type_tooltip_callback(options) {
 	const ele = catalog_row_fields.draw_item(type_row)
 	// Remove style of coins images container, since it is hardcoded to 124mm
 	ele.getElementsByClassName('coins_images')[0].removeAttribute('style')
+
 
 	return ele
 }
