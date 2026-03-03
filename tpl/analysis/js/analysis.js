@@ -731,7 +731,7 @@ export const analysis =  {
 
 		return { a: a_R, b: b_R };
 	},
-
+/*
 	// Define IR values vector and estimation head dies values vector
 	IR : [ 209, 23, 13, 165, 78, 19, 68, 285, 27, 28, 26, 54, 23, 88, 41, 12, 9, 29, 16, 23, 30, 113, 82, 111, 68,
 		   282, 8, 4, 42, 17, 21, 33, 21, 79, 17, 17, 153, 18, 1, 66, 16, 10, 81, 20, 6, 24, 20, 73, 27, 44, 17, 40,
@@ -791,7 +791,43 @@ export const analysis =  {
 			  2, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 4, 2, 3, 6, 3, 2, 1, 3, 5, 1, 2, 1,
 			  1,1, 2, 4, 2, 2, 3, 1, 3, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			  1, 1, 1, 1],
+			  */
+///////////////////////////////
+	load_regression_vars: function() {
+  const self = this;
 
+  const request_body = {
+    dedalo_get : 'records',
+    db_name: "web_numisdata_mib_pre",
+    table      : 'ts_web',
+    ar_fields  : ['titulo', 'cuerpo', 'norder', 'web_path'],
+    lang       : 'lg-spa',
+    sql_filter : "web_path = 'regression_vars'",
+    order      : 'norder ASC',
+    limit      : 1000
+  };
+
+  return data_manager.request({ body: request_body })
+    .then((response) => {
+      self.regression_vars = Object.fromEntries(
+        response.result
+          .filter(r => r.titulo && r.cuerpo)
+          .map(r => [r.titulo, JSON.parse(r.cuerpo)])
+      );
+      return self.regression_vars;
+    });
+},
+
+
+init: function() {
+  const self = this;
+
+  return this.load_regression_vars().then(() => {
+    console.log("keys:", Object.keys(self.regression_vars));
+    console.log("ir length:", self.regression_vars.ir ? self.regression_vars.ir.length : undefined);
+  });
+},
+////////////////////////////////
 	// Regression model to estimate head dies
 	plot_anv: function(regression_model_chart_container) {
 		// Obtain coefficients
