@@ -731,7 +731,8 @@ export const analysis =  {
 
 		return { a: a_R, b: b_R };
 	},
-/*
+
+	/*
 	// Define IR values vector and estimation head dies values vector
 	IR : [ 209, 23, 13, 165, 78, 19, 68, 285, 27, 28, 26, 54, 23, 88, 41, 12, 9, 29, 16, 23, 30, 113, 82, 111, 68,
 		   282, 8, 4, 42, 17, 21, 33, 21, 79, 17, 17, 153, 18, 1, 66, 16, 10, 81, 20, 6, 24, 20, 73, 27, 44, 17, 40,
@@ -791,14 +792,16 @@ export const analysis =  {
 			  2, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 2, 1, 1, 1, 4, 2, 3, 6, 3, 2, 1, 3, 5, 1, 2, 1,
 			  1,1, 2, 4, 2, 2, 3, 1, 3, 1, 1, 5, 2, 4, 4, 2, 1, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			  1, 1, 1, 1],
-			  */
-///////////////////////////////
-	load_regression_vars: function() {
+	*/
+
+
+
+load_regression_vars: function() {
   const self = this;
 
   const request_body = {
     dedalo_get : 'records',
-    db_name: "web_numisdata_mib_pre",
+	db_name: "web_numisdata_mib_pre",
     table      : 'ts_web',
     ar_fields  : ['titulo', 'cuerpo', 'norder', 'web_path'],
     lang       : 'lg-spa',
@@ -827,220 +830,257 @@ init: function() {
     console.log("ir length:", self.regression_vars.ir ? self.regression_vars.ir.length : undefined);
   });
 },
-////////////////////////////////
-	// Regression model to estimate head dies
-	plot_anv: function(regression_model_chart_container) {
-		// Obtain coefficients
-		const { a, b } = this.coefficients(this.IR, this.D_anv);
 
-		const minIR = Math.min(...this.IR);
-		const maxIR = Math.max(...this.IR);
+// Regression model to estimate head dies
+plot_anv: function(regression_model_chart_container) {
 
-		// Generate x_vals
-		const x_vals = Array.from({ length: 2000 }, (_, i) => minIR + (i / 1999) * (maxIR - minIR));
+  return this.load_regression_vars().then(() => {
 
-		// Generate y_vals
-		const y_vals = x_vals.map(x => a + b * x);
+    // Si quieres mantener nombres como antes:
+    const IR = this.regression_vars.ir;
+    const D_anv = this.regression_vars.d_anv;
 
-		const traces = [
-		  {
-			x: this.IR_ant,
-			y: this.Anvers,
-			mode: 'markers',
-			type: 'scatter',
-			name: 'Datos observados',
-			marker: { color: 'skyblue' },
-			hovertemplate: "Num. monedas: %{x}<br>" +
-			"Estimación cuños: %{y}<extra></extra>",
-			xaxis: 'x1',
-			yaxis: 'y1'
-		  },
-		  {
-			x: x_vals,
-			y: y_vals,
-			mode: 'lines',
-			type: 'scatter',
-			name: 'Modelo estimado',
-			line: { color: 'lightsteelblue', width: 2 },
-			xaxis: 'x1',
-			yaxis: 'y1'
-		  }
-		];
+    // Si estos también vienen de regression_vars:
+    const IR_ant = this.regression_vars.ir_ant;   
+    const Anvers = this.regression_vars.anvers;   
 
-		return traces;
-	},
+    // Obtain coefficients
+    const { a, b } = this.coefficients(IR, D_anv);
 
-	// Calculation IR
-	calculation_IR_anv: function (emblem){
-		const index = emblem.full_coins_reference_calculable || [];
-		//Define counter
-		let ir = 0;
-		// Calculate number IR of each type
-		for (let i = 0; i < index.length; i++) {
-			if(index[i] === true){
-				ir ++;
-			}
-		}
+    const minIR = Math.min(...IR);
+    const maxIR = Math.max(...IR);
 
-		//We have IR of the type (emblem)
-		// call function to use a and b valors
-		const { a, b } = this.coefficients(this.IR,this.D_anv);
+    // Generate x_vals
+    const x_vals = Array.from(
+      { length: 2000 },
+      (_, i) => minIR + (i / 1999) * (maxIR - minIR)
+    );
 
-		//Calculate approximations
-		let approx;
-		approx = a + b*ir;
+    // Generate y_vals
+    const y_vals = x_vals.map(x => a + b * x);
 
-		return { ir, approx };
-	},
+    const traces = [
+      {
+        x: IR_ant,
+        y: Anvers,
+        mode: 'markers',
+        type: 'scatter',
+        name: 'Datos observados',
+        marker: { color: 'skyblue' },
+        hovertemplate:
+          "Num. monedas: %{x}<br>" +
+          "Estimación cuños: %{y}<extra></extra>",
+        xaxis: 'x1',
+        yaxis: 'y1'
+      },
+      {
+        x: x_vals,
+        y: y_vals,
+        mode: 'lines',
+        type: 'scatter',
+        name: 'Modelo estimado',
+        line: { color: 'lightsteelblue', width: 2 },
+        xaxis: 'x1',
+        yaxis: 'y1'
+      }
+    ];
 
-	plot_points_regression_anv : function(parsed_data, regression_model_chart_container){
-		let vect_tipos = [];
-		for(let i=1; i< parsed_data.length; i++){
-			let emblem = parsed_data[i]
-			const { ir,approx } = this.calculation_IR_anv(emblem)
+    return traces;
+  });
+},
 
-			const tipo = {
-			ir,
-			approx,
-			ceca: emblem.p_mint,
-			id: emblem.term_section_id,
-			num: emblem.ref_type_number,
-			ref_ceca: emblem.ref_mint_number
-			};
-			vect_tipos.push(tipo);
-		}
+// Calculation IR
+calculation_IR_anv: function (emblem) {
+  const index = emblem.full_coins_reference_calculable || [];
 
-		const xValues = vect_tipos.map(obj => obj.ir);
-		const yValues = vect_tipos.map(obj => obj.approx);
+  // Define counter
+  let ir = 0;
+  for (let i = 0; i < index.length; i++) {
+    if (index[i] === true) ir++;
+  }
 
-		const pointsTrace = {
-			x: xValues,
-			y: yValues,
-			mode: 'markers',
-			type: 'scatter',
-			name: 'Aproximación',
-			customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
-			hovertemplate: "Ceca: %{customdata[0]}<br>"+"MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
-			"Num. monedas: %{x}<br>" +
-			"Estimación cuños anverso: %{y}<extra></extra>",
-			marker: {
-				color: 'darkblue',
-				size: 10,
-				line: { width: 2, color: 'black' }
-			},
-			xaxis: 'x1',
-			yaxis: 'y1'
-		};
-		return [pointsTrace];
-	},
+  // Asegurar que regression_vars está cargado
+  return this.load_regression_vars().then(() => {
+    const IR = this.regression_vars.ir;
+    const D_anv = this.regression_vars.d_anv;
 
-	// Regression model to estimate reverse dies
+    const { a, b } = this.coefficients(IR, D_anv);
 
-	plot_rev: function(regression_model_chart_container) {
-		// Obtain coefficients
-		const { a, b } = this.coefficients(this.IR, this.D_rev);
+    const approx = a + b * ir;
 
-		const minIR = Math.min(...this.IR);
-		const maxIR = Math.max(...this.IR);
+    return { ir, approx };
+  });
+},
 
-		// Generate x_vals
-		const x_vals = Array.from({ length: 2000 }, (_, i) => minIR + (i / 1999) * (maxIR - minIR));
+plot_points_regression_anv: function(parsed_data, regression_model_chart_container){
 
-		// Generate y_vals
-		const y_vals = x_vals.map(x => a + b * x);
+  const self = this;
+  const emblems = parsed_data.slice(1); // saltas el 0 como antes
 
-		const traces = [
-		  {
-			x: this.IR_ant,
-			y: this.Revers,
-			mode: 'markers',
-			type: 'scatter',
-			name: 'Datos observados',
-			marker: { color: 'skyblue' },
-			hovertemplate: "Num. monedas: %{x}<br>" +
-			"Estimación cuños: %{y}<extra></extra>",
-			xaxis: 'x2',
-			yaxis: 'y2'
-		  },
-		  {
-			x: x_vals,
-			y: y_vals,
-			mode: 'lines',
-			type: 'scatter',
-			name: 'Modelo estimado',
-			line: { color: 'lightsteelblue', width: 2 },
-			xaxis: 'x2',
-			yaxis: 'y2'
-		  }
-		];
+  return Promise.all(
+    emblems.map(emblem => self.calculation_IR_anv(emblem).then(({ ir, approx }) => {
+      return {
+        ir,
+        approx,
+        ceca: emblem.p_mint,
+        id: emblem.term_section_id,
+        num: emblem.ref_type_number,
+        ref_ceca: emblem.ref_mint_number
+      };
+    }))
+  ).then((vect_tipos) => {
 
-		return traces;
-	},
+    const xValues = vect_tipos.map(obj => obj.ir);
+    const yValues = vect_tipos.map(obj => obj.approx);
 
-	// Calculation IR
-	calculation_IR_rev: function (emblem){
-		const index = emblem.full_coins_reference_calculable || [];
-		//Define counter
-		let ir = 0;
-		// Calculate number IR of each type
-		for (let i = 0; i < index.length; i++) {
-			if(index[i] === true){
-				ir ++;
-			}
-		}
+    const pointsTrace = {
+      x: xValues,
+      y: yValues,
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Aproximación',
+      customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
+      hovertemplate:
+        "Ceca: %{customdata[0]}<br>" +
+        "MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
+        "Num. monedas: %{x}<br>" +
+        "Estimación cuños anverso: %{y}<extra></extra>",
+      marker: {
+        color: 'darkblue',
+        size: 10,
+        line: { width: 2, color: 'black' }
+      },
+      xaxis: 'x1',
+      yaxis: 'y1'
+    };
 
-		//We have IR of the type (emblem)
-		// call function to use a and b valors
-		const { a, b } = this.coefficients(this.IR,this.D_rev);
+    return [pointsTrace];
+  });
+},
 
-		//Calculate approximations
-		let approx;
-		approx = a + b*ir;
+// Regression model to estimate reverse dies
+plot_rev: function(regression_model_chart_container) {
 
-		return { ir, approx };
-	},
+  return this.load_regression_vars().then(() => {
 
-	plot_points_regression_rev : function(parsed_data, regression_model_chart_container){
-		let vect_tipos = [];
-		for(let i=1; i< parsed_data.length; i++){
-			let emblem = parsed_data[i]
-			const { ir,approx } = this.calculation_IR_rev(emblem)
+    const IR    = this.regression_vars.ir;
+    const D_rev = this.regression_vars.d_rev;
 
-			const tipo = {
-			ir,
-			approx,
-			ceca: emblem.p_mint,
-			id: emblem.term_section_id,
-			num: emblem.ref_type_number,
-			ref_ceca: emblem.ref_mint_number
-			};
-			vect_tipos.push(tipo);
-		}
+    // Si estos también vienen de regression_vars:
+    const IR_ant = this.regression_vars.ir_ant;  // o this.IR_ant si lo sigues cargando por otro lado
+    const Revers = this.regression_vars.revers;  // o this.Revers
 
-		const xValues = vect_tipos.map(obj => obj.ir);
-		const yValues = vect_tipos.map(obj => obj.approx);
+    // Obtain coefficients
+    const { a, b } = this.coefficients(IR, D_rev);
 
-		const pointsTrace = {
-			x: xValues,
-			y: yValues,
-			mode: 'markers',
-			type: 'scatter',
-			name: 'Aproximación',
-			customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
-			hovertemplate: "Ceca: %{customdata[0]}<br>"+"MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
-			"Num. monedas: %{x}<br>" +
-			"Estimación cuños reverso: %{y}<extra></extra>",
-			marker: {
-				color: 'darkblue',
-				size: 10,
-				line: { width: 2, color: 'black' }
-			},
-			xaxis: 'x2',
-			yaxis: 'y2'
-		};
+    const minIR = Math.min(...IR);
+    const maxIR = Math.max(...IR);
 
-		return [pointsTrace];
-	},
+    // Generate x_vals
+    const x_vals = Array.from(
+      { length: 2000 },
+      (_, i) => minIR + (i / 1999) * (maxIR - minIR)
+    );
+
+    // Generate y_vals
+    const y_vals = x_vals.map(x => a + b * x);
+
+    const traces = [
+      {
+        x: IR_ant,
+        y: Revers,
+        mode: 'markers',
+        type: 'scatter',
+        name: 'Datos observados',
+        marker: { color: 'skyblue' },
+        hovertemplate:
+          "Num. monedas: %{x}<br>" +
+          "Estimación cuños: %{y}<extra></extra>",
+        xaxis: 'x2',
+        yaxis: 'y2'
+      },
+      {
+        x: x_vals,
+        y: y_vals,
+        mode: 'lines',
+        type: 'scatter',
+        name: 'Modelo estimado',
+        line: { color: 'lightsteelblue', width: 2 },
+        xaxis: 'x2',
+        yaxis: 'y2'
+      }
+    ];
+
+    return traces;
+  });
+},
+
+// Calculation IR
+calculation_IR_rev: function (emblem) {
+  const index = emblem.full_coins_reference_calculable || [];
+
+  let ir = 0;
+  for (let i = 0; i < index.length; i++) {
+    if (index[i] === true) ir++;
+  }
+
+  return this.load_regression_vars().then(() => {
+    const IR = this.regression_vars.ir;
+    const D_rev = this.regression_vars.d_rev;
+
+    const { a, b } = this.coefficients(IR, D_rev);
+
+    const approx = a + b * ir;
+
+    return { ir, approx };
+  });
+},
+
+plot_points_regression_rev : function(parsed_data, regression_model_chart_container){
+
+  const self = this;
+  const emblems = parsed_data.slice(1);
+
+  return Promise.all(
+    emblems.map(emblem =>
+      self.calculation_IR_rev(emblem).then(({ ir, approx }) => ({
+        ir,
+        approx,
+        ceca: emblem.p_mint,
+        id: emblem.term_section_id,
+        num: emblem.ref_type_number,
+        ref_ceca: emblem.ref_mint_number
+      }))
+    )
+  ).then((vect_tipos) => {
+
+    const xValues = vect_tipos.map(obj => obj.ir);
+    const yValues = vect_tipos.map(obj => obj.approx);
+
+    const pointsTrace = {
+      x: xValues,
+      y: yValues,
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Aproximación',
+      customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
+      hovertemplate:
+        "Ceca: %{customdata[0]}<br>" +
+        "MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
+        "Num. monedas: %{x}<br>" +
+        "Estimación cuños reverso: %{y}<extra></extra>",
+      marker: {
+        color: 'darkblue',
+        size: 10,
+        line: { width: 2, color: 'black' }
+      },
+      xaxis: 'x2',
+      yaxis: 'y2'
+    };
+
+    return [pointsTrace];
+  });
+},
 
 plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
   return Promise.all([
