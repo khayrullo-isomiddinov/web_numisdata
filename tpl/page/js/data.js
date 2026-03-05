@@ -553,6 +553,15 @@ page.parse_catalog_data = function(data) {
 
 	try {
 
+		function IsJson(argument) {
+			try {
+				JSON.parse(argument)
+			} catch (e) {
+				return false
+			}
+			return true
+		}
+
 		const data_length = data.length
 		for (let i = 0; i < data_length; i++) {
 			// const row = JSON.parse( JSON.stringify(data[i]) )
@@ -603,15 +612,6 @@ page.parse_catalog_data = function(data) {
 
 			if (IsJson(row.term_data)){
 				row.term_data = JSON.parse(row.term_data)
-			}
-
-			function IsJson(argument) {
-				try {
-					JSON.parse(argument)
-				} catch (e) {
-					return false
-				}
-				return true
 			}
 
 			row.term_section_id	= row.term_data ? row.term_data[0] : null

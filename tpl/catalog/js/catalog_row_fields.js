@@ -393,7 +393,6 @@ var catalog_row_fields = {
 	* @return bool
 	*/
 	node_factory : function(item, name, parent, nodetype, class_name) {
-	// item, "term", type_info, "span", null
 
 		if (item[name]) { //  && item[name].length>0
 
