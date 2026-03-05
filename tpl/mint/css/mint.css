@@ -301,7 +301,8 @@
   .types_print .row_node {
     position: relative;
   }
-  .types_print .row_node .qr_code_node {
+  .types_print .row_node .type_container .qr_code_node {
+    display: block !important;
     position: absolute;
     width: 1cm;
     height: 1cm;

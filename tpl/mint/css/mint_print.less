@@ -324,19 +324,23 @@
 		.row_node {
 			position: relative;
 
-			// QR Code placeholder
-			.qr_code_node {
-				// background-color: #c3c3f8;
-				position: absolute;
-				width: 1cm;
-				height: 1cm;
-				left: -1.4cm;
-				top: 0.1cm;
-				opacity: 0.3;
-				text-align: end;
+			.type_container {
 
-				>svg {
-					// zoom: 1.15;
+				// QR Code placeholder
+				.qr_code_node {
+					display: block !important;
+					// background-color: #c3c3f8;
+					position: absolute;
+					width: 1cm;
+					height: 1cm;
+					left: -1.4cm;
+					top: 0.1cm;
+					opacity: 0.3;
+					text-align: end;
+
+					>svg {
+						// zoom: 1.15;
+					}
 				}
 			}
 

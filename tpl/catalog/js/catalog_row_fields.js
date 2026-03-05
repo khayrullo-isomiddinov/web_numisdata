@@ -148,7 +148,7 @@ var catalog_row_fields = {
 					// QR code. Add QR code at left of the type fro print
 						const qr_code_node = common.create_dom_element({
 							element_type	: "div",
-							class_name		: "qr_code_node",
+							class_name		: "qr_code_node hide",
 							parent			: type_container
 						})
 						if (item.catalog_info?.section_id) {
