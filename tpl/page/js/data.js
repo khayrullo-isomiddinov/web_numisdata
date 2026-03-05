@@ -810,6 +810,42 @@ page.parse_catalog_data = function(data) {
 				? JSON.parse(row.ref_mint_change_to_uri)
 				: null
 
+			// ref_coins_auction. Create a 'ref_auction_group' on the fly to mimic 'parse_coin_data'
+				row.ref_auction_group = null
+				if (row.ref_coins_auction) {
+					// Sample: Cayón subastas | 2012/05/16  2012/05/18 |
+					const parts = row.ref_coins_auction.split(' | ')
+
+					const name = parts[0] || null
+					const date = parts[1] || null
+					const number = parts[2] || null
+
+					if (name) {
+
+						const obj = {
+							name : name
+						}
+
+						if(date) {
+							const dates = date.split(/\s+/);
+							const ar_parsed = []
+							if(dates[0]) {
+								ar_parsed.push( self.parse_date(dates[0]) )
+							}
+							if(dates[1]) {
+								ar_parsed.push( self.parse_date(dates[1]) )
+							}
+							obj.date = ar_parsed.join(' ')
+						}
+
+						if(number) {
+							obj.number = number
+						}
+
+						row.ref_auction_group = [obj]
+					}
+				}
+
 			new_data.push(row)
 		}
 

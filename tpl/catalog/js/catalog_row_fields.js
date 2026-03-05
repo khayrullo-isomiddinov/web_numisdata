@@ -457,10 +457,32 @@ var catalog_row_fields = {
 					current_value = page.render_type_label(item)
 					break;
 
+				case 'ref_coins_auction':
+					const ref_auction_group = item.ref_auction_group?.[0] || null
+					if (ref_auction_group) {
+						const parts = []
+						// name. As 'Cayón subastas'
+						if (ref_auction_group.name) {
+							parts.push(ref_auction_group.name)
+						}
+						// date. Note that could be a range as '16-05-2012 18-05-2012'
+						if (ref_auction_group.date) {
+							parts.push(ref_auction_group.date)
+						}
+						// number. Is not used here !
+						// if (ref_auction_group.number) {
+						// 	parts.push(ref_auction_group.number)
+						// }
+						current_value = parts.join(' | ')
+
+					}else{
+						current_value = item[name]
+					}
+					break;
+
 				default:
 					current_value = item[name]
 			}
-
 
 			const node = common.create_dom_element({
 				element_type	: current_node_type,
