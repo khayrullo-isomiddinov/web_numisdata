@@ -387,7 +387,6 @@ var mint = {
 			const ar_rows			= options.ar_rows
 			const mint_section_id	= options.mint_section_id
 
-
 		const fragment = new DocumentFragment()
 
 		// label

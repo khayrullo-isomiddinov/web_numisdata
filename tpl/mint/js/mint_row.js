@@ -432,7 +432,7 @@ var mint_row = {
 	* @return DocumentFragment
 	*/
 	render_type_print : async function (ar_rows) {
-
+		
 		const fragment = new DocumentFragment();
 
 		// set catalog properties temporally

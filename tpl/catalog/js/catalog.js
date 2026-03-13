@@ -1751,10 +1751,10 @@ var catalog = {
 			for (let i = 0; i < children.length; i++) {
 
 				const finded = self.parents.find(el => el.section_id == children[i])
-
 				if(finded){
 					continue
 				}
+
 				self.get_child(ar_rows, children[i], catalog_row_wrapper)
 			}
 		}
@@ -1879,13 +1879,11 @@ var catalog = {
 
 		const fragment = new DocumentFragment()
 
-
 		const mint_relations = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "mint_relations",
-					parent			: fragment
-				})
-
+			element_type	: "div",
+			class_name		: "mint_relations",
+			parent			: fragment
+		})
 
 		// relations
 			// change to

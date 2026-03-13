@@ -291,7 +291,7 @@
 		height: unset;
 		width: unset;
 		overflow: unset;
-
+		// anchor-name: --page;
 
 		.children_contanier {
 			margin-left: 10pt;
@@ -325,6 +325,7 @@
 			position: relative;
 
 			.type_container {
+				// anchor-name: --type;
 
 				// QR Code placeholder
 				.qr_code_node {
@@ -335,8 +336,11 @@
 					height: 1cm;
 					left: -1.4cm;
 					top: 0.1cm;
-					opacity: 0.3;
+					opacity: 0.4;
 					text-align: end;
+
+					// position-anchor: --page;
+					// left: calc( anchor(--page left) - 100px);
 
 					>svg {
 						// zoom: 1.15;
