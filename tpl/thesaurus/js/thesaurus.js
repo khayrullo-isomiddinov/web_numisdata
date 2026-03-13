@@ -110,17 +110,22 @@ var thesaurus =  {
 			if (self.root_term && self.root_term.length) {
 				const root_term_id = self.root_term[0]
 
+				const ar_fields = [
+					'authorship_data',
+					'authorship_names',
+					'authorship_surnames',
+					'authorship_roles'
+				]
+
+				if (self.table === 'ts_countermarks') {
+					ar_fields.push('authorship_date')
+				}
+
 				const body = {
 					dedalo_get	: 'records',
 					db_name		: page_globals.WEB_DB,
 					table		: self.table,
-					ar_fields	: [
-						'authorship_data',
-						'authorship_date',
-						'authorship_names',
-						'authorship_surnames',
-						'authorship_roles'
-					],
+					ar_fields	: ar_fields,
 					lang		: page_globals.WEB_CURRENT_LANG_CODE,
 					sql_filter	: `term_id = '${root_term_id}'`,
 					limit		: 1,
