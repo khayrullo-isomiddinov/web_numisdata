@@ -659,7 +659,7 @@ page.make_images_links = function (node) {
 					const click_handler = (e) => {
 						e.stopPropagation()
 
-						const url = `${page_globals.__WEB_ROOT_WEB__}/ts_node/${locator.section_tipo}_${locator.section_id}`
+						const url = `${page_globals.__WEB_ROOT_WEB__}/ts/${locator.section_tipo}_${locator.section_id}`
 						window.open(url, '_blank');
 					}
 					image.classList.add('clickable')

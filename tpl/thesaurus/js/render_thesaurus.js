@@ -242,7 +242,7 @@ thesaurus.render_tree_node = function(row) {
 						// other thesaurus
 						default:
 							window.open(
-								`./ts_node/${row.term_id}`,
+								`./ts/${row.term_id}`,
 								'term',
 								null
 							);
