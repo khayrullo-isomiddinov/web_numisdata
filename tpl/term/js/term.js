@@ -46,8 +46,12 @@ var term = {
 
 			// table
 				const table = page.thesaurus_map[self.section_tipo]
+
+			// Check table exists
 				if (!table) {
-					console.error('Invalid thesaurus map value:', section_tipo);
+					self.main_title.textContent = 'Error'
+					self.row_detail.textContent = 'Invalid table value for: ' + self.section_tipo + '_' + self.section_id
+					console.error('Invalid table value for:', self.section_tipo + '_' + self.section_id);
 					return
 				}
 
@@ -57,6 +61,14 @@ var term = {
 					section_id		: self.section_id,
 					table			: table
 				})
+
+			// Check row exists
+				if (!row || !row.term_id) {
+					self.main_title.textContent = 'Error'
+					self.row_detail.textContent = 'This record does not exist: ' + self.section_tipo + '_' + self.section_id
+					console.error('This record does not exist:', self.section_tipo + '_' + self.section_id);
+					return
+				}
 
 			// get_thesaurus_name
 				// get first item and get the last parent

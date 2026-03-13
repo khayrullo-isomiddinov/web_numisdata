@@ -883,7 +883,8 @@ var thesaurus =  {
 				return new Promise(function(resolve){
 
 					const ar_promise = []
-					const children = self.data_clean.filter(el => row.children && row.children.includes(el.term_id))
+					const data_clean = self.data_clean || []
+					const children = data_clean.filter(el => row.children && row.children.includes(el.term_id))
 					const children_length = children.length
 					for (let i = 0; i < children_length; i++) {
 

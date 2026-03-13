@@ -17,6 +17,9 @@ var type =  {
 	// div where the export data buttons where placed
 	export_data_container : null,
 
+	// div where the row detail is placed
+	row_detail : null,
+
 	// section_id
 	section_id : null,
 
@@ -33,6 +36,7 @@ var type =  {
 		// options
 			self.export_data_container	= options.export_data_container
 			self.section_id				= options.section_id
+			self.row_detail				= options.row_detail
 
 		// export_data_buttons added once
 			const export_data_buttons = page.render_export_data_buttons()
@@ -66,78 +70,87 @@ var type =  {
 							const type_response		= response.result.find(item => item.id==='type')
 							const catalog_response	= response.result.find(item => item.id==='catalog')
 
-						if (typeof type_response.result[0]!=="undefined") {
+						// row
+							const row = type_response.result[0] || null
 
-							const row			= type_response.result[0]
+						// Check record exists
+							if (!row) {
+								const title = document.getElementById('title')
+								if(title) title.textContent = 'Error'
+								self.row_detail.textContent = 'This record does not exist: ' + self.section_id
+								console.error('This record does not exist:', self.section_id);
+								return
+							}
+
+						// parse row
 							const catalog_rows	= page.parse_catalog_data(catalog_response.result)[0] || null
 
-							// app property catalog with all catalog rows result
-								row.catalog = catalog_rows
+						// app property catalog with all catalog rows result
+							row.catalog = catalog_rows
 
-							// parse data
-								page.parse_type_data(row)
+						// parse data
+							page.parse_type_data(row)
 
-							// send event data_request_done (used by buttons download)
-								event_manager.publish('data_request_done', {
-									request_body		: null,
-									result				: row,
-									export_data_parser	: page.export_parse_type_data
-								})
+						// send event data_request_done (used by buttons download)
+							event_manager.publish('data_request_done', {
+								request_body		: null,
+								result				: row,
+								export_data_parser	: page.export_parse_type_data
+							})
 
-							// render row nodes
-							self.list_row_builder(row)
-							.then(function(row_wrapper){
+						// render row nodes
+						self.list_row_builder(row)
+						.then(function(row_wrapper){
 
-								// append final rendered node
-									container.appendChild(row_wrapper)
+							// append final rendered node
+								container.appendChild(row_wrapper)
 
-								// children case (only variants)
-									const children = catalog_rows.children || null
-									if (children && children.length>0) {
-										const children_container = common.create_dom_element({
-											element_type	: 'div',
-											class_name		: 'children_container gallery',
-											parent			: container
-										})
-										children.forEach(child_row => {
-											const node = catalog_row_fields.draw_item(child_row, catalog)
-											children_container.appendChild(node)
-										})
-									}
+							// children case (only variants)
+								const children = catalog_rows.children || null
+								if (children && children.length>0) {
+									const children_container = common.create_dom_element({
+										element_type	: 'div',
+										class_name		: 'children_container gallery',
+										parent			: container
+									})
+									children.forEach(child_row => {
+										const node = catalog_row_fields.draw_item(child_row, catalog)
+										children_container.appendChild(node)
+									})
+								}
 
-								// newGallery
-									requestAnimationFrame(
-										() => {
-											// activate images light box
-											const images_gallery_containers = container.querySelectorAll('.gallery')
-											if (images_gallery_containers) {
-												for (let i = 0; i < images_gallery_containers.length; i++) {
-													page.activate_images_gallery(images_gallery_containers[i])
-												}
-											}
-
-											const embeddedGallery = row_wrapper.querySelectorAll('a')
-											if (embeddedGallery && embeddedGallery.length>0) {
-												// hide default images div
-												const identify_coin_wrapper = row_wrapper.querySelector('.identify_coin_wrapper')
-												if (identify_coin_wrapper) {
-													identify_coin_wrapper.remove()
-												}
-												// create identify images gallery
-												const newGallery = Object.create(image_gallery);
-												newGallery.set_up_embedded ({
-													galleryNode		: embeddedGallery,
-													galleryPrimId	: 'embedded-gallery-id',
-													containerId		: 'embedded-gallery'
-												})
+							// newGallery
+								requestAnimationFrame(
+									() => {
+										// activate images light box
+										const images_gallery_containers = container.querySelectorAll('.gallery')
+										if (images_gallery_containers) {
+											for (let i = 0; i < images_gallery_containers.length; i++) {
+												page.activate_images_gallery(images_gallery_containers[i])
 											}
 										}
-									)
 
-								// show export buttons
-									self.export_data_container.classList.remove('hide')
-							})
-						}
+										const embeddedGallery = row_wrapper.querySelectorAll('a')
+										if (embeddedGallery && embeddedGallery.length>0) {
+											// hide default images div
+											const identify_coin_wrapper = row_wrapper.querySelector('.identify_coin_wrapper')
+											if (identify_coin_wrapper) {
+												identify_coin_wrapper.remove()
+											}
+											// create identify images gallery
+											const newGallery = Object.create(image_gallery);
+											newGallery.set_up_embedded ({
+												galleryNode		: embeddedGallery,
+												galleryPrimId	: 'embedded-gallery-id',
+												containerId		: 'embedded-gallery'
+											})
+										}
+									}
+								)
+
+							// show export buttons
+								self.export_data_container.classList.remove('hide')
+						})
 					})
 			}
 

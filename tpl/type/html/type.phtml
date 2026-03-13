@@ -19,7 +19,7 @@
 				<div class="inner">
 
 					<!-- title -->
-						<h1><?php echo $title ?></h1>
+						<h1 id="title"><?php echo $title ?></h1>
 						<div class="golden-separator"></div>
 
 					<!-- Result -->
@@ -41,7 +41,8 @@
 dom_ready(function(){
 	type.set_up({
 		section_id				: '<?php echo $section_id ?>',
-		export_data_container	: document.getElementById('export_data')
+		export_data_container	: document.getElementById('export_data'),
+		row_detail				: document.getElementById('row_detail')
 	})
 })
 </script>

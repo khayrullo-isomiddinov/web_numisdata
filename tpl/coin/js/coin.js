@@ -10,6 +10,7 @@ var coin = {
 
 	section_id				: null,
 	export_data_container	: null,
+	row_detail				: null,
 
 
 	/**
@@ -24,6 +25,7 @@ var coin = {
 		// options
 			self.section_id				= options.section_id
 			self.export_data_container	= options.export_data_container
+			self.row_detail				= options.row_detail
 
 		// export_data_buttons added once
 			const export_data_buttons = page.render_export_data_buttons()
@@ -48,7 +50,16 @@ var coin = {
 						if (target) {
 
 							// row . Note data is an array of one row, already parsed
-								const row = data[0];
+								const row = data[0] || null;
+
+							// Check record exists
+							if (!row) {
+								const title = document.getElementById('title')
+								if(title) title.textContent = 'Error'
+								self.row_detail.textContent = 'This record does not exist: ' + self.section_id
+								console.error('This record does not exist:', self.section_id);
+								return
+							}
 
 							// render row nodes
 								self.render_row({

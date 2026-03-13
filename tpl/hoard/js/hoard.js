@@ -49,36 +49,39 @@ var hoard =  {
 				})
 				.then(function(ar_rows){
 
-					if (ar_rows && ar_rows.length>0) {
-
-						// self row fix
-							self.row = ar_rows[0];
-
-						// row render
-							const hoard_node = render_hoard.draw_hoard({
-								row : self.row
-							});
-							const container = self.row_detail_container;
-							// container. clean container div
-								while (container.hasChildNodes()) {
-									container.removeChild(container.lastChild);
-								}
-							container.appendChild(hoard_node);
-
-						// map draw. Init default map
-							render_hoard.draw_map({
-								map_data	: self.row.map,
-								container	: document.getElementById("map_container"),
-								self		: self
-							});
-
-						// types
-							const rows_container = document.getElementById('rows_container');
-							self.get_types_data(self.row, rows_container);
-
-					}else{
-						self.row_detail_container.innerHTML = 'Sorry. Empty result for section_id: ' + self.section_id;
+					// Check record exists
+					if (!ar_rows || ar_rows.length===0) {
+						const title = document.getElementById('title')
+						if(title) title.textContent = 'Error'
+						self.row_detail_container.textContent = 'This record does not exist: ' + self.section_id
+						console.error('This record does not exist:', self.section_id);
+						return
 					}
+
+					// self row fix
+						self.row = ar_rows[0];
+
+					// row render
+						const hoard_node = render_hoard.draw_hoard({
+							row : self.row
+						});
+						const container = self.row_detail_container;
+						// container. clean container div
+							while (container.hasChildNodes()) {
+								container.removeChild(container.lastChild);
+							}
+						container.appendChild(hoard_node);
+
+					// map draw. Init default map
+						render_hoard.draw_map({
+							map_data	: self.row.map,
+							container	: document.getElementById("map_container"),
+							self		: self
+						});
+
+					// types
+						const rows_container = document.getElementById('rows_container');
+						self.get_types_data(self.row, rows_container);
 				})
 		}else{
 			self.row_detail_container.innerHTML = 'Error. Invalid section_id';

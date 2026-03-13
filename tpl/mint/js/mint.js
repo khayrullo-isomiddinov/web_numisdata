@@ -62,6 +62,15 @@ var mint = {
 					const mint = response.result.find( el => el.id==='mint')
 					const mint_data = page.parse_mint_data(mint.result[0])
 
+					// Check record exists
+					if (!mint_data) {
+						const title = document.getElementById('title')
+						if(title) title.textContent = 'Error'
+						self.row_detail.textContent = 'This record does not exist: ' + self.section_id
+						console.error('This record does not exist:', self.section_id);
+						return
+					}
+
 					self.draw_row({
 						target	: self.row_detail,
 						ar_rows	: [mint_data]
@@ -110,6 +119,10 @@ var mint = {
 					if (mint_catalog.result) {
 						const _mint_catalog = mint_catalog.result.find(el => el.term_table==='mints')
 						if (_mint_catalog && _mint_catalog.section_id) {
+
+							// set mint section_id
+							self.mint_section_id = _mint_catalog.section_id
+
 							self.get_types_data2({
 								section_id : _mint_catalog.section_id
 							})
@@ -137,9 +150,13 @@ var mint = {
 								}
 
 								// types print
+								const target = document.getElementById('types_print')
+								const rect = target.getBoundingClientRect();
+								const leftPosition = rect.left;
+								page_globals.types_print_left = leftPosition
+
 								const types_node_print = await mint_row.render_type_print(result)
-								if (types_node_print) {
-									const target = document.getElementById('types_print')
+								if (types_node_print && target) {
 									target.appendChild(types_node_print)
 								}
 							})
