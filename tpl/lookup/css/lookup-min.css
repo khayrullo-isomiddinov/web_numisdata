@@ -1,0 +1,87 @@
+.lookup-container {
+	max-width: 800px;
+	margin: 2em auto;
+	padding: 2em;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 8px;
+	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.lookup-form {
+	margin-top: 2em;
+}
+
+.lookup-container p {
+	text-align: center;
+	font-size: 1.25em;
+	margin-bottom: 1.5em;
+}
+
+.resource-id-input {
+	text-align: center;
+	padding: 0 1.5em; /* Small padding for better aesthetics */
+}
+
+.resource-type-select,
+.resource-id-input,
+.lookup-submit {
+	height: 3.5rem !important; /* Use rem for absolute height consistency */
+	margin: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.resource-type-select,
+.resource-id-input {
+	background-color: rgba(255, 255, 255, 0.05) !important;
+	border: 1px solid #c9c9c9 !important;
+	border-radius: 4px !important;
+	color: #585858 !important;
+	transition: border-color 0.2s ease;
+}
+
+.resource-type-select {
+	padding-left: 1rem !important;
+}
+
+.lookup-submit {
+	min-width: 100px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 1.5em !important;
+	line-height: 1 !important;
+	vertical-align: middle;
+	border-radius: 4px !important;
+}
+
+.resource-type-select:focus,
+.resource-id-input:focus {
+	border-color: #d1b46a !important;
+	outline: none !important;
+	box-shadow: 0 0 0 1px #d1b46a !important;
+}
+
+/* Specific fix for the row alignment */
+.lookup-form .row {
+	align-items: center !important;
+}
+
+@media screen and (max-width: 650px) {
+	.lookup-form .row > .col-4,
+	.lookup-form .row > .col-5,
+	.lookup-form .row > .col-3 {
+		width: 100%;
+	}
+}
+
+@media screen and (max-width: 736px) {
+	.lookup-container {
+		padding: 1.5em;
+		margin: 1em;
+	}
+	
+	.lookup-container p {
+		font-size: 1.1em;
+	}
+}

@@ -1,0 +1,78 @@
+<?php
+# REQUIRED FILES
+	$base_path = dirname(dirname(__FILE__));
+	$cwd 	   = basename($base_path); # Current dir name
+
+	// Current controller add
+	require($base_path .'/'. $cwd .'.php');
+?>
+
+<!-- Wrapper -->
+	<div id="wrapper">
+
+		<!-- header -->
+			<?php include dirname(dirname(dirname(__FILE__))) . '/page/html/header.phtml'; ?>
+
+		<!-- main -->
+			<div id="main">
+				<div class="inner">
+
+					<!-- title -->
+						<h1><?php echo tstring('lookup_title'); ?></h1>
+						<div class="golden-separator"></div>
+
+					<!-- Result -->
+						<section class="result">
+							<div class="lookup-container">
+								<p><?php echo tstring('lookup_abstract'); ?></p>
+								<form id="lookup_form" class="lookup-form" onsubmit="return false;">
+									<div class="row gtr-uniform">
+										<div class="col-4 col-12-xsmall">
+											<select name="resource_type" id="resource_type" class="resource-type-select">
+												<option value="" disabled selected><?php echo tstring('lookup_select_type'); ?></option>
+												<optgroup label="<?php echo tstring('resource_main'); ?>">
+													<option value="mint"><?php echo tstring('mint'); ?></option>
+													<option value="coin"><?php echo tstring('coin'); ?></option>
+													<option value="type"><?php echo tstring('type'); ?></option>
+													<option value="hoard"><?php echo tstring('hoard'); ?></option>
+												</optgroup>
+												<optgroup label="<?php echo tstring('resource_ts_paleo'); ?>">
+													<option value="icon"><?php echo tstring('iconography'); ?></option>
+													<option value="cmk"><?php echo tstring('countermark'); ?></option>
+													<option value="greek"><?php echo tstring('greek'); ?></option>
+													<option value="latin"><?php echo tstring('latin'); ?></option>
+													<option value="punic"><?php echo tstring('punic'); ?></option>
+													<option value="ibo"><?php echo tstring('northern_palaeohispanic'); ?></option>
+													<option value="ibm"><?php echo tstring('southern_palaeohispanic'); ?></option>
+													<option value="txr"><?php echo tstring('south_western_palaeohispanic'); ?></option>
+												</optgroup>
+											</select>
+										</div>
+										<div class="col-5 col-12-xsmall">
+											<input type="number" name="resource_id" id="resource_id" placeholder="<?php echo tstring('lookup_placeholder_id'); ?>" required min="1" class="resource-id-input">
+										</div>
+										<div class="col-3 col-12-xsmall">
+											<button type="submit" id="lookup_submit" class="button primary lookup-submit fit"><?php echo tstring('lookup_go'); ?></button>
+										</div>
+									</div>
+								</form>
+							</div>
+						</section>
+				</div>
+			</div>
+
+		<!-- footer -->
+			<?php include dirname(dirname(dirname(__FILE__))) . '/page/html/footer.phtml'; ?>
+
+	</div>
+
+<?php echo $this->get_header_links('js', ['js_async' => 'defer']) ?>
+<script>
+dom_ready(function(){
+	lookup.set_up({
+		form: document.getElementById('lookup_form'),
+		select: document.getElementById('resource_type'),
+		input: document.getElementById('resource_id')
+	});
+});
+</script>

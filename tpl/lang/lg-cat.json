@@ -78,6 +78,7 @@
     "iconography_obverse": "Iconografia d'anvers",
     "iconography_reverse": "Iconografia de revers",
     "id": "ID",
+    "iconography": "Iconografia",
     "identification": "Identificació",
     "in": "En",
     "indexation": "Indexació",
@@ -184,5 +185,19 @@
     "weight": "Pes",
     "whiskers": "Bigots",
     "work_in_progress": "Work in progress. Provisional numbering. Not for citation",
-    "xticklabel_angle": "Angle de les etiquetes (eix X)"
+    "xticklabel_angle": "Angle de les etiquetes (eix X)",
+    "lookup_title": "Cerca per ID",
+    "lookup_abstract": "Introduïu un tipus de recurs i el seu ID per obrir ràpidament la seua pàgina.",
+    "lookup_select_type": "Seleccionar tipus de recurs",
+    "lookup_placeholder_id": "ID (ex. 2, 112161)",
+    "lookup_go": "Anar",
+    "resource_main": "Recursos principals",
+    "resource_ts_paleo": "Tesaurus i Paleografia",
+    "greek": "Grega",
+    "latin": "Llatina",
+    "punic": "Púnica",
+    "northern_palaeohispanic": "Paleohispànica nord-oriental",
+    "southern_palaeohispanic": "Paleohispànica meridional",
+    "south_western_palaeohispanic": "Paleohispànica sud-occidental",
+    "lookup_error_no_type": "Per favor seleccioni un tipus de recurs"
 }

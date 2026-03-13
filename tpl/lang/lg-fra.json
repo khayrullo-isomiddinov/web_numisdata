@@ -78,6 +78,7 @@
     "iconography_obverse": "Iconographie de droit",
     "iconography_reverse": "Iconographie de revers",
     "id": "ID",
+    "iconography": "Iconographie",
     "identification": "Identification",
     "in": "En",
     "indexation": "Indexage",
@@ -184,5 +185,19 @@
     "weight": " Poids",
     "whiskers": "Moustaches",
     "work_in_progress": "Work in progress. Provisional numbering. Not for citation",
-    "xticklabel_angle": ""
+    "xticklabel_angle": "",
+    "lookup_title": "Recherche par ID",
+    "lookup_abstract": "Entrez un type de ressource et son identifiant pour ouvrir rapidement sa page.",
+    "lookup_select_type": "Sélectionner le type de ressource",
+    "lookup_placeholder_id": "ID (ex. 2, 112161)",
+    "lookup_go": "Aller",
+    "resource_main": "Ressources principales",
+    "resource_ts_paleo": "Thésaurus et Paléographie",
+    "greek": "Grecque",
+    "latin": "Latine",
+    "punic": "Punique",
+    "northern_palaeohispanic": "Paléohispanique du Nord",
+    "southern_palaeohispanic": "Paléohispanique du Sud",
+    "south_western_palaeohispanic": "Paléohispanique du Sud-Ouest",
+    "lookup_error_no_type": "Veuillez sélectionner un type de ressource"
 }

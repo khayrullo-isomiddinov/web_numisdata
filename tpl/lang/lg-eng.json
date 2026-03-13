@@ -78,6 +78,7 @@
   "iconography_obverse": "Obverse iconography",
   "iconography_reverse": "Reverse iconography",
   "id": "ID",
+  "iconography": "Iconography",
   "identification": "Identification",
   "in": "In",
   "indexation": "Indexation",
@@ -188,5 +189,19 @@
   "work_in_progress": "Work in progress. Provisional numbering. Not for citation",
   "xticklabel_angle": "X-Tick label angle",
   "use_chrome_for_print": "Preferably use 'Chrome' for printing",
-  "regression_model": "Regression model"
+  "regression_model": "Regression model",
+  "lookup_title": "ID Lookup",
+  "lookup_abstract": "Enter a resource type and its ID to quickly open its page.",
+  "lookup_select_type": "Select Resource Type",
+  "lookup_placeholder_id": "ID (e.g. 2, 112161)",
+  "lookup_go": "Go",
+  "resource_main": "Main Resources",
+  "resource_ts_paleo": "Thesaurus & Paleography",
+  "greek": "Greek",
+  "latin": "Latin",
+  "punic": "Punic",
+  "northern_palaeohispanic": "Northern Palaeohispanic",
+  "southern_palaeohispanic": "Southern Palaeohispanic",
+  "south_western_palaeohispanic": "South-Western Palaeohispanic",
+  "lookup_error_no_type": "Please select a resource type"
 }

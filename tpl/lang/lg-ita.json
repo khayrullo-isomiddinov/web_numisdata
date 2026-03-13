@@ -78,6 +78,7 @@
     "iconography_obverse": "Iconografia dritto",
     "iconography_reverse": "Iconografia rovescio",
     "id": "ID",
+    "iconography": "Iconografia",
     "identification": "Identificazione",
     "in": "In",
     "indexation": "Indicizzazione",
@@ -184,5 +185,19 @@
     "weight": "Peso",
     "whiskers": "Baffi",
     "work_in_progress": "Work in progress. Provisional numbering. Not for citation",
-    "xticklabel_angle": ""
+    "xticklabel_angle": "",
+    "lookup_title": "Ricerca per ID",
+    "lookup_abstract": "Inserisci un tipo di risorsa e il suo ID per aprire rapidamente la sua pagina.",
+    "lookup_select_type": "Seleziona il tipo di risorsa",
+    "lookup_placeholder_id": "ID (es. 2, 112161)",
+    "lookup_go": "Vai",
+    "resource_main": "Risorse principali",
+    "resource_ts_paleo": "Tesauro e Paleografia",
+    "greek": "Greca",
+    "latin": "Latina",
+    "punic": "Punica",
+    "northern_palaeohispanic": "Paleo-ispanica settentrionale",
+    "southern_palaeohispanic": "Paleo-ispanica meridionale",
+    "south_western_palaeohispanic": "Paleo-ispanica sud-occidentale",
+    "lookup_error_no_type": "Per favore seleziona un tipo di risorsa"
 }
