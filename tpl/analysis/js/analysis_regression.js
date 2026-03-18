@@ -24,6 +24,7 @@ let load_promise = null;
 export const analysis_regression = {
 
 	regression_vars: null,
+    bootstrap_cache: null,
 
 	/**
 	 * Initializes the regression module.
@@ -183,7 +184,6 @@ export const analysis_regression = {
                 betaR : fitR.b,
                 filtered
             };
-
             this.regression_fit_cache = result;
 
             if (SHOW_DEBUG === true) {
@@ -192,6 +192,180 @@ export const analysis_regression = {
 
             return result;
         });
+    },
+
+    /**
+     * Calculates a quantile from a sorted numeric array.
+     *
+     * @param {number[]} sortedArr
+     * @param {number} q
+     * @returns {number}
+     */
+    quantile_sorted: function(sortedArr, q) {
+        const n = sortedArr.length;
+        if (!n) return NaN;
+        if (n === 1) return sortedArr[0];
+
+        const pos = (n - 1) * q;
+        const base = Math.floor(pos);
+        const rest = pos - base;
+
+        if ((base + 1) < n) {
+            return sortedArr[base] + rest * (sortedArr[base + 1] - sortedArr[base]);
+        }
+        return sortedArr[base];
+    },
+
+    /**
+     * Returns bootstrap percentile band for a prediction matrix row.
+     *
+     * @param {number[]} values
+     * @returns {{lwr:number, med:number, upr:number}}
+     */
+    bootstrap_band_from_vector: function(values) {
+        const clean = values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
+
+        if (!clean.length) {
+            return { lwr: NaN, med: NaN, upr: NaN };
+        }
+
+        return {
+            lwr: this.quantile_sorted(clean, 0.025),
+            med: this.quantile_sorted(clean, 0.5),
+            upr: this.quantile_sorted(clean, 0.975)
+        };
+    },
+
+    /**
+     * Calculates bootstrap confidence bands for obverse and reverse
+     * from 1 to 500 coins, following the same logic as the R code.
+     *
+     * @param {number} B Number of bootstrap iterations
+     * @returns {Promise<Object>}
+     */
+    get_bootstrap_bands: function(B = 2000) {
+        if (this.bootstrap_cache && this.bootstrap_cache.B === B) {
+            return Promise.resolve(this.bootstrap_cache);
+        }
+
+        return this.get_log_regression_coefficients().then((fit) => {
+            const {
+                filtered: {
+                    IR_Ant_filtrat,
+                    D_A_Ant_filtrat,
+                    D_R_Ant_filtrat
+                }
+            } = fit;
+
+            const n = IR_Ant_filtrat.length;
+            const Mgrid = Array.from({ length: 500 }, (_, i) => i + 1);
+
+            if (!n) {
+                const emptyBand = Mgrid.map(m => ({
+                    m,
+                    lwr: NaN,
+                    med: NaN,
+                    upr: NaN
+                }));
+
+                const result = {
+                    B,
+                    Mgrid,
+                    bandA: emptyBand,
+                    bandR: emptyBand
+                };
+
+                this.bootstrap_cache = result;
+                return result;
+            }
+
+            const predA = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
+            const predR = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
+
+            for (let b = 0; b < B; b++) {
+                const idx = Array.from({ length: n }, () => Math.floor(Math.random() * n));
+
+                const Xb  = idx.map(i => Math.log(IR_Ant_filtrat[i]));
+                const YA_b = idx.map(i => Math.log(D_A_Ant_filtrat[i]));
+                const YR_b = idx.map(i => Math.log(D_R_Ant_filtrat[i]));
+
+                const fitA_b = this.coefficients(Xb, YA_b);
+                const fitR_b = this.coefficients(Xb, YR_b);
+
+                const alphaA_b = fitA_b.a;
+                const betaA_b  = fitA_b.b;
+                const alphaR_b = fitR_b.a;
+                const betaR_b  = fitR_b.b;
+
+                for (let j = 0; j < Mgrid.length; j++) {
+                    const m = Mgrid[j];
+
+                    predA[j][b] = this.predict_potential(m, alphaA_b, betaA_b);
+                    predR[j][b] = this.predict_potential(m, alphaR_b, betaR_b);
+                }
+            }
+
+            const bandA = predA.map((row, i) => ({
+                m: Mgrid[i],
+                ...this.bootstrap_band_from_vector(row)
+            }));
+
+            const bandR = predR.map((row, i) => ({
+                m: Mgrid[i],
+                ...this.bootstrap_band_from_vector(row)
+            }));
+
+            const result = {
+                B,
+                Mgrid,
+                bandA,
+                bandR
+            };
+
+            this.bootstrap_cache = result;
+
+            if (SHOW_DEBUG === true) {
+                console.log("---> bootstrap bands", result);
+            }
+
+            return result;
+        });
+    },
+
+    /**
+     * Gets the bootstrap interval for a specific IR value.
+     * Uses nearest integer in [1, 500].
+     *
+     * @param {number} ir
+     * @param {Array<Object>} band
+     * @returns {{lwr:number, med:number, upr:number}|null}
+     */
+    get_bootstrap_interval_for_ir: function(ir, band) {
+        if (!Number.isFinite(ir) || ir < 1 || ir > 500 || !Array.isArray(band)) {
+            return null;
+        }
+
+        const m = Math.round(ir);
+        const row = band[m - 1];
+
+        if (!row) return null;
+
+        return {
+            lwr: row.lwr,
+            med: row.med,
+            upr: row.upr
+        };
+    },
+
+    /**
+     * Formats a numeric value for tooltip display.
+     *
+     * @param {number} value
+     * @param {number} digits
+     * @returns {string}
+     */
+    format_tooltip_number: function(value, digits = 2) {
+        return Number.isFinite(value) ? value.toFixed(digits) : "NA";
     },
 
     /**
@@ -289,31 +463,45 @@ export const analysis_regression = {
         });
     },
 
-    /**
-     * Generates scatter trace for current search results (obverse).
+       /**
+     * Generates scatter trace for current search results (obverse),
+     * including bootstrap confidence interval in customdata.
      *
      * @param {Array<Object>} parsed_data
      * @param {string|Element} regression_model_chart_container
      * @returns {Promise<Array<Object>>}
      */
     plot_points_regression_anv: function(parsed_data, regression_model_chart_container) {
-        const self = this;
         const emblems = parsed_data.slice(1);
 
-        return Promise.all(
-            emblems.map(emblem => self.calculation_IR_anv(emblem).then(({ ir, approx }) => {
+        return Promise.all([
+            Promise.all(
+                emblems.map(emblem => this.calculation_IR_anv(emblem).then(({ ir, approx }) => {
+                    return {
+                        ir,
+                        approx,
+                        ceca: emblem.p_mint,
+                        id: emblem.term_section_id,
+                        num: emblem.ref_type_number,
+                        ref_ceca: emblem.ref_mint_number
+                    };
+                }))
+            ),
+            this.get_bootstrap_bands()
+        ]).then(([vect_tipos, bootstrap]) => {
+            const vect_tipos_with_ci = vect_tipos.map(obj => {
+                const ci = this.get_bootstrap_interval_for_ir(obj.ir, bootstrap.bandA);
+
                 return {
-                    ir,
-                    approx,
-                    ceca: emblem.p_mint,
-                    id: emblem.term_section_id,
-                    num: emblem.ref_type_number,
-                    ref_ceca: emblem.ref_mint_number
+                    ...obj,
+                    ci_lwr: ci ? ci.lwr : NaN,
+                    ci_med: ci ? ci.med : NaN,
+                    ci_upr: ci ? ci.upr : NaN
                 };
-            }))
-        ).then((vect_tipos) => {
-            const xValues = vect_tipos.map(obj => obj.ir);
-            const yValues = vect_tipos.map(obj => obj.approx);
+            });
+
+            const xValues = vect_tipos_with_ci.map(obj => obj.ir);
+            const yValues = vect_tipos_with_ci.map(obj => obj.approx);
 
             const pointsTrace = {
                 x: xValues,
@@ -321,12 +509,22 @@ export const analysis_regression = {
                 mode: "markers",
                 type: "scatter",
                 name: "Aproximación",
-                customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
+                customdata: vect_tipos_with_ci.map(o => [
+                    o.ceca,
+                    o.id,
+                    o.ref_ceca,
+                    o.num,
+                    o.ci_lwr,
+                    o.ci_med,
+                    o.ci_upr
+                ]),
                 hovertemplate:
                     "Ceca: %{customdata[0]}<br>" +
                     "MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
                     "Num. monedas: %{x}<br>" +
-                    "Estimación cuños anverso: %{y}<extra></extra>",
+                    "Estimación cuños anverso: %{y}<br>" +
+                    "IC bootstrap 95%: [%{customdata[4]}, %{customdata[6]}]<br>" +
+                    "Mediana bootstrap: %{customdata[5]}<extra></extra>",
                 marker: {
                     color: "darkblue",
                     size: 10,
@@ -419,31 +617,45 @@ export const analysis_regression = {
         });
     },
 
-    /**
-     * Generates scatter trace for current search results (reverse).
+       /**
+     * Generates scatter trace for current search results (reverse),
+     * including bootstrap confidence interval in customdata.
      *
      * @param {Array<Object>} parsed_data
      * @param {string|Element} regression_model_chart_container
      * @returns {Promise<Array<Object>>}
      */
     plot_points_regression_rev: function(parsed_data, regression_model_chart_container) {
-        const self = this;
         const emblems = parsed_data.slice(1);
 
-        return Promise.all(
-            emblems.map(emblem =>
-                self.calculation_IR_rev(emblem).then(({ ir, approx }) => ({
-                    ir,
-                    approx,
-                    ceca: emblem.p_mint,
-                    id: emblem.term_section_id,
-                    num: emblem.ref_type_number,
-                    ref_ceca: emblem.ref_mint_number
-                }))
-            )
-        ).then((vect_tipos) => {
-            const xValues = vect_tipos.map(obj => obj.ir);
-            const yValues = vect_tipos.map(obj => obj.approx);
+        return Promise.all([
+            Promise.all(
+                emblems.map(emblem =>
+                    this.calculation_IR_rev(emblem).then(({ ir, approx }) => ({
+                        ir,
+                        approx,
+                        ceca: emblem.p_mint,
+                        id: emblem.term_section_id,
+                        num: emblem.ref_type_number,
+                        ref_ceca: emblem.ref_mint_number
+                    }))
+                )
+            ),
+            this.get_bootstrap_bands()
+        ]).then(([vect_tipos, bootstrap]) => {
+            const vect_tipos_with_ci = vect_tipos.map(obj => {
+                const ci = this.get_bootstrap_interval_for_ir(obj.ir, bootstrap.bandR);
+
+                return {
+                    ...obj,
+                    ci_lwr: ci ? ci.lwr : NaN,
+                    ci_med: ci ? ci.med : NaN,
+                    ci_upr: ci ? ci.upr : NaN
+                };
+            });
+
+            const xValues = vect_tipos_with_ci.map(obj => obj.ir);
+            const yValues = vect_tipos_with_ci.map(obj => obj.approx);
 
             const pointsTrace = {
                 x: xValues,
@@ -451,12 +663,22 @@ export const analysis_regression = {
                 mode: "markers",
                 type: "scatter",
                 name: "Aproximación",
-                customdata: vect_tipos.map(o => [o.ceca, o.id, o.ref_ceca, o.num]),
+                customdata: vect_tipos_with_ci.map(o => [
+                    o.ceca,
+                    o.id,
+                    o.ref_ceca,
+                    o.num,
+                    o.ci_lwr,
+                    o.ci_med,
+                    o.ci_upr
+                ]),
                 hovertemplate:
                     "Ceca: %{customdata[0]}<br>" +
                     "MIB: %{customdata[1]} | %{customdata[2]} / %{customdata[3]}<br>" +
                     "Num. monedas: %{x}<br>" +
-                    "Estimación cuños reverso: %{y}<extra></extra>",
+                    "Estimación cuños reverso: %{y}<br>" +
+                    "IC bootstrap 95%: [%{customdata[4]}, %{customdata[6]}]<br>" +
+                    "Mediana bootstrap: %{customdata[5]}<extra></extra>",
                 marker: {
                     color: "darkblue",
                     size: 10,
@@ -648,9 +870,11 @@ export const analysis_regression = {
                         tooltip.html(`
                             <div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
                             <div><b>MIB:</b> ${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
-                            <div><b>Num. monedas:</b> ${d.x}</div>
-                            <div><b>Estimación cuños:</b> ${d.y}</div>
-                        `);
+                            <div><b>Num. monedas:</b> ${this.format_tooltip_number(d.x, 0)}</div>
+                            <div><b>Estimación cuños:</b> ${this.format_tooltip_number(d.y, 2)}</div>
+                            <div><b>IC bootstrap 95%:</b> [${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
+                            <div><b>Mediana bootstrap:</b> ${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
+                            `);
                     })
                     .on("mousemove.tooltip", (event) => {
                         const tt = tooltip.node();
