@@ -21,10 +21,14 @@
 let load_promise = null;
 
 
+//import { type_tooltip_callback } from "./analysis.js";
+//console.log("type_tooltip_callback:", type_tooltip_callback);
 export const analysis_regression = {
 
 	regression_vars: null,
     bootstrap_cache: null,
+
+    
 
 	/**
 	 * Initializes the regression module.
@@ -243,94 +247,123 @@ export const analysis_regression = {
      * @param {number} B Number of bootstrap iterations
      * @returns {Promise<Object>}
      */
-    get_bootstrap_bands: function(B = 2000) {
-        if (this.bootstrap_cache && this.bootstrap_cache.B === B) {
-            return Promise.resolve(this.bootstrap_cache);
-        }
+  get_bootstrap_bands: function(B = 2000) {
+    if (this.bootstrap_cache && this.bootstrap_cache.B === B) {
+        return Promise.resolve(this.bootstrap_cache);
+    }
 
-        return this.get_log_regression_coefficients().then((fit) => {
-            const {
-                filtered: {
-                    IR_Ant_filtrat,
-                    D_A_Ant_filtrat,
-                    D_R_Ant_filtrat
-                }
-            } = fit;
-
-            const n = IR_Ant_filtrat.length;
-            const Mgrid = Array.from({ length: 500 }, (_, i) => i + 1);
-
-            if (!n) {
-                const emptyBand = Mgrid.map(m => ({
-                    m,
-                    lwr: NaN,
-                    med: NaN,
-                    upr: NaN
-                }));
-
-                const result = {
-                    B,
-                    Mgrid,
-                    bandA: emptyBand,
-                    bandR: emptyBand
-                };
-
-                this.bootstrap_cache = result;
-                return result;
+    return this.get_log_regression_coefficients().then((fit) => {
+        const {
+            alphaA,
+            betaA,
+            alphaR,
+            betaR,
+            filtered: {
+                IR_Ant_filtrat,
+                D_A_Ant_filtrat,
+                D_R_Ant_filtrat
             }
+        } = fit;
 
-            const predA = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
-            const predR = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
+        const n = IR_Ant_filtrat.length;
+        const Mgrid = Array.from({ length: 500 }, (_, i) => i + 1);
 
-            for (let b = 0; b < B; b++) {
-                const idx = Array.from({ length: n }, () => Math.floor(Math.random() * n));
-
-                const Xb  = idx.map(i => Math.log(IR_Ant_filtrat[i]));
-                const YA_b = idx.map(i => Math.log(D_A_Ant_filtrat[i]));
-                const YR_b = idx.map(i => Math.log(D_R_Ant_filtrat[i]));
-
-                const fitA_b = this.coefficients(Xb, YA_b);
-                const fitR_b = this.coefficients(Xb, YR_b);
-
-                const alphaA_b = fitA_b.a;
-                const betaA_b  = fitA_b.b;
-                const alphaR_b = fitR_b.a;
-                const betaR_b  = fitR_b.b;
-
-                for (let j = 0; j < Mgrid.length; j++) {
-                    const m = Mgrid[j];
-
-                    predA[j][b] = this.predict_potential(m, alphaA_b, betaA_b);
-                    predR[j][b] = this.predict_potential(m, alphaR_b, betaR_b);
-                }
-            }
-
-            const bandA = predA.map((row, i) => ({
-                m: Mgrid[i],
-                ...this.bootstrap_band_from_vector(row)
-            }));
-
-            const bandR = predR.map((row, i) => ({
-                m: Mgrid[i],
-                ...this.bootstrap_band_from_vector(row)
+        if (!n) {
+            const emptyBand = Mgrid.map(m => ({
+                m,
+                lwr: NaN,
+                med: NaN,
+                upr: NaN
             }));
 
             const result = {
                 B,
                 Mgrid,
-                bandA,
-                bandR
+                bandA: emptyBand,
+                bandR: emptyBand,
+                oneDieA: { ir: NaN, lwr: NaN, med: NaN, upr: NaN },
+                oneDieR: { ir: NaN, lwr: NaN, med: NaN, upr: NaN }
             };
 
             this.bootstrap_cache = result;
-
-            if (SHOW_DEBUG === true) {
-                console.log("---> bootstrap bands", result);
-            }
-
             return result;
-        });
-    },
+        }
+
+        const predA = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
+        const predR = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
+
+        // IR donde la recta central predice exactamente 1 cuño
+        const irAtOneA = Math.exp(-alphaA / betaA);
+        const irAtOneR = Math.exp(-alphaR / betaR);
+
+        const predAtOneA = new Array(B).fill(NaN);
+        const predAtOneR = new Array(B).fill(NaN);
+
+        for (let b = 0; b < B; b++) {
+            const idx = Array.from({ length: n }, () => Math.floor(Math.random() * n));
+
+            const Xb   = idx.map(i => Math.log(IR_Ant_filtrat[i]));
+            const YA_b = idx.map(i => Math.log(D_A_Ant_filtrat[i]));
+            const YR_b = idx.map(i => Math.log(D_R_Ant_filtrat[i]));
+
+            const fitA_b = this.coefficients(Xb, YA_b);
+            const fitR_b = this.coefficients(Xb, YR_b);
+
+            const alphaA_b = fitA_b.a;
+            const betaA_b  = fitA_b.b;
+            const alphaR_b = fitR_b.a;
+            const betaR_b  = fitR_b.b;
+
+            // distribución bootstrap del "1 cuño"
+            predAtOneA[b] = this.predict_potential(irAtOneA, alphaA_b, betaA_b);
+            predAtOneR[b] = this.predict_potential(irAtOneR, alphaR_b, betaR_b);
+
+            for (let j = 0; j < Mgrid.length; j++) {
+                const m = Mgrid[j];
+
+                predA[j][b] = this.predict_potential(m, alphaA_b, betaA_b);
+                predR[j][b] = this.predict_potential(m, alphaR_b, betaR_b);
+            }
+        }
+
+        const bandA = predA.map((row, i) => ({
+            m: Mgrid[i],
+            ...this.bootstrap_band_from_vector(row)
+        }));
+
+        const bandR = predR.map((row, i) => ({
+            m: Mgrid[i],
+            ...this.bootstrap_band_from_vector(row)
+        }));
+
+        const oneDieA = {
+            ir: irAtOneA,
+            ...this.bootstrap_band_from_vector(predAtOneA)
+        };
+
+        const oneDieR = {
+            ir: irAtOneR,
+            ...this.bootstrap_band_from_vector(predAtOneR)
+        };
+
+        const result = {
+            B,
+            Mgrid,
+            bandA,
+            bandR,
+            oneDieA,
+            oneDieR
+        };
+
+        this.bootstrap_cache = result;
+
+        if (SHOW_DEBUG === true) {
+            console.log("---> bootstrap bands", result);
+        }
+
+        return result;
+    });
+},
 
     /**
      * Gets the bootstrap interval for a specific IR value.
@@ -465,7 +498,6 @@ export const analysis_regression = {
 
        /**
      * Generates scatter trace for current search results (obverse),
-     * including bootstrap confidence interval in customdata.
      *
      * @param {Array<Object>} parsed_data
      * @param {string|Element} regression_model_chart_container
@@ -490,18 +522,23 @@ export const analysis_regression = {
             this.get_bootstrap_bands()
         ]).then(([vect_tipos, bootstrap]) => {
             const vect_tipos_with_ci = vect_tipos.map(obj => {
-                const ci = this.get_bootstrap_interval_for_ir(obj.ir, bootstrap.bandA);
+    const approx_display = Math.max(1, obj.approx);
 
-                return {
-                    ...obj,
-                    ci_lwr: ci ? ci.lwr : NaN,
-                    ci_med: ci ? ci.med : NaN,
-                    ci_upr: ci ? ci.upr : NaN
-                };
-            });
+    const ci = (obj.approx < 1)
+        ? bootstrap.oneDieA
+        : this.get_bootstrap_interval_for_ir(obj.ir, bootstrap.bandA);
 
-            const xValues = vect_tipos_with_ci.map(obj => obj.ir);
-            const yValues = vect_tipos_with_ci.map(obj => obj.approx);
+    return {
+        ...obj,
+        approx_display,
+        ci_lwr: ci ? ci.lwr : NaN,
+        ci_med: ci ? ci.med : NaN,
+        ci_upr: ci ? ci.upr : NaN
+    };
+});
+
+const xValues = vect_tipos_with_ci.map(obj => obj.ir);
+const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
 
             const pointsTrace = {
                 x: xValues,
@@ -644,18 +681,23 @@ export const analysis_regression = {
             this.get_bootstrap_bands()
         ]).then(([vect_tipos, bootstrap]) => {
             const vect_tipos_with_ci = vect_tipos.map(obj => {
-                const ci = this.get_bootstrap_interval_for_ir(obj.ir, bootstrap.bandR);
+    const approx_display = Math.max(1, obj.approx);
 
-                return {
-                    ...obj,
-                    ci_lwr: ci ? ci.lwr : NaN,
-                    ci_med: ci ? ci.med : NaN,
-                    ci_upr: ci ? ci.upr : NaN
-                };
-            });
+    const ci = (obj.approx < 1)
+        ? bootstrap.oneDieR
+        : this.get_bootstrap_interval_for_ir(obj.ir, bootstrap.bandR);
 
-            const xValues = vect_tipos_with_ci.map(obj => obj.ir);
-            const yValues = vect_tipos_with_ci.map(obj => obj.approx);
+    return {
+        ...obj,
+        approx_display,
+        ci_lwr: ci ? ci.lwr : NaN,
+        ci_med: ci ? ci.med : NaN,
+        ci_upr: ci ? ci.upr : NaN
+    };
+});
+
+const xValues = vect_tipos_with_ci.map(obj => obj.ir);
+const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
 
             const pointsTrace = {
                 x: xValues,
@@ -716,6 +758,7 @@ export const analysis_regression = {
         });
     },
 
+
     /**
      * Renders the obverse and reverse regression charts using D3.js.
      *
@@ -746,6 +789,18 @@ export const analysis_regression = {
             .style("padding", "8px 10px")
             .style("font", "12px sans-serif")
             .style("box-shadow", "0 4px 14px rgba(0,0,0,0.12)");
+
+        const infoBox = d3.select(root)
+            .append("div")
+            .style("margin-top", "16px")
+            .style("padding", "24px 32px")
+            .style("background", "#f3f3f3")
+            .style("border-radius", "4px")
+            .style("max-width", "420px")
+            .style("font-family", "sans-serif")
+            .style("color", "#666")
+            .style("display", "none")
+            .text("Haz click en un punto azul para ver la información.");
 
         const viewportW = root.clientWidth || 900;
         const width = Math.max(1200, Math.floor(viewportW * 0.9));
@@ -831,11 +886,12 @@ export const analysis_regression = {
                     .attr("d", lineGen);
             });
 
-            series.filter(s => s.kind === "points").forEach(s => {
+            //series.filter(s => s.kind === "points").forEach(s => { Canviar esto per la fila de baix si volem que apareguen els punts blancs
+            series.filter(s => s.kind === "points" && s.keepColor).forEach(s => {    
                 const validPoints = s.points.filter(d =>
                     Number.isFinite(d.x) && Number.isFinite(d.y)
                 );
-
+                
                 const circles = g.selectAll(null)
                     .data(validPoints)
                     .join("circle")
@@ -848,7 +904,7 @@ export const analysis_regression = {
                     })
                     .attr("stroke", s.style.stroke ?? "#000")
                     .attr("stroke-width", s.style.strokeWidth ?? 2);
-
+                
                 const TARGET = "rgb(20,80,200)";
                 const norm = (v) => (v || "").replace(/\s+/g, "").toLowerCase();
 
@@ -897,6 +953,77 @@ export const analysis_regression = {
                         tooltip.style("left", `${left}px`).style("top", `${top}px`);
                     })
                     .on("mouseleave.tooltip", () => tooltip.style("opacity", 0));
+                    const blueCircles = circles.filter(function() {
+    const fillAttr = this.getAttribute("fill");
+    const fillComp = getComputedStyle(this).fill;
+    return norm(fillAttr) === norm(TARGET) || norm(fillComp) === norm(TARGET);
+});
+
+blueCircles
+    .style("cursor", "pointer")
+    .on("mouseenter.tooltip", (event, d) => {
+        tooltip.style("opacity", 1);
+        tooltip.html(`
+            <div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
+            <div><b>MIB:</b> ${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
+            <div><b>Num. monedas:</b> ${this.format_tooltip_number(d.x, 0)}</div>
+            <div><b>Estimación cuños:</b> ${this.format_tooltip_number(d.y, 2)}</div>
+            <div><b>IC bootstrap 95%:</b> [${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
+            <div><b>Mediana bootstrap:</b> ${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
+        `);
+    })
+    .on("mousemove.tooltip", (event) => {
+        const tt = tooltip.node();
+        const parent = tt.offsetParent || root;
+
+        const pRect = parent.getBoundingClientRect();
+        const cRect = event.currentTarget.getBoundingClientRect();
+
+        const ttW = tt.offsetWidth;
+        const ttH = tt.offsetHeight;
+
+        const xCenter = (cRect.left - pRect.left) + cRect.width / 2;
+
+        const sx = parent.scrollLeft || 0;
+        const sy = parent.scrollTop || 0;
+
+        const left = xCenter + sx - ttW / 2;
+        const top  = (cRect.top - pRect.top) + sy - ttH - 8;
+
+        tooltip.style("left", `${left}px`).style("top", `${top}px`);
+    })
+    .on("mouseleave.tooltip", () => {
+        tooltip.style("opacity", 0);
+    })
+ .on("click", (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log("OBJETO COMPLETO d:", d);
+        console.log("CUSTOMDATA:", d.customdata);
+       infoBox
+            .style("display", "block")
+            .html(`
+                <div style="display:grid; grid-template-columns: auto auto; column-gap: 18px; row-gap: 12px; font-size: 13px; line-height: 1.4;">
+                    <div style="text-align:right;">Ceca</div>
+                    <div style="text-align:left;">${d.customdata?.[0] ?? ""}</div>
+
+                    <div style="text-align:right;">MIB</div>
+                    <div style="text-align:left;">${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
+
+                    <div style="text-align:right;">Num. monedas</div>
+                    <div style="text-align:left;">${this.format_tooltip_number(d.x, 0)}</div>
+
+                    <div style="text-align:right;">Estimación cuños</div>
+                    <div style="text-align:left;">${this.format_tooltip_number(d.y, 2)}</div>
+
+                    <div style="text-align:right;">IC bootstrap 95%</div>
+                    <div style="text-align:left;">[${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
+
+                    <div style="text-align:right;">Mediana bootstrap</div>
+                    <div style="text-align:left;">${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
+                </div>
+            `);
+    });
             });
         });
     },
@@ -908,52 +1035,64 @@ export const analysis_regression = {
      * @param {Array<Object>} traces
      * @returns {Array<Object>}
      */
-    _traces_to_series: function(traces) {
-        const COLOR_TRACE_NAME = "Aproximación";
+   _traces_to_series: function(traces) {
+    const COLOR_TRACE_NAME = "Aproximación";
 
-        return (traces || []).map(t => {
-            const mode = (t.mode || "").toLowerCase();
-            const isLine = mode.includes("lines");
+    return (traces || []).map(t => {
+        const mode = (t.mode || "").toLowerCase();
+        const isLine = mode.includes("lines");
 
-            const points = (t.x || []).map((xVal, i) => ({
+        const points = (t.x || []).map((xVal, i) => {
+            const cd = Array.isArray(t.customdata) ? (t.customdata[i] ?? null) : (t.customdata ?? null);
+            const mintRaw = Array.isArray(cd?.[0]) ? cd[0][0] : cd?.[0];
+            const mint = (typeof mintRaw === "string") ? mintRaw.split("|")[0].trim() : mintRaw;
+
+            const rawY = +(t.y?.[i]);
+            const yVal = Number.isFinite(rawY) ? Math.max(1, rawY) : rawY;
+
+            return {
                 x: +xVal,
-                y: +(t.y?.[i]),
+                y: yVal,
                 i,
                 name: t.name ?? "",
                 text: Array.isArray(t.text) ? (t.text[i] ?? "") : (t.text ?? ""),
-                customdata: Array.isArray(t.customdata) ? (t.customdata[i] ?? null) : (t.customdata ?? null)
-            }));
-
-            if (isLine) {
-                return {
-                    kind: "line",
-                    points,
-                    name: t.name,
-                    style: {
-                        stroke: t.line?.color ?? "#9aa0a6",
-                        strokeWidth: t.line?.width ?? 2
-                    }
-                };
-            }
-
-            const markerColor = (t.name === "Aproximación") ? "rgb(20, 80, 200)" : t.marker?.color;
-            const getFill = (d) =>
-                Array.isArray(markerColor) ? (markerColor[d.i] ?? "white") : (markerColor ?? "white");
-
-            return {
-                kind: "points",
-                points,
-                name: t.name,
-                keepColor: (t.name === COLOR_TRACE_NAME),
-                style: {
-                    r: (t.name === "Aproximación") ? 4 : 5,
-                    fill: getFill,
-                    stroke: t.marker?.line?.color ?? "#000",
-                    strokeWidth: t.marker?.line?.width ?? 2
-                }
+                customdata: cd,
+                id: Number(cd?.[1]),
+                type_number: cd?.[3],
+                mint: mint
             };
         });
-    },
+
+        if (isLine) {
+            return {
+                kind: "line",
+                points,
+                name: t.name,
+                style: {
+                    stroke: t.line?.color ?? "#9aa0a6",
+                    strokeWidth: t.line?.width ?? 2
+                }
+            };
+        }
+
+        const markerColor = (t.name === "Aproximación") ? "rgb(20, 80, 200)" : t.marker?.color;
+        const getFill = (d) =>
+            Array.isArray(markerColor) ? (markerColor[d.i] ?? "white") : (markerColor ?? "white");
+
+        return {
+            kind: "points",
+            points,
+            name: t.name,
+            keepColor: (t.name === COLOR_TRACE_NAME),
+            style: {
+                r: (t.name === "Aproximación") ? 4 : 5,
+                fill: getFill,
+                stroke: t.marker?.line?.color ?? "#000",
+                strokeWidth: t.marker?.line?.width ?? 2
+            }
+        };
+    });
+},
 
     /**
      * Calculates simple linear regression coefficients for y = a + b*x
