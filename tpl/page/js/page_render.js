@@ -1,4 +1,4 @@
-/*global tstring, page_globals, common, Promise, event_manager, data_manager, WEB_AREA, __WEB_TEMPLATE_WEB__, psqo_factory, page */
+/*global tstring, page_globals, common, Promise, event_manager, data_manager, WEB_AREA, common, __WEB_TEMPLATE_WEB__, psqo_factory, page */
 /*eslint no-undef: "error"*/
 
 "use strict";
@@ -889,11 +889,16 @@ page.render_cite_record = async (row, container, title) => {
 /**
 * RENDER_AUTHORSHIP
 * Renders row authorship info in a normalized way
+* Authors are composed by name, surname, role and date. Each of these data can be missing, 
+* but the render will try to compose the most complete authorship info possible with the available data.
 * @param object row
 * 	Database record parsed
 * @return DocumentFragment
 */
 page.render_authorship = (row) => {
+	if(SHOW_DEBUG===true) {
+		console.log("Render authorship with row:", row);
+	}	
 
 	const fragment = new DocumentFragment()
 
@@ -903,6 +908,10 @@ page.render_authorship = (row) => {
 
 	const ar_surnames = row.authorship_surnames
 		? row.authorship_surnames.split('|')
+		: []
+		
+	const ar_entity = row.authorship_entity
+		? row.authorship_entity.split('|')
 		: []
 
 	const ar_roles = row.authorship_roles
@@ -928,11 +937,16 @@ page.render_authorship = (row) => {
 			if (ar_surnames[i]) {
 				name_parts.push(ar_surnames[i].trim().toUpperCase())
 			}
+			
+		// entity add
+			if (ar_entity[i]) {
+				name_parts.push('(' + ar_entity[i].trim() + ')')
+			}
 
 		// full name add
 			authorship_value_parts.push(
 				name_parts.join(' ')
-			)
+			)		
 
 		// role add
 			if (ar_roles[i]) {

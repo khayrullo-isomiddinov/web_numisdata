@@ -270,6 +270,7 @@ var mint = {
 						// 'authorship_date'
 						'authorship_names',
 						'authorship_surnames',
+						'authorship_entity',
 						'authorship_roles',
 						'change_to_uri',
 						'related',
@@ -813,13 +814,57 @@ var mint = {
 		// public_info
 			if (row_object.public_info && row_object.public_info.length>0) {
 
-				const public_info = row_object.public_info
+				const public_info = row_object.public_info;
+				const public_info_p = public_info.replace(/<br\s*\/?>/gi, '</p><p>');
+
 				block_text_length += public_info.length;
+				// fix at least 3 words in the last line
+
+				function fix_widows(html, minWords = 3) {
+				    const parser = new DOMParser();
+				    const doc = parser.parseFromString(html, 'text/html');
+				    doc.querySelectorAll('p').forEach(p => {
+				        // Walk to the last text node to preserve inner HTML tags
+				        const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT, null);
+				        let lastTextNode = null;
+				        let node;
+				        while ((node = walker.nextNode())) {
+				            if (node.textContent.trim()) lastTextNode = node;
+				        }
+				        if (!lastTextNode) return;
+
+				        const words = lastTextNode.textContent.trimEnd().split(/\s+/);
+				        if (words.length >= minWords) {
+				            const lastWords = words.slice(-minWords).join('\u00A0');
+				            const rest = words.slice(0, -minWords).join(' ');
+				            lastTextNode.textContent = (rest ? rest + ' ' : '') + lastWords;
+				        } else {
+				            // Fewer words than minWords in last node — join with previous text node
+				            const allTextNodes = [];
+				            const w2 = document.createTreeWalker(p, NodeFilter.SHOW_TEXT, null);
+				            while ((node = w2.nextNode())) {
+				                if (node.textContent.trim()) allTextNodes.push(node);
+				            }
+				            if (allTextNodes.length >= 2) {
+				                const prev = allTextNodes[allTextNodes.length - 2];
+				                const last = allTextNodes[allTextNodes.length - 1];
+				                const combined = (prev.textContent.trimEnd() + ' ' + last.textContent.trim()).split(/\s+/);
+				                if (combined.length > minWords) {
+				                    const lastWords = combined.slice(-minWords).join('\u00A0');
+				                    const rest = combined.slice(0, -minWords).join(' ');
+				                    prev.textContent = rest + ' ';
+				                    last.textContent = lastWords;
+				                }
+				            }
+				        }
+				    });
+				    return doc.body.innerHTML;
+				}
 
 				const public_info_block = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "info_text_block",
-					inner_html		: public_info,
+					inner_html		: fix_widows('<p>'+public_info_p+'</p>',4),
 					parent			: comments_wrap
 				})
 			}

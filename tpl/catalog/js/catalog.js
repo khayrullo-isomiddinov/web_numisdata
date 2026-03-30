@@ -1740,6 +1740,10 @@ var catalog = {
 
 		const children = parent.children
 
+		if( parent.term_table==='mints' ){
+			self.mint_section_id = parent.section_id
+		}
+
 		// wrapper
 			const catalog_row_wrapper = common.create_dom_element({
 				element_type	: "div",

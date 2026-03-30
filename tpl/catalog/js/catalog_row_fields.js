@@ -151,6 +151,11 @@ var catalog_row_fields = {
 							class_name		: "qr_code_node hide",
 							parent			: type_container
 						})
+						// Calculate mint position with respect current item and use it as indent
+						const mint_index		= catalog?.mint_section_id ? item.parents.indexOf(String(catalog.mint_section_id)) : -1
+						const qr_code_indent	= mint_index * 10
+						qr_code_node.style.marginLeft = `-${qr_code_indent}pt`
+						// Render QRCode as SVG
 						if (item.catalog_info?.section_id) {
 							const qr_url = page_globals.__WEB_BASE_URL__ + '/type/' + item.catalog_info.section_id
 							// Create QRCode Object
