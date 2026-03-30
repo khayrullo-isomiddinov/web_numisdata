@@ -673,7 +673,7 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
                         ir,
                         approx,
                         ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,//emblem.p_mint,
-                        id: emblem.term_section_id,
+                        id: emblem.section_id,//emblem.term_section_id,
                         num: emblem.ref_type_number,
                         ref_ceca: emblem.ref_mint_number
                     }))
@@ -996,35 +996,106 @@ blueCircles
     .on("mouseleave.tooltip", () => {
         tooltip.style("opacity", 0);
     })
-.on("click", (event, d) => {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log("OBJETO COMPLETO d:", d);
-        console.log("CUSTOMDATA:", d.customdata);
-       infoBox
-            .style("display", "block")
-            .html(`
-                <div style="display:grid; grid-template-columns: auto auto; column-gap: 18px; row-gap: 12px; font-size: 13px; line-height: 1.4;">
-                    <div style="text-align:right;">Ceca</div>
-                    <div style="text-align:left;">${d.customdata?.[0] ?? ""}</div>
+// En analysis_regression.js, dentro de _render_rev_anv_d3
+// Busca la sección .on("click", ...) y reemplázala con:
 
-                    <div style="text-align:right;">MIB</div>
-                    <div style="text-align:left;">${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
-
-                    <div style="text-align:right;">Num. monedas</div>
-                    <div style="text-align:left;">${this.format_tooltip_number(d.x, 0)}</div>
-
-                    <div style="text-align:right;">Estimación cuños</div>
-                    <div style="text-align:left;">${this.format_tooltip_number(d.y, 2)}</div>
-
-                    <div style="text-align:right;">IC bootstrap 95%</div>
-                    <div style="text-align:left;">[${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
-
-                    <div style="text-align:right;">Mediana bootstrap</div>
-                    <div style="text-align:left;">${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
-                </div>
-            `);
-    });
+.on("click", async (event, d) => {
+    event.preventDefault();
+    event.stopPropagation();
+     // Ver todo el objeto d
+    console.log("=== OBJETO d COMPLETO ===");
+    console.log(d);
+    console.log("Todas las propiedades:", Object.keys(d));
+    console.log("customdata:", d.customdata);
+    
+    // Buscar o crear el contenedor de paneles laterales
+    let panelsContainer = root.querySelector(".panels-container");
+    
+    if (!panelsContainer) {
+        // Crear contenedor de paneles si no existe
+        panelsContainer = document.createElement("div");
+        panelsContainer.className = "panels-container";
+        panelsContainer.style.cssText = `
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            margin-top: 20px;
+        `;
+        root.appendChild(panelsContainer);
+    }
+    
+    // Limpiar paneles anteriores
+    panelsContainer.innerHTML = "";
+    
+    // === PANEL IZQUIERDO: Información resumida ===
+    const leftPanel = document.createElement("div");
+    leftPanel.style.cssText = `
+        flex: 0 0 320px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        font-family: sans-serif;
+        border: 1px solid #e0e0e0;
+    `;
+    
+    leftPanel.innerHTML = `
+        <h3 style="margin: 0 0 15px 0; border-bottom: 2px solid #4a90e2; padding-bottom: 10px;">
+            Resumen Estadístico
+        </h3>
+        <div style="display:grid; grid-template-columns: auto auto; gap: 12px; font-size: 13px;">
+            <div style="font-weight: bold;">Ceca:</div>
+            <div>${d.customdata?.[0] ?? ""}</div>
+            
+            <div style="font-weight: bold;">MIB:</div>
+            <div>${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
+            
+            <div style="font-weight: bold;">Nº Monedas:</div>
+            <div>${this.format_tooltip_number(d.x, 0)}</div>
+            
+            <div style="font-weight: bold;">Estimación cuños:</div>
+            <div>${this.format_tooltip_number(d.y, 2)}</div>
+            
+            <div style="font-weight: bold;">Intervalo de confianza:</div>
+            <div>[${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
+            
+            <div style="font-weight: bold;">Mediana:</div>
+            <div>${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
+        </div>
+    `;
+    
+    // === PANEL DERECHO: Información detallada ===
+    const rightPanel = document.createElement("div");
+    rightPanel.style.cssText = `
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        max-height: 500px;
+        overflow-y: auto;
+    `;
+    
+    rightPanel.innerHTML = `<div style="text-align: center; padding: 20px;">Cargando...</div>`;
+    
+    panelsContainer.appendChild(leftPanel);
+    panelsContainer.appendChild(rightPanel);
+    
+    // Cargar detalles
+    try {
+        const options = {
+            id: d.customdata?.[1],
+            type_number: d.customdata?.[3],
+            mint: d.customdata?.[0]
+        };
+        
+        const tooltipElement = await type_tooltip_callback(options);
+        rightPanel.innerHTML = "";
+        rightPanel.appendChild(tooltipElement);
+        
+    } catch (error) {
+        rightPanel.innerHTML = `<div style="color: #c00;">Error: ${error.message}</div>`;
+    }
+})
 
             });
         });
