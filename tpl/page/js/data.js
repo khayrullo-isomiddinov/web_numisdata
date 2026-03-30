@@ -835,7 +835,7 @@ page.parse_catalog_data = function(data) {
 							if(dates[1]) {
 								ar_parsed.push( self.parse_date(dates[1]) )
 							}
-							obj.date = ar_parsed.join(' ')
+							obj.date = ar_parsed.join(' <> ')
 						}
 
 						if(number) {

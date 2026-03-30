@@ -36,10 +36,12 @@
   font-size: 0.8em;
   letter-spacing: 1px;
 }
-.result #row_detail .info_text_block br {
+.result #row_detail .info_text_block p {
   display: block;
-  margin: 1.2em 0;
-  content: " ";
+  margin-bottom: 0.5mm;
+}
+.result #row_detail .info_text_block p + p {
+  text-indent: 5mm;
 }
 .result #types .info_line.separator {
   margin-bottom: 1.25em;
@@ -265,7 +267,15 @@
     font-size: 10pt;
     letter-spacing: 0.2pt;
     word-spacing: -0.2pt;
-    line-height: 14pt;
+    line-height: 13pt;
+    text-wrap: pretty;
+  }
+  #wrapper #main > .inner .result > .row_detail .info_text_block p {
+    display: block;
+    margin-bottom: 0.5mm;
+  }
+  #wrapper #main > .inner .result > .row_detail .info_text_block p + p {
+    text-indent: 5mm;
   }
   #wrapper #main > .inner .result .authorship_print_container {
     display: block !important;
@@ -308,7 +318,7 @@
     height: 1cm;
     left: -1.4cm;
     top: 0.1cm;
-    opacity: 0.3;
+    opacity: 0.4;
     text-align: end;
   }
   .types_print .row_node .term_grouper {
