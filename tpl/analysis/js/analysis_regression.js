@@ -20,7 +20,7 @@
  */
 let load_promise = null;
 
-
+import { type_tooltip_callback } from "./analysis.js";
 //import { type_tooltip_callback } from "./analysis.js";
 //console.log("type_tooltip_callback:", type_tooltip_callback);
 export const analysis_regression = {
@@ -509,11 +509,12 @@ export const analysis_regression = {
         return Promise.all([
             Promise.all(
                 emblems.map(emblem => this.calculation_IR_anv(emblem).then(({ ir, approx }) => {
+                    console.log("emblem completo:", emblem);
                     return {
                         ir,
                         approx,
-                        ceca: emblem.p_mint,
-                        id: emblem.term_section_id,
+                        ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,//emblem.p_mint,
+                        id: emblem.section_id,   //term_section_id, //id. emblem.section.id
                         num: emblem.ref_type_number,
                         ref_ceca: emblem.ref_mint_number
                     };
@@ -671,7 +672,7 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
                     this.calculation_IR_rev(emblem).then(({ ir, approx }) => ({
                         ir,
                         approx,
-                        ceca: emblem.p_mint,
+                        ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,//emblem.p_mint,
                         id: emblem.term_section_id,
                         num: emblem.ref_type_number,
                         ref_ceca: emblem.ref_mint_number
@@ -995,7 +996,7 @@ blueCircles
     .on("mouseleave.tooltip", () => {
         tooltip.style("opacity", 0);
     })
- .on("click", (event, d) => {
+.on("click", (event, d) => {
         event.preventDefault();
         event.stopPropagation();
         console.log("OBJETO COMPLETO d:", d);
@@ -1024,6 +1025,7 @@ blueCircles
                 </div>
             `);
     });
+
             });
         });
     },
@@ -1057,9 +1059,9 @@ blueCircles
                 name: t.name ?? "",
                 text: Array.isArray(t.text) ? (t.text[i] ?? "") : (t.text ?? ""),
                 customdata: cd,
-                id: Number(cd?.[1]),
+                id: cd?.[1],//Number(cd?.[1]),
                 type_number: cd?.[3],
-                mint: mint
+                mint: cd?.[0]//mint
             };
         });
 
@@ -1127,6 +1129,94 @@ blueCircles
         const a = meanY - b * meanX;
 
         return { a, b };
+    },
+
+    /**
+ * Local tooltip callback for regression charts.
+ * Reuses the same catalog loading logic as analysis.js, but allows
+ * patching missing fields before calling draw_item().
+ *
+ * @param {Object} options
+ * @param {string|number} options.id
+ * @param {string} options.type_number
+ * @param {string} options.mint
+ * @param {string|number} [options.mint_section_id]
+ * @returns {Promise<Element>}
+ */
+/*type_tooltip_callback_regression: async function(options) {
+    if (SHOW_DEBUG === true) {
+        console.warn("---> type_tooltip_callback_regression options", options);
     }
+
+    const section_id = options.id;
+    const type_number = options.type_number;
+    const mint = options.mint;
+
+    const catalog_request_options = {
+        dedalo_get : "records",
+        lang       : page_globals.WEB_CURRENT_LANG_CODE,
+        table      : "catalog",
+        ar_fields  : ["*"],
+        section_id : section_id,
+        limit      : 1,
+        count      : false
+    };
+
+    const api_response = await data_manager.request({
+        body: catalog_request_options
+    });
+
+    const type_data = api_response?.result || [];
+
+    if (!Array.isArray(type_data) || type_data.length === 0) {
+        return common.create_dom_element({
+            element_type: "div",
+            text_content: `Could not find number ${type_number} for mint ${mint} in the database.`
+        });
+    }
+
+    const parsed_rows = page.parse_catalog_data(type_data) || [];
+    const type_row = parsed_rows[0];
+
+    if (SHOW_DEBUG === true) {
+        console.log("type_data RAW:", type_data[0]);
+        console.log("type_row parsed:", type_row);
+        console.log("type_row.mint_section_id BEFORE PATCH:", type_row?.mint_section_id);
+    }
+
+    if (!type_row) {
+        return common.create_dom_element({
+            element_type: "div",
+            text_content: `No parsed catalog row found for number ${type_number} and mint ${mint}.`
+        });
+    }
+
+    type_row.add_denomination = true;
+
+    if (!type_row.mint_section_id && Array.isArray(type_row.parents) && Array.isArray(type_row.parents_text)) {
+        const idx = type_row.parents_text.findIndex(txt =>
+            String(txt || "").trim() === String(mint || "").trim()
+        );
+
+        if (idx !== -1) {
+            type_row.mint_section_id = type_row.parents[idx];
+        }
+    }
+
+    if (SHOW_DEBUG === true) {
+        console.log("type_row.mint_section_id AFTER PATCH:", type_row?.mint_section_id);
+    }
+
+    const ele = catalog_row_fields.draw_item(type_row);
+
+    const coinsImages = ele.getElementsByClassName("coins_images")[0];
+    if (coinsImages) {
+        coinsImages.removeAttribute("style");
+    }
+
+    return ele;
+},*/
+
+
 
 };
