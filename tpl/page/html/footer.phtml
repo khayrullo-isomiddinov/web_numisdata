@@ -2,26 +2,35 @@
 	<!-- inner -->
 	<div class="inner">
 		<div class="footer-section-wrapper" id="footer_dynamic_wraper"></div>
+		
+		<!-- banner -->
+		<div id="banner" class="banner">
+			<style type="text/css">
+				<?php include dirname(dirname(dirname(__FILE__))) . '/assets/ans/ans.css' ?>
+			</style>
+			<?php include dirname(dirname(dirname(__FILE__))) . '/assets/ans/ans.svg' ?>
+		</div>
+	
 		<div class="footer-copyright-wrapper">
 			<ul class="copyright version">
 				<li class="version">Numisdata web v <?php
-					echo WEB_VERSION;
-					echo ' Build: ' . WEB_BUILD;
-					echo IS_PRODUCTION ? ' pro' : ' dev';
-					if (IS_PRODUCTION===false) {
-						echo ' DB: '.WEB_DB;
-					}
-				?></li><?php
-					if (defined('ISSB_ISSN_URI') && !empty(ISSB_ISSN_URI)) {
-						$html	= '<li>';
-							$html	.= '<a href="'.ISSB_ISSN_URI.'" class="issb_issn" rel="noreferrer" target="_blank">';
-								$html	.= ISSB_ISSN;
+													echo WEB_VERSION;
+													echo ' Build: ' . WEB_BUILD;
+													echo IS_PRODUCTION ? ' pro' : ' dev';
+													if (IS_PRODUCTION === false) {
+														echo ' DB: ' . WEB_DB;
+													}
+													?></li><?php
+						if (defined('ISSB_ISSN_URI') && !empty(ISSB_ISSN_URI)) {
+							$html	= '<li>';
+							$html	.= '<a href="' . ISSB_ISSN_URI . '" class="issb_issn" rel="noreferrer" target="_blank">';
+							$html	.= ISSB_ISSN;
 							$html	.=  '</a>';
-						$html	.= '</li>';
+							$html	.= '</li>';
 
-						echo $html;
-					}
-				?>
+							echo $html;
+						}
+						?>
 				<li><a href="mailto:<?php echo EMAIL ?>"><?php echo EMAIL ?></a></li>
 				<li class="print_hide99">
 					Powered by
