@@ -944,6 +944,11 @@ export async function type_tooltip_callback(options) {
 	const api_response = await data_manager.request({
 		body : catalog_request_options
 	})
+	
+	if (SHOW_DEBUG === true) {
+		console.warn('---> type_tooltip_callback api_response', api_response)
+	}
+	
 	const type_data = api_response.result || null
 
 	if (!type_data) {
@@ -954,14 +959,18 @@ export async function type_tooltip_callback(options) {
 	}
 	const type_row = page.parse_catalog_data(type_data)[0]
 
-	// set true to render material and denonimation
+	// set true to render material and denomination
 	type_row.add_denomination = true
+	
 	// CREATE THE RESULTING HTML Element
 	// type_row.render_material	= true
-	const ele = catalog_row_fields.draw_item(type_row)
-	// Remove style of coins images container, since it is hardcoded to 124mm
-	ele.getElementsByClassName('coins_images')[0].removeAttribute('style')
+	const type_node = catalog_row_fields.draw_item(type_row)
+	
+	if(type_node) {
+		// Remove style of coins images container, since it is hardcoded to 124mm
+		type_node.getElementsByClassName('coins_images')[0].removeAttribute('style')
+	}	
 
 
-	return ele
+	return type_node
 }
