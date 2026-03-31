@@ -23,6 +23,8 @@ let load_promise = null;
 import { type_tooltip_callback } from "./analysis.js";
 //import { type_tooltip_callback } from "./analysis.js";
 //console.log("type_tooltip_callback:", type_tooltip_callback);
+// Función auxiliar para extraer el número MIB del tooltip
+
 export const analysis_regression = {
 
 	regression_vars: null,
@@ -266,7 +268,7 @@ export const analysis_regression = {
         } = fit;
 
         const n = IR_Ant_filtrat.length;
-        const Mgrid = Array.from({ length: 500 }, (_, i) => i + 1);
+        const Mgrid = Array.from({ length: 1500 }, (_, i) => i + 1);
 
         if (!n) {
             const emptyBand = Mgrid.map(m => ({
@@ -374,7 +376,7 @@ export const analysis_regression = {
      * @returns {{lwr:number, med:number, upr:number}|null}
      */
     get_bootstrap_interval_for_ir: function(ir, band) {
-        if (!Number.isFinite(ir) || ir < 1 || ir > 500 || !Array.isArray(band)) {
+        if (!Number.isFinite(ir) || ir < 1 || ir > 1500 || !Array.isArray(band)) {
             return null;
         }
 
@@ -436,7 +438,7 @@ export const analysis_regression = {
             } = fit;
 
             const minIR = Math.min(...IR_Ant_filtrat);
-            const maxIR = Math.max(...IR_Ant_filtrat);
+            const maxIR = Math.max(...IR_Ant_filtrat,1500);
 
             const x_vals = Array.from(
                 { length: 2000 },
@@ -503,13 +505,15 @@ export const analysis_regression = {
      * @param {string|Element} regression_model_chart_container
      * @returns {Promise<Array<Object>>}
      */
-    plot_points_regression_anv: function(parsed_data, regression_model_chart_container) {
+   plot_points_regression_anv: function(parsed_data, regression_model_chart_container) {
         const emblems = parsed_data.slice(1);
 
         return Promise.all([
             Promise.all(
                 emblems.map(emblem => this.calculation_IR_anv(emblem).then(({ ir, approx }) => {
                     console.log("emblem completo:", emblem);
+                    // Obtener el número MIB correcto del catálogo
+                let correctMibNumber = emblem.ref_type_number; // valor por defecto
                     return {
                         ir,
                         approx,
@@ -595,7 +599,7 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
             } = fit;
 
             const minIR = Math.min(...IR_Ant_filtrat);
-            const maxIR = Math.max(...IR_Ant_filtrat);
+            const maxIR = Math.max(...IR_Ant_filtrat,1500);
 
             const x_vals = Array.from(
                 { length: 2000 },
@@ -663,7 +667,7 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
      * @param {string|Element} regression_model_chart_container
      * @returns {Promise<Array<Object>>}
      */
-    plot_points_regression_rev: function(parsed_data, regression_model_chart_container) {
+   plot_points_regression_rev: function(parsed_data, regression_model_chart_container) {
         const emblems = parsed_data.slice(1);
 
         return Promise.all([
@@ -758,7 +762,25 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
             });
         });
     },
+  extractMibNumber: function(tooltipElement, fallback = "?") {
+    const text = tooltipElement.textContent || tooltipElement.innerText || "";
+    const match = text.match(/MIB\s*(\d+)/i);
+    if (match) {
+        return match[1];
+    }
 
+    const mibElement =
+        tooltipElement.querySelector('[class*="mib"]') ||
+        tooltipElement.querySelector('[class*="MIB"]');
+
+    if (mibElement) {
+        const mibText = mibElement.textContent || "";
+        const mibMatch = mibText.match(/\d+/);
+        if (mibMatch) return mibMatch[0];
+    }
+
+    return fallback;
+},
 
     /**
      * Renders the obverse and reverse regression charts using D3.js.
@@ -804,8 +826,8 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
             .text("Haz click en un punto azul para ver la información.");
 
         const viewportW = root.clientWidth || 900;
-        const width = Math.max(1200, Math.floor(viewportW * 0.9));
-        const panelHeight = 260;
+        const width = Math.max(2500, Math.floor(viewportW * 0.9));
+        const panelHeight = 300;
         const gap = 40;
         const margin = { top: 40, right: 20, bottom: 45, left: 65 };
 
@@ -962,16 +984,40 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
 
 blueCircles
     .style("cursor", "pointer")
-    .on("mouseenter.tooltip", (event, d) => {
+    .on("mouseenter.tooltip", async (event, d) => {
         tooltip.style("opacity", 1);
-        tooltip.html(`
-            <div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
-            <div><b>MIB:</b> ${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
-            <div><b>Num. monedas:</b> ${this.format_tooltip_number(d.x, 0)}</div>
-            <div><b>Estimación cuños:</b> ${this.format_tooltip_number(d.y, 2)}</div>
-            <div><b>IC bootstrap 95%:</b> [${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
-            <div><b>Mediana bootstrap:</b> ${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
-        `);
+
+        const options = {
+            id: d.customdata?.[1],
+            type_number: d.customdata?.[3],
+            mint: d.customdata?.[0]
+        };
+
+        try {
+            const tooltipElement = await type_tooltip_callback(options);
+            const mibNumber = this.extractMibNumber(
+                tooltipElement,
+                d.customdata?.[3] ?? "?"
+            );
+
+            tooltip.html(`
+                <div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
+                <div><b>MIB:</b> ${mibNumber} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
+                <div><b>Num. monedas:</b> ${this.format_tooltip_number(d.x, 0)}</div>
+                <div><b>Estimación cuños:</b> ${this.format_tooltip_number(d.y, 2)}</div>
+                <div><b>Intervalo de confianza:</b> [${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
+                <div><b>Mediana del intervalo:</b> ${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
+            `);
+        } catch (error) {
+            tooltip.html(`
+                <div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
+                <div><b>MIB:</b> ${d.customdata?.[3] ?? "?"} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
+                <div><b>Num. monedas:</b> ${this.format_tooltip_number(d.x, 0)}</div>
+                <div><b>Estimación cuños:</b> ${this.format_tooltip_number(d.y, 2)}</div>
+                <div><b>IC bootstrap 95%:</b> [${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
+                <div><b>Mediana bootstrap:</b> ${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
+            `);
+        }
     })
     .on("mousemove.tooltip", (event) => {
         const tt = tooltip.node();
@@ -1002,17 +1048,11 @@ blueCircles
 .on("click", async (event, d) => {
     event.preventDefault();
     event.stopPropagation();
-     // Ver todo el objeto d
-    console.log("=== OBJETO d COMPLETO ===");
-    console.log(d);
-    console.log("Todas las propiedades:", Object.keys(d));
-    console.log("customdata:", d.customdata);
     
-    // Buscar o crear el contenedor de paneles laterales
+    // Mostrar loading en el panel izquierdo también
     let panelsContainer = root.querySelector(".panels-container");
     
     if (!panelsContainer) {
-        // Crear contenedor de paneles si no existe
         panelsContainer = document.createElement("div");
         panelsContainer.className = "panels-container";
         panelsContainer.style.cssText = `
@@ -1024,10 +1064,8 @@ blueCircles
         root.appendChild(panelsContainer);
     }
     
-    // Limpiar paneles anteriores
     panelsContainer.innerHTML = "";
-    
-    // === PANEL IZQUIERDO: Información resumida ===
+    //izq
     const leftPanel = document.createElement("div");
     leftPanel.style.cssText = `
         flex: 0 0 320px;
@@ -1037,33 +1075,9 @@ blueCircles
         font-family: sans-serif;
         border: 1px solid #e0e0e0;
     `;
+    leftPanel.innerHTML = `<div style="text-align: center; padding: 20px;">Cargando...</div>`;
     
-    leftPanel.innerHTML = `
-        <h3 style="margin: 0 0 15px 0; border-bottom: 2px solid #4a90e2; padding-bottom: 10px;">
-            Resumen Estadístico
-        </h3>
-        <div style="display:grid; grid-template-columns: auto auto; gap: 12px; font-size: 13px;">
-            <div style="font-weight: bold;">Ceca:</div>
-            <div>${d.customdata?.[0] ?? ""}</div>
-            
-            <div style="font-weight: bold;">MIB:</div>
-            <div>${d.customdata?.[1] ?? ""} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
-            
-            <div style="font-weight: bold;">Nº Monedas:</div>
-            <div>${this.format_tooltip_number(d.x, 0)}</div>
-            
-            <div style="font-weight: bold;">Estimación cuños:</div>
-            <div>${this.format_tooltip_number(d.y, 2)}</div>
-            
-            <div style="font-weight: bold;">Intervalo de confianza:</div>
-            <div>[${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
-            
-            <div style="font-weight: bold;">Mediana:</div>
-            <div>${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
-        </div>
-    `;
-    
-    // === PANEL DERECHO: Información detallada ===
+    // der
     const rightPanel = document.createElement("div");
     rightPanel.style.cssText = `
         flex: 1;
@@ -1074,13 +1088,11 @@ blueCircles
         max-height: 500px;
         overflow-y: auto;
     `;
-    
     rightPanel.innerHTML = `<div style="text-align: center; padding: 20px;">Cargando...</div>`;
     
     panelsContainer.appendChild(leftPanel);
     panelsContainer.appendChild(rightPanel);
     
-    // Cargar detalles
     try {
         const options = {
             id: d.customdata?.[1],
@@ -1089,13 +1101,65 @@ blueCircles
         };
         
         const tooltipElement = await type_tooltip_callback(options);
+        tooltipElement.innerHTML = tooltipElement.innerHTML.replace(
+            /(\s*)(Bronce\b)/i,
+            "<br>$2"
+        );
+   
+
+        const mibNumber = extractMibNumber(tooltipElement);
+
+        leftPanel.innerHTML = `
+            <h3 style="margin: 0 0 15px 0; border-bottom: 2px solid #4a90e2; padding-bottom: 10px;">
+                Resumen Estadístico
+            </h3>
+            <div style="display:grid; grid-template-columns: auto auto; gap: 12px; font-size: 13px;">
+                <div style="font-weight: bold;">Ceca:</div>
+                <div>${d.customdata?.[0] ?? ""}</div>
+                
+                <div style="font-weight: bold;">MIB:</div>
+                <div>${mibNumber} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
+                
+                <div style="font-weight: bold;">Nº Monedas:</div>
+                <div>${this.format_tooltip_number(d.x, 0)}</div>
+                
+                <div style="font-weight: bold;">Estimación cuños:</div>
+                <div>${this.format_tooltip_number(d.y, 2)}</div>
+                
+                <div style="font-weight: bold;">Intervalo de confianza:</div>
+                <div>[${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
+                
+                <div style="font-weight: bold;">Mediana:</div>
+                <div>${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
+            </div>
+        `;
+        
         rightPanel.innerHTML = "";
         rightPanel.appendChild(tooltipElement);
         
     } catch (error) {
+        leftPanel.innerHTML = `<div style="color: #c00;">Error: ${error.message}</div>`;
         rightPanel.innerHTML = `<div style="color: #c00;">Error: ${error.message}</div>`;
     }
 })
+
+function extractMibNumber(tooltipElement) {
+    const text = tooltipElement.textContent || tooltipElement.innerText;
+    const match = text.match(/MIB\s*(\d+)/i);
+    if (match) {
+        return match[1];
+    }
+    
+    const mibElement = tooltipElement.querySelector('[class*="mib"]') || 
+                       tooltipElement.querySelector('[class*="MIB"]');
+    if (mibElement) {
+        const mibText = mibElement.textContent;
+        const mibMatch = mibText.match(/\d+/);
+        if (mibMatch) return mibMatch[0];
+    }
+    
+    return d.customdata?.[3] ?? "?";
+}
 
             });
         });
@@ -1201,93 +1265,5 @@ blueCircles
 
         return { a, b };
     },
-
-    /**
- * Local tooltip callback for regression charts.
- * Reuses the same catalog loading logic as analysis.js, but allows
- * patching missing fields before calling draw_item().
- *
- * @param {Object} options
- * @param {string|number} options.id
- * @param {string} options.type_number
- * @param {string} options.mint
- * @param {string|number} [options.mint_section_id]
- * @returns {Promise<Element>}
- */
-/*type_tooltip_callback_regression: async function(options) {
-    if (SHOW_DEBUG === true) {
-        console.warn("---> type_tooltip_callback_regression options", options);
-    }
-
-    const section_id = options.id;
-    const type_number = options.type_number;
-    const mint = options.mint;
-
-    const catalog_request_options = {
-        dedalo_get : "records",
-        lang       : page_globals.WEB_CURRENT_LANG_CODE,
-        table      : "catalog",
-        ar_fields  : ["*"],
-        section_id : section_id,
-        limit      : 1,
-        count      : false
-    };
-
-    const api_response = await data_manager.request({
-        body: catalog_request_options
-    });
-
-    const type_data = api_response?.result || [];
-
-    if (!Array.isArray(type_data) || type_data.length === 0) {
-        return common.create_dom_element({
-            element_type: "div",
-            text_content: `Could not find number ${type_number} for mint ${mint} in the database.`
-        });
-    }
-
-    const parsed_rows = page.parse_catalog_data(type_data) || [];
-    const type_row = parsed_rows[0];
-
-    if (SHOW_DEBUG === true) {
-        console.log("type_data RAW:", type_data[0]);
-        console.log("type_row parsed:", type_row);
-        console.log("type_row.mint_section_id BEFORE PATCH:", type_row?.mint_section_id);
-    }
-
-    if (!type_row) {
-        return common.create_dom_element({
-            element_type: "div",
-            text_content: `No parsed catalog row found for number ${type_number} and mint ${mint}.`
-        });
-    }
-
-    type_row.add_denomination = true;
-
-    if (!type_row.mint_section_id && Array.isArray(type_row.parents) && Array.isArray(type_row.parents_text)) {
-        const idx = type_row.parents_text.findIndex(txt =>
-            String(txt || "").trim() === String(mint || "").trim()
-        );
-
-        if (idx !== -1) {
-            type_row.mint_section_id = type_row.parents[idx];
-        }
-    }
-
-    if (SHOW_DEBUG === true) {
-        console.log("type_row.mint_section_id AFTER PATCH:", type_row?.mint_section_id);
-    }
-
-    const ele = catalog_row_fields.draw_item(type_row);
-
-    const coinsImages = ele.getElementsByClassName("coins_images")[0];
-    if (coinsImages) {
-        coinsImages.removeAttribute("style");
-    }
-
-    return ele;
-},*/
-
-
 
 };
