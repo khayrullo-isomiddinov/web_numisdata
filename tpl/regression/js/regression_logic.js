@@ -20,17 +20,15 @@
  */
 let load_promise = null;
 
-import { type_tooltip_callback } from "./analysis.js";
+import { type_tooltip_callback } from "./regression.js";
 //import { type_tooltip_callback } from "./analysis.js";
 //console.log("type_tooltip_callback:", type_tooltip_callback);
 // Función auxiliar para extraer el número MIB del tooltip
 
-export const analysis_regression = {
+export const regression_logic = {
 
 	regression_vars: null,
     bootstrap_cache: null,
-
-    
 
 	/**
 	 * Initializes the regression module.
@@ -74,7 +72,7 @@ export const analysis_regression = {
 		const request_body = {
 			dedalo_get : 'records',
 			db_name    : "web_numisdata_mib_pre", // PRO is not available yet ! page_globals.WEB_DB ||
- 			table      : 'ts_web',
+			table      : 'ts_web',
 			ar_fields  : ['titulo', 'cuerpo', 'norder', 'web_path'],
 			lang       : 'lg-spa',
 			sql_filter : "web_path = 'regression_vars'",
@@ -84,8 +82,10 @@ export const analysis_regression = {
 
 		load_promise = data_manager.request({ body: request_body })
 			.then((response) => {
-				console.log(response)
-				console.log(request_body)
+                if (SHOW_DEBUG === true) {
+				    console.log(response)
+				    console.log(request_body)
+                }
 				const vars = Object.fromEntries(
 					response.result
 						.filter(r => r.titulo && r.cuerpo)
@@ -505,13 +505,15 @@ export const analysis_regression = {
      * @param {string|Element} regression_model_chart_container
      * @returns {Promise<Array<Object>>}
      */
-   plot_points_regression_anv: function(parsed_data, regression_model_chart_container) {
+    plot_points_regression_anv: function(parsed_data, regression_model_chart_container) {
         const emblems = parsed_data.slice(1);
 
         return Promise.all([
             Promise.all(
                 emblems.map(emblem => this.calculation_IR_anv(emblem).then(({ ir, approx }) => {
-                    console.log("emblem completo:", emblem);
+                    if (SHOW_DEBUG === true) {
+                        console.log("emblem completo:", emblem);
+                    }
                     // Obtener el número MIB correcto del catálogo
                 let correctMibNumber = emblem.ref_type_number; // valor por defecto
                     return {
@@ -667,7 +669,7 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
      * @param {string|Element} regression_model_chart_container
      * @returns {Promise<Array<Object>>}
      */
-   plot_points_regression_rev: function(parsed_data, regression_model_chart_container) {
+    plot_points_regression_rev: function(parsed_data, regression_model_chart_container) {
         const emblems = parsed_data.slice(1);
 
         return Promise.all([
@@ -910,11 +912,11 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
             });
 
             //series.filter(s => s.kind === "points").forEach(s => { Canviar esto per la fila de baix si volem que apareguen els punts blancs
-            series.filter(s => s.kind === "points" && s.keepColor).forEach(s => {    
+            series.filter(s => s.kind === "points" && s.keepColor).forEach(s => {
                 const validPoints = s.points.filter(d =>
                     Number.isFinite(d.x) && Number.isFinite(d.y)
                 );
-                
+
                 const circles = g.selectAll(null)
                     .data(validPoints)
                     .join("circle")
@@ -927,7 +929,7 @@ const yValues = vect_tipos_with_ci.map(obj => obj.approx_display);
                     })
                     .attr("stroke", s.style.stroke ?? "#000")
                     .attr("stroke-width", s.style.strokeWidth ?? 2);
-                
+
                 const TARGET = "rgb(20,80,200)";
                 const norm = (v) => (v || "").replace(/\s+/g, "").toLowerCase();
 
@@ -1048,10 +1050,10 @@ blueCircles
 .on("click", async (event, d) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     // Mostrar loading en el panel izquierdo también
     let panelsContainer = root.querySelector(".panels-container");
-    
+
     if (!panelsContainer) {
         panelsContainer = document.createElement("div");
         panelsContainer.className = "panels-container";
@@ -1063,7 +1065,7 @@ blueCircles
         `;
         root.appendChild(panelsContainer);
     }
-    
+
     panelsContainer.innerHTML = "";
     //izq
     const leftPanel = document.createElement("div");
@@ -1076,7 +1078,7 @@ blueCircles
         border: 1px solid #e0e0e0;
     `;
     leftPanel.innerHTML = `<div style="text-align: center; padding: 20px;">Cargando...</div>`;
-    
+
     // der
     const rightPanel = document.createElement("div");
     rightPanel.style.cssText = `
@@ -1089,23 +1091,23 @@ blueCircles
         overflow-y: auto;
     `;
     rightPanel.innerHTML = `<div style="text-align: center; padding: 20px;">Cargando...</div>`;
-    
+
     panelsContainer.appendChild(leftPanel);
     panelsContainer.appendChild(rightPanel);
-    
+
     try {
         const options = {
             id: d.customdata?.[1],
             type_number: d.customdata?.[3],
             mint: d.customdata?.[0]
         };
-        
+
         const tooltipElement = await type_tooltip_callback(options);
         tooltipElement.innerHTML = tooltipElement.innerHTML.replace(
             /(\s*)(Bronce\b)/i,
             "<br>$2"
         );
-   
+
 
         const mibNumber = extractMibNumber(tooltipElement);
 
@@ -1116,27 +1118,27 @@ blueCircles
             <div style="display:grid; grid-template-columns: auto auto; gap: 12px; font-size: 13px;">
                 <div style="font-weight: bold;">Ceca:</div>
                 <div>${d.customdata?.[0] ?? ""}</div>
-                
+
                 <div style="font-weight: bold;">MIB:</div>
                 <div>${mibNumber} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
-                
+
                 <div style="font-weight: bold;">Nº Monedas:</div>
                 <div>${this.format_tooltip_number(d.x, 0)}</div>
-                
+
                 <div style="font-weight: bold;">Estimación cuños:</div>
                 <div>${this.format_tooltip_number(d.y, 2)}</div>
-                
+
                 <div style="font-weight: bold;">Intervalo de confianza:</div>
                 <div>[${this.format_tooltip_number(d.customdata?.[4], 2)}, ${this.format_tooltip_number(d.customdata?.[6], 2)}]</div>
-                
+
                 <div style="font-weight: bold;">Mediana:</div>
                 <div>${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
             </div>
         `;
-        
+
         rightPanel.innerHTML = "";
         rightPanel.appendChild(tooltipElement);
-        
+
     } catch (error) {
         leftPanel.innerHTML = `<div style="color: #c00;">Error: ${error.message}</div>`;
         rightPanel.innerHTML = `<div style="color: #c00;">Error: ${error.message}</div>`;
@@ -1149,15 +1151,15 @@ function extractMibNumber(tooltipElement) {
     if (match) {
         return match[1];
     }
-    
-    const mibElement = tooltipElement.querySelector('[class*="mib"]') || 
+
+    const mibElement = tooltipElement.querySelector('[class*="mib"]') ||
                        tooltipElement.querySelector('[class*="MIB"]');
     if (mibElement) {
         const mibText = mibElement.textContent;
         const mibMatch = mibText.match(/\d+/);
         if (mibMatch) return mibMatch[0];
     }
-    
+
     return d.customdata?.[3] ?? "?";
 }
 

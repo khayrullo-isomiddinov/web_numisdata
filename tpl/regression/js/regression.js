@@ -1,19 +1,18 @@
 /**
  * @fileoverview Analysis module for MIB project.
- * Handles the generation of charts (weight, diameter, clock)
+ * Handles the generation of charts (weight, diameter, clock) and regression models
  * based on coin catalog data filtered via a user-facing search form.
  *
  * @module analysis
  *
  * @example
  * // Basic setup
- * import { analysis } from './tpl/analysis/js/analysis.js';
+ * import { regression } from './tpl/regression/js/regression.js';
  *
- * analysis.set_up({
- *   area_name: 'catalog_analysis',
+ * regression.set_up({
+ *   area_name: 'catalog_regression',
  *   form_items_container: document.getElementById('form_container'),
- *   weight_chart_container: document.getElementById('weight_chart'),
- *   // ... other containers
+ *   regression_model_chart_container: document.getElementById('regression_model_chart'),
  * });
  */
 
@@ -23,10 +22,8 @@
 "use strict";
 
 
-import { chart_wrapper } from "../../lib/charts/chart-wrapper.js";
-import { boxvio_chart_wrapper } from "../../lib/charts/d3/boxvio/boxvio-chart-wrapper.js";
-import { clock_chart_wrapper } from "../../lib/charts/d3/clock/clock-chart-wrapper.js";
-
+// import { chart_wrapper } from "../../lib/charts/chart-wrapper.js";
+import { regression_logic } from "./regression_logic.js";
 
 
 /**
@@ -37,10 +34,13 @@ const DEFAULT_COLOR = '#1f77b4'
 
 
 /**
- * Main analysis controller object.
- * Integrates analysis functions and manages the UI for data filtering and visualization.
+ * Main regression controller object.
+ * Integrates regression analysis functions and manages the UI for data filtering and visualization.
  */
-export const analysis =  {
+export const regression =  {
+
+	// Include regression_logic module functions
+	...regression_logic,
 
 	/**
 	 * Form factory instance used to build the search interface.
@@ -52,31 +52,27 @@ export const analysis =  {
 	 * Form submit button element.
 	 * @type {HTMLButtonElement|null}
 	 */
-	submit_button : null,
+	submit_button: null,
 
 	/**
 	 * Area name for the current context.
 	 * @type {string|null}
 	 */
-	area_name : null,
+	area_name				: null,
 
 	/**
 	 * Current row data if applicable.
 	 * @type {Object|null}
 	 */
-	row : null,
+	row						: null,
 
 	// DOM containers
 	/** @type {HTMLElement|null} Container for data export controls. */
 	export_data_container				: null,
 	/** @type {HTMLElement|null} Container where the form items are rendered. */
 	form_items_container				: null,
-	/** @type {HTMLElement|null} Container for the weight distribution chart. */
-	weight_chart_container				: null,
-	/** @type {HTMLElement|null} Container for the diameter distribution chart. */
-	diameter_chart_container			: null,
-	/** @type {HTMLElement|null} Container for the chronological/clock chart. */
-	clock_chart_container				: null,
+	/** @type {HTMLElement|null} Container for the regression model visualization. */
+	regression_model_chart_container	: null,
 
 	/**
 	 * Color hexadecimal code for each denomination
@@ -88,23 +84,7 @@ export const analysis =  {
 	denomination_colors: null,
 
 	/**
-	 * Chart wrapper instance for weight
-	 * @type {chart_wrapper}
-	 */
-	weight_chart_wrapper: null,
-	/**
-	 * Chart wrapper instance for diameter
-	 * @type {chart_wrapper}
-	 */
-	diameter_chart_wrapper: null,
-	/**
-	 * Chart wrapper instance for clock
-	 * @type {chart_wrapper}
-	 */
-	clock_chart_wrapper: null,
-
-	/**
-	 * Initializes the analysis module by setting up DOM containers,
+	 * Initializes the regression module by setting up DOM containers,
 	 * loading denomination colors, and rendering the search form.
 	 *
 	 * @param {Object} options - Configuration options for the module.
@@ -112,9 +92,7 @@ export const analysis =  {
 	 * @param {HTMLElement} options.export_data_container - Container for export buttons.
 	 * @param {Object} options.row - Current record data.
 	 * @param {HTMLElement} options.form_items_container - Target container for the form.
-	 * @param {HTMLElement} options.weight_chart_container - Target container for the weight chart.
-	 * @param {HTMLElement} options.diameter_chart_container - Target container for the diameter chart.
-	 * @param {HTMLElement} options.clock_chart_container - Target container for the clock chart.
+	 * @param {HTMLElement} options.regression_model_chart_container - Target container for regression plot.
 	 * @returns {boolean} Returns true if setup was initiated successfully.
 	 */
 	set_up : function(options) {
@@ -126,9 +104,7 @@ export const analysis =  {
 			self.export_data_container				= options.export_data_container
 			self.row								= options.row
 			self.form_items_container				= options.form_items_container
-			self.weight_chart_container				= options.weight_chart_container
-			self.diameter_chart_container			= options.diameter_chart_container
-			self.clock_chart_container				= options.clock_chart_container
+			self.regression_model_chart_container	= options.regression_model_chart_container
 
 		// denomination colors
 			self.load_denomination_colors()
@@ -163,11 +139,7 @@ export const analysis =  {
 
 		data_manager.request({
 			body : request_body
-		})
-		.then((response)=>{
-			if(SHOW_DEBUG) {
-				console.log('auto_search API calll response', response)
-			}
+		}).then((response)=>{
 			if (response.result && response.result.length > 0) {
 				// filter results to get valid mint names
 				const mints = response.result
@@ -184,6 +156,7 @@ export const analysis =  {
 				if (mints.length > 0) {
 					// pick a random mint
 					const random_mint = mints[Math.floor(Math.random() * mints.length)]
+
 					// find mint form item and set its value
 					const mint_item = self.form.form_items['mint']
 					if (mint_item) {
@@ -463,17 +436,13 @@ export const analysis =  {
 										// update input values on user drag slide points
 										range_slider_value_in.value	 = ui.values[0]
 										range_slider_value_out.value = ui.values[1]
-										if (SHOW_DEBUG === true) {
-											// console.warn("-----> slide range form_item.sql_filter:",form_item.sql_filter);
-										}
+										// console.warn("-----> slide range form_item.sql_filter:",form_item.sql_filter);
 									},
 									change: function( event, ui ) {
 										// update form_item sql_filter value on every slider change
 										form_item.sql_filter = "(ref_date_in >= " + ui.values[0] + " AND ref_date_in <= "+ui.values[1]+")"; // AND (ref_date_end <= " + ui.values[1] + " OR ref_date_end IS NULL)
 										form_item.q = ui.value
-										if (SHOW_DEBUG === true) {
-											// console.warn("-----> change range form_item.sql_filter:", form_item.sql_filter);
-										}
+										// console.warn("-----> change range form_item.sql_filter:", form_item.sql_filter);
 									}
 								});
 						})
@@ -541,7 +510,7 @@ export const analysis =  {
 	 * 1. Collects and builds filters from form items.
 	 * 2. Cleans up previous results and UI state (show/hide sections, clear charts).
 	 * 3. Executes API request for catalog rows.
-	 * 4. Processes the results into datasets for weights, diameters, axes.
+	 * 4. Processes the results into datasets for weights, diameters, axes, and regression.
 	 * 5. Instantiates and renders chart wrappers for each data category.
 	 *
 	 * @param {Object} form_obj - The form element or object (reserved for future use).
@@ -570,26 +539,9 @@ export const analysis =  {
 
 		// loading
 			// cleanup html
-				const section_container = {
-					weight: document.getElementById('weight_section'),
-					diameter: document.getElementById('diameter_section'),
-					clock: document.getElementById('clock_section')
-				}
-				for (const [sec_name, container] of Object.entries(section_container)) {
-					container.classList.add('hide')
-				}
-				self.diameter_chart_container.replaceChildren()
-				self.weight_chart_container.replaceChildren()
-				self.clock_chart_container.replaceChildren()
-				// while (self.diameter_chart_container.hasChildNodes()) {
-				// 	self.diameter_chart_container.removeChild(self.diameter_chart_container.lastChild);
-				// }
-				// while (self.weight_chart_container.hasChildNodes()) {
-				// 	self.weight_chart_container.removeChild(self.weight_chart_container.lastChild);
-				// }
-				// while (self.clock_chart_container.hasChildNodes()) {
-				// 	self.clock_chart_container.removeChild(self.clock_chart_container.lastChild);
-				// }
+				self.regression_model_chart_container.replaceChildren()
+				document.getElementById('regression_model_section').classList.add('hide')
+
 			// spinner
 				const result = document.getElementById('result')
 				const spinner = common.create_dom_element({
@@ -597,13 +549,6 @@ export const analysis =  {
 					class_name		: 'spinner',
 					parent			: result
 				})
-
-		// scroll to head result
-			// if (scroll_result) {
-				// result.scrollIntoView(
-				// 	{behavior: "smooth", block: "start", inline: "nearest"}
-				// );
-			// }
 
 		// search rows exec against API
 			const js_promise = self.search_rows({
@@ -621,117 +566,6 @@ export const analysis =  {
 
 				event_manager.publish('form_submit', parsed_data)
 
-				// data
-					const data = []
-					for (const [i, ele] of parsed_data.entries()) {
-						// get section_id to be the key referent to search data again.
-						const section_id				= ele.section_id
-
-						const number_key				= ele.ref_type_number ? ele.ref_type_number : `Missing Number & Key (${i})` // Why need to change the name???? MR POTATOE !!!!!!!!
-						const mint						= ele.p_mint ? ele.p_mint[0] : `Missing mint (${ele.section_id})`
-						const material					= ele.ref_type_material ? ele.ref_type_material : `Missing material (${i})`
-						const denomination				= ele.ref_type_denomination ? ele.ref_type_denomination : `Missing denomination ${i}`
-						const denomination_section_id	= (ele.ref_type_denomination_data && ele.ref_type_denomination_data.length)
-							? parseInt(ele.ref_type_denomination_data[0])
-							: null
-						const color						= denomination_section_id === null || !self.denomination_colors.find((ele)=>ele.section_id===denomination_section_id)
-							? DEFAULT_COLOR
-							: self.denomination_colors.find((ele)=>ele.section_id===denomination_section_id).color
-						if (SHOW_DEBUG === true) {
-							// console.log(`NumberKey ${number_key} Denomination section ID ${denomination_section_id} assigned color ${color}`)
-						}
-						// if (!['12', '59', '62', '18','11a','14'].includes(name)) continue
-						// if (!['59', '62'].includes(name)) continue
-						const tmp_data		= {}
-
-						const calculable	= ele.full_coins_reference_calculable
-						const discard		= ele.full_coins_reference_discard || []// discard use true, false and null, null is interpreted as true.
-						const diameter_max	= ele.full_coins_reference_diameter_max
-						const diameter_min	= ele.full_coins_reference_diameter_min
-						const weight		= ele.full_coins_reference_weight
-						const axis			= ele.full_coins_reference_axis
-
-						if (diameter_max && diameter_max.length) {
-							const tmp_diameter_max = diameter_max.filter((v, i) => v && calculable[i] && discard[i]!==false)
-							if (tmp_diameter_max.length) {
-								tmp_data.diameter_max = tmp_diameter_max
-							}
-						}
-						if (diameter_min && diameter_min.length) {
-							const tmp_diameter_min = diameter_min.filter((v, i) => v && calculable[i] && discard[i]!==false)
-							if (tmp_diameter_min.length) {
-								tmp_data.diameter_min = tmp_diameter_min
-							}
-						}
-						if (weight && weight.length) {
-							const tmp_weight = weight.filter((v, i) => v && calculable[i] && discard[i]!==false)
-							if (tmp_weight.length) {
-								tmp_data.weight = tmp_weight
-							}
-						}
-						if (axis && axis.length) {
-							const tmp_axis = axis.filter((v) => v)
-							if (tmp_axis.length) {
-								tmp_data.axis = tmp_axis
-							}
-						}
-						if (Object.keys(tmp_data).length) {
-							tmp_data.section_id 				= section_id
-							tmp_data.number_key					= number_key
-							tmp_data.mint						= mint
-							tmp_data.type_number				= number_key //type number is and will be type number! Raspa said.
-							tmp_data.material					= material
-							tmp_data.denomination				= denomination
-							tmp_data.denomination_section_id 	= denomination_section_id
-							tmp_data.color						= color
-							data.push(tmp_data)
-						}
-					}
-
-				// Weights
-				const weights = data.filter( (ele) => ele.weight ).map( (ele) => {
-						return {
-							key			: [ele.mint, ele.number_key],
-							values		: ele.weight,
-							id			: ele.section_id,
-							mint		: ele.mint,
-							type_number	: ele.number_key,
-							color		: ele.color
-						}
-					}
-				)
-
-				// Diameters
-				const diameters = data.filter( (ele) => ele.diameter_max ).map(
-					(ele) => {
-						return {
-							key			: [ele.mint, ele.number_key],
-							values		: ele.diameter_max,
-							id			: ele.section_id,
-							mint		: ele.mint,
-							type_number	: ele.number_key,
-							color		: ele.color
-						}
-					}
-				)
-
-				// Axes
-				const axes = data.filter( (ele) => ele.axis && ele.axis.length).map(
-					(ele) => {
-						const axis = Array(12).fill(0)
-						for (const hour of ele.axis) {
-							axis[hour % 12]++
-						}
-						return {
-							key			: [ele.mint, ele.number_key],
-							values		: axis,
-							id			: ele.section_id,
-							mint		: ele.mint,
-							type_number	: ele.number_key
-						}
-					}
-				)
-
 				// Reference calculable. Filter result rows with full_coins_reference_calculable data.
 				const reference_calculable = parsed_data.filter( el => {
 					return el.full_coins_reference_calculable && el.full_coins_reference_calculable.length > 0
@@ -739,61 +573,15 @@ export const analysis =  {
 
 				spinner.remove()
 
-				if (weights.length) {
-					section_container.weight.classList.remove('hide')
-					this.weight_chart_wrapper = new boxvio_chart_wrapper(
-						this.weight_chart_container,
-						weights,
-						[tstring.mint || 'Mint', tstring.number || 'Number'],
-						{
-							whiskers_quantiles					: [10, 90],
-							ylabel								: tstring.weight || 'Weight',
-							overflow							: true,
-							display_control_panel				: true,
-							display_download					: true,
-							sort_xaxis							: true,
-							tooltip_callback					: type_tooltip_callback,
-							tooltip_callback_options_attributes	: ['id', 'type_number', 'mint']
-						}
-					)
-					this.weight_chart_wrapper.render()
-				}
+				// Modelo_Regresión
+				if (!IS_PRODUCTION) { // Only display in PRE from now (!)
+					if (reference_calculable.length) {
 
-				if (diameters.length) {
-					section_container.diameter.classList.remove('hide')
-					this.diameter_chart_wrapper = new boxvio_chart_wrapper(
-						this.diameter_chart_container,
-						diameters,
-						[tstring.mint || 'Mint', tstring.number || 'Number'],
-						{
-							whiskers_quantiles					: [10, 90],
-							ylabel								: tstring.diameter || 'Diameter',
-							overflow							: true,
-							display_control_panel				: true,
-							display_download					: true,
-							sort_xaxis							: true,
-							tooltip_callback					: type_tooltip_callback,
-							tooltip_callback_options_attributes	: ['id', 'type_number', 'mint']
-						}
-					)
-					this.diameter_chart_wrapper.render()
-				}
+						// Show hidden DOM node 'regression_model_chart_container'
+						document.getElementById('regression_model_section').classList.remove('hide')
 
-				if (axes.length) {
-					section_container.clock.classList.remove('hide')
-					this.clock_chart_wrapper = new clock_chart_wrapper(
-						this.clock_chart_container,
-						axes,
-						{
-							overflow							: true,
-							outer_height						: '300px',
-							display_download					: true,
-							sort								: true,
-							tooltip_callback					: type_tooltip_callback,
-							tooltip_callback_options_attributes	: ['id', 'type_number', 'mint']
-						}
-					)
-					this.clock_chart_wrapper.render()
+						this.plot_rev_and_anv(this.regression_model_chart_container,parsed_data)
+					}
 				}
 			})
 
