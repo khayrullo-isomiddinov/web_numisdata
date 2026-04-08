@@ -14,11 +14,46 @@
 					margin-top: -1em;
 					margin-bottom: 2rem;
 				}
+
+				.spinner {
+					position: relative;
+					margin-top: 4rem;
+				}
+
+				#row_body {
+					padding-top: 1rem;
+					padding-bottom: 2rem;
+				}
+
+				// body text
+				.block-expandable {
+					margin-bottom: 1rem;
+
+					&.contracted-block {
+						max-height: 91px;
+					}
+
+					>.info_text_block {
+						padding: 0px;
+						text-align: left;
+						// background-color: #aa78f6;
+
+						p {
+							display: inline-block;
+							text-align: left;
+						}
+
+						figure.table {
+							margin-left: auto;
+							margin-right: auto;
+						}
+					}
+				}
 			}
 		}
 
 		.form-inline .form-row .form-group {
-			min-height: 3rem;
+			min-height: 3.25rem;
 		}
 	}
 

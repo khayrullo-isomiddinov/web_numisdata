@@ -20,14 +20,32 @@
 						<h1><?php echo $title ?></h1>
 						<div class="golden-separator"></div>
 
-					<!-- Form -->
-						<section class="form">
-							<?php #include($cwd.'_search.phtml') ?>
-							<div id="items_container"></div>
-						</section>
-
 					<!-- Result -->
-						<section id="result" class="result">
+					<section id="result" class="result">
+						<!-- abstract -->
+							<?php if (!empty($abstract)) { ?>
+							<div class="line-tittle-wrap">
+								<div class="info_value"><?php echo $abstract ?></div>
+								<div id="authorship_text"></div>
+							</div>
+							<?php }//if (!empty($abstract)) ?>
+
+						<!-- body -->
+							<?php if (!empty($body)) { ?>
+							<div id="row_body">
+								<div class="block-expandable" id="block_expandable">
+									<div id="body_text" class="info_text_block hide_opacity"><?php echo $body ?></div>
+								</div>
+							</div>
+							<?php }//if (!empty($body)) ?>
+
+						<!-- Form -->
+							<section class="form">
+								<?php #include($cwd.'_search.phtml') ?>
+								<div id="items_container"></div>
+							</section>
+
+						<!-- Charts -->
 							<div id='weight_section' class='hide'>
 								<div class="info_line separator"><div class="big_label"><?php echo tstring('weight')?></div></div>
 								<div id="weight_chart_container" class="chart_wrapper"></div>
@@ -40,8 +58,9 @@
 								<div class="info_line separator"><div class="big_label"><?php echo tstring('die_position')?></div></div>
 								<div id="clock_chart_container" class="chart_wrapper"></div>
 							</div>
-							<!-- <div id="export_data" class="export_data_container"></div> -->
-						</section>
+
+						<!-- <div id="export_data" class="export_data_container"></div> -->
+					</section>
 
 				</div>
 			</div>
@@ -64,5 +83,16 @@ dom_ready(function(){
 		diameter_chart_container			: document.getElementById('diameter_chart_container'),
 		clock_chart_container				: document.getElementById('clock_chart_container')
 	})
+	// active expandable block
+	const block_expandable = document.getElementById('block_expandable')
+	const row_body = document.getElementById('row_body')
+	const body_text = document.getElementById('body_text')
+	if (block_expandable && row_body) {
+		page.create_expandable_block(
+			block_expandable,
+			row_body
+		)
+		body_text.classList.remove('hide_opacity')
+	}
 })
 </script>

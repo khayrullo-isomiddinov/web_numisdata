@@ -10,8 +10,34 @@
   margin-top: -1em;
   margin-bottom: 2rem;
 }
+#main > .inner .result .spinner {
+  position: relative;
+  margin-top: 4rem;
+}
+#main > .inner .result #row_body {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+#main > .inner .result .block-expandable {
+  margin-bottom: 1rem;
+}
+#main > .inner .result .block-expandable.contracted-block {
+  max-height: 91px;
+}
+#main > .inner .result .block-expandable > .info_text_block {
+  padding: 0px;
+  text-align: left;
+}
+#main > .inner .result .block-expandable > .info_text_block p {
+  display: inline-block;
+  text-align: left;
+}
+#main > .inner .result .block-expandable > .info_text_block figure.table {
+  margin-left: auto;
+  margin-right: auto;
+}
 #main .form-inline .form-row .form-group {
-  min-height: 3rem;
+  min-height: 3.25rem;
 }
 .span_parent_width {
   width: 100%;

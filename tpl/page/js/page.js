@@ -978,11 +978,15 @@ var page = {
 			e.stopPropagation()
 
 			if (textBlock.classList.contains("contracted-block")){
+				// Unfold
 				textBlock.classList.remove ("contracted-block");
 				separatorArrow.style.transform = "rotate(-90deg)";
 			} else {
+				// Fold
 				textBlock.classList.add("contracted-block");
 				separatorArrow.style.transform = "rotate(90deg)";
+				// scroll to top
+				textBlock.scrollIntoView({ behavior: 'auto', block: 'start' });
 			}
 		}
 		textBlockSeparator.addEventListener('click', click_handler)
