@@ -20,10 +20,67 @@
 */
 let load_promise = null;
 
-import { type_tooltip_callback } from "./regression.js";
-//import { type_tooltip_callback } from "./analysis.js";
-//console.log("type_tooltip_callback:", type_tooltip_callback);
-// Función auxiliar para extraer el número MIB del tooltip
+
+/**
+ * Callback for tooltip rendering in violin-boxplot visualizations.
+ * Fetches additional catalog data for a specific type and returns its rendered representation.
+ * @param {Object} options - Tooltip options.
+ * @param {string} options.id - Section ID of the record.
+ * @param {string} options.type_number - Type number string.
+ * @param {string} options.mint - Mint name.
+ * @returns {Promise<Element>} The DOM element representing the tooltip content.
+ */
+export async function type_tooltip_callback(options) {
+	if (SHOW_DEBUG === true) {
+		console.warn("---> type_tooltip_callback options", options);
+	}
+	const section_id = options.id;
+	const type_number = options.type_number;
+	const mint = options.mint;
+
+	const catalog_ar_fields = ["*"];
+
+	const catalog_request_options = {
+		dedalo_get: "records",
+		lang: page_globals.WEB_CURRENT_LANG_CODE,
+		table: "catalog",
+		ar_fields: catalog_ar_fields,
+		section_id: section_id,
+		limit: 1,
+		count: false,
+	};
+
+	const api_response = await data_manager.request({
+		body: catalog_request_options,
+	});
+
+	if (SHOW_DEBUG === true) {
+		console.warn("---> type_tooltip_callback api_response", api_response);
+	}
+
+	const type_data = api_response.result || null;
+
+	if (!type_data) {
+		return common.create_dom_element({
+			element_type: "div",
+			text_content: `Could not find number ${type_number} for mint ${mint} in the database.`,
+		});
+	}
+	const type_row = page.parse_catalog_data(type_data)[0];
+
+	// set true to render material and denomination
+	type_row.add_denomination = true;
+
+	const type_node = catalog_row_fields.draw_item(type_row);
+
+	if (type_node) {
+		// Remove style of coins images container, since it is hardcoded to 124mm
+		type_node.getElementsByClassName("coins_images")[0].removeAttribute("style");
+	}
+
+	return type_node;
+}
+
 
 export const regression_logic = {
 
@@ -225,11 +282,13 @@ export const regression_logic = {
 	/**
 	* Returns bootstrap percentile band for a prediction matrix row.
 	*
-	* @param {number[]} values
+	* @param {number[]|Float64Array} values
 	* @returns {{lwr:number, med:number, upr:number}}
 	*/
 	bootstrap_band_from_vector: function(values) {
-		const clean = values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
+		const clean = values instanceof Float64Array
+			? values.filter(v => Number.isFinite(v)).sort()
+			: values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
 
 		if (!clean.length) {
 			return { lwr: NaN, med: NaN, upr: NaN };
@@ -242,24 +301,36 @@ export const regression_logic = {
 		};
 	},
 
+	bootstrap_promise: null,
+	bootstrap_promise_B: 0,
+	bootstrap_promise_limit: 0,
+
 	/**
 	* Calculates bootstrap confidence bands for obverse and reverse
-	* from 1 to 500 coins, following the same logic as the R code.
+	* from 1 to max_ir_limit coins, following the same logic as the R code.
+	* Optimized with fits caching and pre-calculated logs.
 	*
 	* @param {number} B Number of bootstrap iterations
+	* @param {number} max_ir_limit
 	* @returns {Promise<Object>}
 	*/
-	get_bootstrap_bands: function(B = 2000) {
-		if (this.bootstrap_cache && this.bootstrap_cache.B === B) {
+	get_bootstrap_bands: function(B = 2000, max_ir_limit = 1500) {
+		const limit = Math.round(max_ir_limit);
+
+		if (this.bootstrap_cache && this.bootstrap_cache.B === B && this.bootstrap_cache.Mgrid.length >= limit) {
 			return Promise.resolve(this.bootstrap_cache);
 		}
 
-		return this.get_log_regression_coefficients().then((fit) => {
+		if (this.bootstrap_promise && this.bootstrap_promise_B === B && this.bootstrap_promise_limit >= limit) {
+			return this.bootstrap_promise;
+		}
+
+		this.bootstrap_promise_B = B;
+		this.bootstrap_promise_limit = limit;
+
+		this.bootstrap_promise = this.get_log_regression_coefficients().then((fit) => {
 			const {
-				alphaA,
-				betaA,
-				alphaR,
-				betaR,
+				alphaA, betaA, alphaR, betaR,
 				filtered: {
 					IR_Ant_filtrat,
 					D_A_Ant_filtrat,
@@ -268,103 +339,110 @@ export const regression_logic = {
 			} = fit;
 
 			const n = IR_Ant_filtrat.length;
-			const Mgrid = Array.from({ length: 1500 }, (_, i) => i + 1);
+			const Mgrid = new Int32Array(limit);
+			const log_Mgrid = new Float64Array(limit);
+			for (let i = 0; i < limit; i++) {
+				const m = i + 1;
+				Mgrid[i] = m;
+				log_Mgrid[i] = Math.log(m);
+			}
 
 			if (!n) {
-				const emptyBand = Mgrid.map(m => ({
-					m,
-					lwr: NaN,
-					med: NaN,
-					upr: NaN
-				}));
-
-				const result = {
-					B,
-					Mgrid,
-					bandA: emptyBand,
-					bandR: emptyBand,
+				const emptyBand = Array.from(Mgrid, m => ({ m, lwr: NaN, med: NaN, upr: NaN }));
+				const res = {
+					B, Mgrid: Array.from(Mgrid), bandA: emptyBand, bandR: emptyBand,
 					oneDieA: { ir: NaN, lwr: NaN, med: NaN, upr: NaN },
 					oneDieR: { ir: NaN, lwr: NaN, med: NaN, upr: NaN }
 				};
-
-				this.bootstrap_cache = result;
-				return result;
+				this.bootstrap_cache = res;
+				return res;
 			}
 
-			const pred_a = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
-			const pred_r = Array.from({ length: Mgrid.length }, () => new Array(B).fill(NaN));
+			// Pre-calculate logs of training data for maximum inner-loop performance
+			const log_IR = new Float64Array(n);
+			const log_DA = new Float64Array(n);
+			const log_DR = new Float64Array(n);
+			for (let i = 0; i < n; i++) {
+				log_IR[i] = Math.log(IR_Ant_filtrat[i]);
+				log_DA[i] = Math.log(D_A_Ant_filtrat[i]);
+				log_DR[i] = Math.log(D_R_Ant_filtrat[i]);
+			}
 
-			// IR donde la recta central predice exactamente 1 cuño
+			// Results buffers
+			const pred_a = new Float64Array(limit * B);
+			const pred_r = new Float64Array(limit * B);
+
 			const ir_at_one_a = Math.exp(-alphaA / betaA);
+			const log_ir_at_one_a = Math.log(ir_at_one_a);
 			const ir_at_one_r = Math.exp(-alphaR / betaR);
+			const log_ir_at_one_r = Math.log(ir_at_one_r);
 
-			const pred_atOneA = new Array(B).fill(NaN);
-			const pred_atOneR = new Array(B).fill(NaN);
+			const pred_atOneA = new Float64Array(B);
+			const pred_atOneR = new Float64Array(B);
+
+			// Reusable sampling buffers
+			const Xb = new Float64Array(n);
+			const YAb = new Float64Array(n);
+			const YRb = new Float64Array(n);
 
 			for (let b = 0; b < B; b++) {
-				const idx = Array.from({ length: n }, () => Math.floor(Math.random() * n));
+				// Resampling
+				for (let k = 0; k < n; k++) {
+					const r = (Math.random() * n) | 0; // Faster floor
+					Xb[k]  = log_IR[r];
+					YAb[k] = log_DA[r];
+					YRb[k] = log_DR[r];
+				}
 
-				const Xb   = idx.map(i => Math.log(IR_Ant_filtrat[i]));
-				const YA_b = idx.map(i => Math.log(D_A_Ant_filtrat[i]));
-				const YR_b = idx.map(i => Math.log(D_R_Ant_filtrat[i]));
+				// Fits
+				const fit_a_b = this.coefficients(Xb, YAb);
+				const fit_r_b = this.coefficients(Xb, YRb);
 
-				const fit_a_b = this.coefficients(Xb, YA_b);
-				const fit_r_b = this.coefficients(Xb, YR_b);
+				const aA = fit_a_b.a, bA = fit_a_b.b;
+				const aR = fit_r_b.a , bR = fit_r_b.b;
 
-				const alpha_a_b = fit_a_b.a;
-				const beta_a_b  = fit_a_b.b;
-				const alpha_r_b = fit_r_b.a;
-				const beta_r_b  = fit_r_b.b;
+				// Distribution bootstrap of "1 die"
+				pred_atOneA[b] = Math.exp(aA + bA * log_ir_at_one_a);
+				pred_atOneR[b] = Math.exp(aR + bR * log_ir_at_one_r);
 
-				// distribución bootstrap del "1 cuño"
-				pred_atOneA[b] = this.predict_potential(ir_at_one_a, alpha_a_b, beta_a_b);
-				pred_atOneR[b] = this.predict_potential(ir_at_one_r, alpha_r_b, beta_r_b);
-
-				for (let j = 0; j < Mgrid.length; j++) {
-					const m = Mgrid[j];
-
-					pred_a[j][b] = this.predict_potential(m, alpha_a_b, beta_a_b);
-					pred_r[j][b] = this.predict_potential(m, alpha_r_b, beta_r_b);
+				// Loop for Mgrid predictions
+				for (let j = 0; j < limit; j++) {
+					const log_m = log_Mgrid[j];
+					pred_a[j * B + b] = Math.exp(aA + bA * log_m);
+					pred_r[j * B + b] = Math.exp(aR + bR * log_m);
 				}
 			}
 
-			const bandA = pred_a.map((row, i) => ({
-				m: Mgrid[i],
-				...this.bootstrap_band_from_vector(row)
-			}));
+			const bandA = new Array(limit);
+			const bandR = new Array(limit);
+			const tmp = new Float64Array(B);
 
-			const bandR = pred_r.map((row, i) => ({
-				m: Mgrid[i],
-				...this.bootstrap_band_from_vector(row)
-			}));
+			for (let j = 0; j < limit; j++) {
+				const offset = j * B;
 
-			const oneDieA = {
-				ir: ir_at_one_a,
-				...this.bootstrap_band_from_vector(pred_atOneA)
-			};
+				for (let b = 0; b < B; b++) tmp[b] = pred_a[offset + b];
+				bandA[j] = { m: Mgrid[j], ...this.bootstrap_band_from_vector(tmp) };
 
-			const oneDieR = {
-				ir: ir_at_one_r,
-				...this.bootstrap_band_from_vector(pred_atOneR)
-			};
+				for (let b = 0; b < B; b++) tmp[b] = pred_r[offset + b];
+				bandR[j] = { m: Mgrid[j], ...this.bootstrap_band_from_vector(tmp) };
+			}
 
 			const result = {
 				B,
-				Mgrid,
+				Mgrid: Array.from(Mgrid),
 				bandA,
 				bandR,
-				oneDieA,
-				oneDieR
+				oneDieA: { ir: ir_at_one_a, ...this.bootstrap_band_from_vector(pred_atOneA) },
+				oneDieR: { ir: ir_at_one_r, ...this.bootstrap_band_from_vector(pred_atOneR) }
 			};
 
 			this.bootstrap_cache = result;
-
-			if (SHOW_DEBUG === true) {
-				console.log("---> bootstrap bands", result);
-			}
-
 			return result;
+		}).finally(() => {
+			this.bootstrap_promise = null;
 		});
+
+		return this.bootstrap_promise;
 	},
 
 	/**
@@ -376,7 +454,7 @@ export const regression_logic = {
 	* @returns {{lwr:number, med:number, upr:number}|null}
 	*/
 	get_bootstrap_interval_for_ir: function(ir, band) {
-		if (!Number.isFinite(ir) || ir < 1 || ir > 1500 || !Array.isArray(band)) {
+		if (!Number.isFinite(ir) || ir < 1 || ir > band.length || !Array.isArray(band)) {
 			return null;
 		}
 
@@ -426,40 +504,66 @@ export const regression_logic = {
 	* @param {string|Element} regression_model_chart_container
 	* @returns {Promise<Array<Object>>}
 	*/
-	plot_anv: function(regression_model_chart_container) {
-		return this.get_log_regression_coefficients().then((fit) => {
+	plot_anv: function(regression_model_chart_container, max_requested_ir = 0) {
+		const max_ir = Math.max(max_requested_ir, 10);
+		return Promise.all([
+			this.get_log_regression_coefficients(),
+			this.get_bootstrap_bands(2000, max_ir)
+		]).then(([fit, bootstrap]) => {
 			const {
-				alphaA,
-				betaA,
-				filtered: {
-					IR_Ant_filtrat,
-					D_A_Ant_filtrat
-				}
+				alphaA, betaA,
+				filtered: { IR_Ant_filtrat, D_A_Ant_filtrat }
 			} = fit;
+			const { Mgrid, bandA } = bootstrap;
 
-			const min_ir = Math.min(...IR_Ant_filtrat);
-			const max_ir = Math.max(...IR_Ant_filtrat,1500);
+			// Filter observed data to fit the display range
+			const observed_x = [];
+			const observed_y = [];
+			for (let i = 0; i < IR_Ant_filtrat.length; i++) {
+				if (IR_Ant_filtrat[i] <= max_ir) {
+					observed_x.push(IR_Ant_filtrat[i]);
+					observed_y.push(D_A_Ant_filtrat[i]);
+				}
+			}
 
-			const x_vals = Array.from(
-				{ length: 2000 },
-				(_, i) => min_ir + (i / 1999) * (max_ir - min_ir)
-			);
-
+			const min_ir = (observed_x.length > 0) ? Math.min(...observed_x) : 0;
+			const x_vals = Array.from({ length: 2000 }, (_, i) => min_ir + (i / 1999) * (max_ir - min_ir));
 			const y_vals = x_vals.map(x => this.predict_potential(x, alphaA, betaA));
 
 			const traces = [
 				{
-					x: IR_Ant_filtrat,
-					y: D_A_Ant_filtrat,
+					x: Mgrid,
+					y: bandA.map(row => row.lwr),
+					fill: "none",
+					mode: "lines",
+					line: { width: 1, color: "rgba(153, 127, 90, 0.2)" },
+					type: "scatter",
+					name: "Lwr",
+					hoverinfo: "skip",
+					showlegend: false,
+					xaxis: "x1", yaxis: "y1"
+				},
+				{
+					x: Mgrid,
+					y: bandA.map(row => row.upr),
+					fill: "tonexty",
+					fillcolor: "rgba(153, 127, 90, 0.1)", // Transparent brand color for band
+					mode: "lines",
+					line: { width: 1, color: "rgba(153, 127, 90, 0.2)" },
+					type: "scatter",
+					name: "Upr",
+					hoverinfo: "skip",
+					showlegend: false,
+					xaxis: "x1", yaxis: "y1"
+				},
+				{
+					x: observed_x,
+					y: observed_y,
 					mode: "markers",
 					type: "scatter",
 					name: "Datos observados",
-					marker: { color: "skyblue" },
-					hovertemplate:
-						"Num. monedas: %{x}<br>" +
-						"Estimación cuños: %{y}<extra></extra>",
-					xaxis: "x1",
-					yaxis: "y1"
+					marker: { color: "#c7ba9d" }, // Lighter beige for historical context
+					xaxis: "x1", yaxis: "y1"
 				},
 				{
 					x: x_vals,
@@ -467,12 +571,10 @@ export const regression_logic = {
 					mode: "lines",
 					type: "scatter",
 					name: "Modelo estimado",
-					line: { color: "lightsteelblue", width: 2 },
-					xaxis: "x1",
-					yaxis: "y1"
+					line: { color: "#997f5a", width: 2 },
+					xaxis: "x1", yaxis: "y1"
 				}
 			];
-
 			return traces;
 		});
 	},
@@ -505,28 +607,23 @@ export const regression_logic = {
 	* @param {string|Element} regression_model_chart_container
 	* @returns {Promise<Array<Object>>}
 	*/
-	plot_points_regression_anv: function(parsed_data, regression_model_chart_container) {
+	plot_points_regression_anv: function(parsed_data, regression_model_chart_container, max_ir = 1500) {
 		const emblems = parsed_data.slice(1);
 
 		return Promise.all([
 			Promise.all(
 				emblems.map(emblem => this.calculation_IR_anv(emblem).then(({ ir, approx }) => {
-					if (SHOW_DEBUG === true) {
-						console.log("emblem completo:", emblem);
-					}
-					// Obtener el número MIB correcto del catálogo
-				let correct_mib_number = emblem.ref_type_number; // valor por defecto
 					return {
 						ir,
 						approx,
-						ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,//emblem.p_mint,
-						id: emblem.section_id,   //term_section_id, //id. emblem.section.id
+						ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,
+						id: emblem.section_id,
 						num: emblem.ref_type_number,
 						ref_ceca: emblem.ref_mint_number
 					};
 				}))
 			),
-			this.get_bootstrap_bands()
+			this.get_bootstrap_bands(2000, max_ir)
 		]).then(([vect_tipos, bootstrap]) => {
 			const vect_tipos_with_ci = vect_tipos.map(obj => {
 				const approx_display = Math.max(1, obj.approx);
@@ -570,7 +667,7 @@ export const regression_logic = {
 					"IC bootstrap 95%: [%{customdata[4]}, %{customdata[6]}]<br>" +
 					"Mediana bootstrap: %{customdata[5]}<extra></extra>",
 				marker: {
-					color: "darkblue",
+					color: "#997f5a",
 					size: 10,
 					line: { width: 2, color: "black" }
 				},
@@ -589,40 +686,65 @@ export const regression_logic = {
 	* @param {string|Element} regression_model_chart_container
 	* @returns {Promise<Array<Object>>}
 	*/
-	plot_rev: function(regression_model_chart_container) {
-		return this.get_log_regression_coefficients().then((fit) => {
+	plot_rev: function(regression_model_chart_container, max_requested_ir = 0) {
+		const max_ir = Math.max(max_requested_ir, 10);
+		return Promise.all([
+			this.get_log_regression_coefficients(),
+			this.get_bootstrap_bands(2000, max_ir)
+		]).then(([fit, bootstrap]) => {
 			const {
-				alphaR,
-				betaR,
-				filtered: {
-					IR_Ant_filtrat,
-					D_R_Ant_filtrat
-				}
+				alphaR, betaR,
+				filtered: { IR_Ant_filtrat, D_R_Ant_filtrat }
 			} = fit;
+			const { Mgrid, bandR } = bootstrap;
 
-			const min_ir = Math.min(...IR_Ant_filtrat);
-			const max_ir = Math.max(...IR_Ant_filtrat,1500);
+			const observed_x = [];
+			const observed_y = [];
+			for (let i = 0; i < IR_Ant_filtrat.length; i++) {
+				if (IR_Ant_filtrat[i] <= max_ir) {
+					observed_x.push(IR_Ant_filtrat[i]);
+					observed_y.push(D_R_Ant_filtrat[i]);
+				}
+			}
 
-			const x_vals = Array.from(
-				{ length: 2000 },
-				(_, i) => min_ir + (i / 1999) * (max_ir - min_ir)
-			);
-
+			const min_ir = (observed_x.length > 0) ? Math.min(...observed_x) : 0;
+			const x_vals = Array.from({ length: 2000 }, (_, i) => min_ir + (i / 1999) * (max_ir - min_ir));
 			const y_vals = x_vals.map(x => this.predict_potential(x, alphaR, betaR));
 
 			const traces = [
 				{
-					x: IR_Ant_filtrat,
-					y: D_R_Ant_filtrat,
+					x: Mgrid,
+					y: bandR.map(row => row.lwr),
+					fill: "none",
+					mode: "lines",
+					line: { width: 1, color: "rgba(153, 127, 90, 0.2)" },
+					type: "scatter",
+					name: "Lwr",
+					hoverinfo: "skip",
+					showlegend: false,
+					xaxis: "x2", yaxis: "y2"
+				},
+				{
+					x: Mgrid,
+					y: bandR.map(row => row.upr),
+					fill: "tonexty",
+					fillcolor: "rgba(153, 127, 90, 0.1)",
+					mode: "lines",
+					line: { width: 1, color: "rgba(153, 127, 90, 0.2)" },
+					type: "scatter",
+					name: "Upr",
+					hoverinfo: "skip",
+					showlegend: false,
+					xaxis: "x2", yaxis: "y2"
+				},
+				{
+					x: observed_x,
+					y: observed_y,
 					mode: "markers",
 					type: "scatter",
 					name: "Datos observados",
-					marker: { color: "skyblue" },
-					hovertemplate:
-						"Num. monedas: %{x}<br>" +
-						"Estimación cuños: %{y}<extra></extra>",
-					xaxis: "x2",
-					yaxis: "y2"
+					marker: { color: "#c7ba9d" },
+					xaxis: "x2", yaxis: "y2"
 				},
 				{
 					x: x_vals,
@@ -630,12 +752,10 @@ export const regression_logic = {
 					mode: "lines",
 					type: "scatter",
 					name: "Modelo estimado",
-					line: { color: "lightsteelblue", width: 2 },
-					xaxis: "x2",
-					yaxis: "y2"
+					line: { color: "#997f5a", width: 2 },
+					xaxis: "x2", yaxis: "y2"
 				}
 			];
-
 			return traces;
 		});
 	},
@@ -669,7 +789,7 @@ export const regression_logic = {
 	* @param {string|Element} regression_model_chart_container
 	* @returns {Promise<Array<Object>>}
 	*/
-	plot_points_regression_rev: function(parsed_data, regression_model_chart_container) {
+	plot_points_regression_rev: function(parsed_data, regression_model_chart_container, max_ir = 1500) {
 		const emblems = parsed_data.slice(1);
 
 		return Promise.all([
@@ -678,14 +798,14 @@ export const regression_logic = {
 					this.calculation_IR_rev(emblem).then(({ ir, approx }) => ({
 						ir,
 						approx,
-						ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,//emblem.p_mint,
-						id: emblem.section_id,//emblem.term_section_id,
+						ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,
+						id: emblem.section_id,
 						num: emblem.ref_type_number,
 						ref_ceca: emblem.ref_mint_number
 					}))
 				)
 			),
-			this.get_bootstrap_bands()
+			this.get_bootstrap_bands(2000, max_ir)
 		]).then(([vect_tipos, bootstrap]) => {
 			const vect_tipos_with_ci = vect_tipos.map(obj => {
 				const approx_display = Math.max(1, obj.approx);
@@ -729,7 +849,7 @@ export const regression_logic = {
 					"IC bootstrap 95%: [%{customdata[4]}, %{customdata[6]}]<br>" +
 					"Mediana bootstrap: %{customdata[5]}<extra></extra>",
 				marker: {
-					color: "darkblue",
+					color: "#997f5a",
 					size: 10,
 					line: { width: 2, color: "black" }
 				},
@@ -749,18 +869,27 @@ export const regression_logic = {
 	* @returns {Promise<void>}
 	*/
 	plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
-		return Promise.all([
-			this.plot_rev(regression_model_chart_container),
-			this.plot_points_regression_rev(parsed_data, regression_model_chart_container),
-			this.plot_anv(regression_model_chart_container),
-			this.plot_points_regression_anv(parsed_data, regression_model_chart_container)
-		]).then(([revModel, revPoints, anvModel, anvPoints]) => {
-			const tracesRev = [...revModel, ...revPoints];
-			const tracesAnv = [...anvModel, ...anvPoints];
+		const max_ir_search = this._get_max_ir_from_parsed_data(parsed_data);
 
-			this._render_rev_anv_d3(regression_model_chart_container, tracesAnv, tracesRev, {
-				xLabel: "Índice de Rareza (IR)",
-				yLabel: "Número de cuños estimado"
+		return this.get_log_regression_coefficients().then((fit) => {
+			const max_ir_observed = (fit.filtered.IR_Ant_filtrat.length > 0) ? Math.max(...fit.filtered.IR_Ant_filtrat) : 0;
+			// Prioritize search results max IR to "fit" the graph to the results, plus a tiny margin.
+			// If no results, default to observed max.
+			const max_ir = (max_ir_search > 0) ? Math.max(max_ir_search * 1.02, 10) : max_ir_observed;
+
+			return Promise.all([
+				this.plot_rev(regression_model_chart_container, max_ir),
+				this.plot_points_regression_rev(parsed_data, regression_model_chart_container, max_ir),
+				this.plot_anv(regression_model_chart_container, max_ir),
+				this.plot_points_regression_anv(parsed_data, regression_model_chart_container, max_ir)
+			]).then(([revModel, revPoints, anvModel, anvPoints]) => {
+				const tracesRev = [...revModel, ...revPoints];
+				const tracesAnv = [...anvModel, ...anvPoints];
+
+				this._render_rev_anv_d3(regression_model_chart_container, tracesAnv, tracesRev, {
+					xLabel: "Índice de Rareza (IR)",
+					yLabel: "Número de cuños estimado"
+				});
 			});
 		});
 	},
@@ -782,6 +911,25 @@ export const regression_logic = {
 		}
 
 		return fallback;
+	},
+
+	/**
+	 * Calculates the maximum IR value from a parsed data set of emblems.
+	 *
+	 * @private
+	 * @param {Array<Object>} parsed_data
+	 * @returns {number}
+	 */
+	_get_max_ir_from_parsed_data: function(parsed_data) {
+		if (!Array.isArray(parsed_data)) return 0;
+		return parsed_data.slice(1).reduce((max, emblem) => {
+			const index = emblem.full_coins_reference_calculable || [];
+			let ir = 0;
+			for (let i = 0; i < index.length; i++) {
+				if (index[i] === true) ir++;
+			}
+			return Math.max(max, ir);
+		}, 0);
 	},
 
 	/**
@@ -828,7 +976,7 @@ export const regression_logic = {
 			.text("Haz click en un punto azul para ver la información.");
 
 		const viewport_w = root.clientWidth || 900;
-		const width = Math.max(2500, Math.floor(viewport_w * 0.9));
+		const width = viewport_w;
 		const panel_height = 300;
 		const gap = 40;
 		const margin = { top: 40, right: 20, bottom: 45, left: 65 };
@@ -867,19 +1015,83 @@ export const regression_logic = {
 				Number.isFinite(d.x) && Number.isFinite(d.y)
 			);
 
+			// Fit axes tightly to the data range, preventing large blank spaces at the right or top.
+			const x_max = d3.max(all_pts, d => d.x) || 10;
+			const y_max = d3.max(all_pts, d => d.y) || 10;
+
 			const x = d3.scaleLinear()
-				.domain(d3.extent(all_pts, d => d.x)).nice()
+				.domain([0, x_max])
 				.range([0, inner_w]);
 
 			const y = d3.scaleLinear()
-				.domain(d3.extent(all_pts, d => d.y)).nice()
+				.domain([0, y_max * 1.05])
 				.range([inner_h, 0]);
 
-			g.append("g")
+			// Create a unique clip path for this panel to prevent data bleeding across axes
+			const clipId = `clip-${i}-${Math.floor(Math.random() * 100000)}`;
+			svg.append("defs").append("clipPath")
+				.attr("id", clipId)
+				.append("rect")
+				.attr("width", inner_w)
+				.attr("height", inner_h);
+
+			// Define independent zoom behavior
+			const zoom = d3.zoom()
+				.scaleExtent([1, 15])
+				.extent([[0, 0], [inner_w, inner_h]])
+				.on("zoom", (event) => {
+					const newX = event.transform.rescaleX(x);
+					const newY = event.transform.rescaleY(y);
+
+					// Update axes
+					gx.call(d3.axisBottom(newX).ticks(6));
+					gy.call(d3.axisLeft(newY).ticks(5));
+
+					// Update lines and paths
+					const new_line = d3.line()
+						.defined(d => Number.isFinite(d.x) && Number.isFinite(d.y))
+						.x(d => newX(d.x))
+						.y(d => newY(d.y));
+
+					plot_area.selectAll("path").attr("d", new_line);
+
+					// Update points
+					plot_area.selectAll("circle")
+						.attr("cx", d => newX(d.x))
+						.attr("cy", d => newY(d.y));
+				});
+
+			// Transparent overlay for pan/zoom gestures
+			const zoom_overlay = g.append("rect")
+				.attr("width", inner_w)
+				.attr("height", inner_h)
+				.attr("fill", "transparent")
+				.attr("pointer-events", "all")
+				.call(zoom)
+				.on("dblclick.zoom", (event) => {
+					// Double click reset: restore position (tx=0, ty=0) and scale (k=1)
+					event.preventDefault();
+
+					// Smooth transition to original state
+					zoom_overlay.transition().duration(750)
+						.call(zoom.transform, d3.zoomIdentity);
+
+					// Also clear any active point highlights for a full reset
+					svg.selectAll("circle")
+						.style("stroke", "#000")
+						.style("stroke-width", 2)
+						.attr("r", circle_d => (circle_d?.name === "Aproximación" ? 4 : 5));
+				});
+
+			// Content area (clipped)
+			const plot_area = g.append("g")
+				.attr("clip-path", `url(#${clipId})`);
+
+			const gx = g.append("g")
 				.attr("transform", `translate(0,${inner_h})`)
 				.call(d3.axisBottom(x).ticks(6));
 
-			g.append("g")
+			const gy = g.append("g")
 				.call(d3.axisLeft(y).ticks(5));
 
 			g.append("text")
@@ -903,7 +1115,7 @@ export const regression_logic = {
 				.y(d => y(d.y));
 
 			series.filter(s => s.kind === "line").forEach(s => {
-				g.append("path")
+				plot_area.append("path")
 					.datum(s.points)
 					.attr("fill", "none")
 					.attr("stroke", s.style.stroke ?? "#9aa0a6")
@@ -916,7 +1128,7 @@ export const regression_logic = {
 					Number.isFinite(d.x) && Number.isFinite(d.y)
 				);
 
-				const circles = g.selectAll(null)
+				const circles = plot_area.selectAll(null)
 					.data(valid_pts)
 					.join("circle")
 					.attr("cx", d => x(d.x))
@@ -929,24 +1141,11 @@ export const regression_logic = {
 					.attr("stroke", s.style.stroke ?? "#000")
 					.attr("stroke-width", s.style.strokeWidth ?? 2);
 
-				const TARGET = "rgb(20,80,200)";
-				const norm = (v) => (v || "").replace(/\s+/g, "").toLowerCase();
-
-				tooltip.style("opacity", 0);
-
-				circles
-					.on("mouseenter.tooltip", null)
-					.on("mousemove.tooltip", null)
-					.on("mouseleave.tooltip", null);
-
-				const blue_circles = circles.filter(function() {
-					const fill_attr = this.getAttribute("fill");
-					const fill_comp = getComputedStyle(this).fill;
-					return norm(fill_attr) === norm(TARGET) || norm(fill_comp) === norm(TARGET);
-				});
+				const blue_circles = circles.filter(d => d.name === "Aproximación");
 
 				blue_circles
 					.style("cursor", "pointer")
+					.style("transition", "stroke 0.2s, stroke-width 0.2s, r 0.2s")
 					.on("mouseenter.tooltip", async (event, d) => {
 						tooltip.style("opacity", 1);
 
@@ -997,8 +1196,20 @@ export const regression_logic = {
 						const sx = parent.scrollLeft || 0;
 						const sy = parent.scrollTop || 0;
 
-						const left = x_center + sx - tt_w / 2;
-						const top  = (c_rect.top - p_rect.top) + sy - tt_h - 8;
+						let left = x_center + sx - tt_w / 2;
+						let top  = (c_rect.top - p_rect.top) + sy - tt_h - 12;
+
+						// Boundary checks to prevent cutting off at edges
+						const margin = 10;
+						const max_left = p_rect.width - tt_w - margin;
+
+						if (left < margin) left = margin;
+						if (left > max_left) left = max_left;
+
+						// Flip to bottom if it goes off-top
+						if (top < margin) {
+							top = (c_rect.top - p_rect.top) + sy + c_rect.height + 12;
+						}
 
 						tooltip.style("left", `${left}px`).style("top", `${top}px`);
 					})
@@ -1008,6 +1219,26 @@ export const regression_logic = {
 					.on("click", async (event, d) => {
 						event.preventDefault();
 						event.stopPropagation();
+
+						// Identify and highlight the active point across both graphs
+						const section_id = d.customdata?.[1];
+						if (section_id) {
+							// Reset all points to their default state
+							svg.selectAll("circle")
+								.style("stroke", "#573c3cff")
+								.style("stroke-width", 2)
+								.attr("r", function(circle_d) {
+									// Return to original radius based on trace type
+									return (circle_d?.name === "Aproximación") ? 4 : 5;
+								});
+
+							// Highlight points matching the clicked section ID in both panels
+							svg.selectAll("circle")
+								.filter(circle_d => circle_d && circle_d.customdata?.[1] === section_id)
+								.style("stroke", "#997f5a") // Site main color
+								.style("stroke-width", 4)
+								.attr("r", 6);
+						}
 
 						// Mostrar loading en el panel izquierdo también
 						let panels_container = root.querySelector(".panels-container");
@@ -1032,6 +1263,7 @@ export const regression_logic = {
 							border-radius: 8px;
 							padding: 20px;
 							font-family: sans-serif;
+							min-height: 500px;
 							border: 1px solid #e0e0e0;
 						`;
 						left_panel.innerHTML = `<div style="text-align: center; padding: 20px;">Cargando...</div>`;
@@ -1043,7 +1275,8 @@ export const regression_logic = {
 							border-radius: 8px;
 							padding: 20px;
 							border: 1px solid #e0e0e0;
-							max-height: 500px;
+							height: auto;
+							min-height: 500px;
 							overflow-y: auto;
 						`;
 						right_panel.innerHTML = `<div style="text-align: center; padding: 20px;">Cargando...</div>`;
@@ -1067,7 +1300,7 @@ export const regression_logic = {
 							const mib_number = extract_mib_number(tooltip_element);
 
 							left_panel.innerHTML = `
-								<h3 style="margin: 0 0 15px 0; border-bottom: 2px solid #4a90e2; padding-bottom: 10px;">
+								<h3 style="margin: 0 0 15px 0; border-bottom: 2px solid #997f5a; padding-bottom: 10px;">
 									Resumen Estadístico
 								</h3>
 								<div style="display:grid; grid-template-columns: auto auto; gap: 12px; font-size: 13px;">
@@ -1168,7 +1401,7 @@ export const regression_logic = {
 				};
 			}
 
-			const marker_color = (t.name === "Aproximación") ? "rgb(20, 80, 200)" : t.marker?.color;
+			const marker_color = (t.name === "Aproximación") ? "#997f5a" : t.marker?.color;
 			const get_fill = (d) =>
 				Array.isArray(marker_color) ? (marker_color[d.i] ?? "white") : (marker_color ?? "white");
 
@@ -1188,38 +1421,39 @@ export const regression_logic = {
 	},
 
 	/**
-	 * Calculates simple linear regression coefficients for y = a + b*x
+	 * Calculates simple linear regression coefficients for y = a + b*x.
+	 * Optimized with simple loops and numeric operations.
 	 *
-	 * @param {number[]} X
-	 * @param {number[]} Y
+	 * @param {number[]|Float64Array} X
+	 * @param {number[]|Float64Array} Y
 	 * @returns {{a: number, b: number}}
 	 */
 	coefficients: function(X, Y) {
-		const n = Math.min(X.length, Y.length);
+		const n = X.length < Y.length ? X.length : Y.length;
+		if (n === 0) return { a: NaN, b: NaN };
 
-		if (!n) {
-			return { a: NaN, b: NaN };
-		}
-
-		const mean_x = X.slice(0, n).reduce((acc, v) => acc + v, 0) / n;
-		const mean_y = Y.slice(0, n).reduce((acc, v) => acc + v, 0) / n;
-
-		let N = 0;
-		let D = 0;
-
+		let sum_x = 0;
+		let sum_y = 0;
 		for (let i = 0; i < n; i++) {
-			N += (X[i] - mean_x) * (Y[i] - mean_y);
-			D += Math.pow(X[i] - mean_x, 2);
+			sum_x += X[i];
+			sum_y += Y[i];
+		}
+		const mean_x = sum_x / n;
+		const mean_y = sum_y / n;
+
+		let num = 0;
+		let den = 0;
+		for (let i = 0; i < n; i++) {
+			const dx = X[i] - mean_x;
+			num += dx * (Y[i] - mean_y);
+			den += dx * dx;
 		}
 
-		if (D === 0) {
-			return { a: NaN, b: NaN };
-		}
+		if (den === 0) return { a: NaN, b: NaN };
 
-		const b = N / D;
+		const b = num / den;
 		const a = mean_y - b * mean_x;
 
 		return { a, b };
 	},
-
 };

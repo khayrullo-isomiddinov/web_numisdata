@@ -36,6 +36,9 @@
   margin-left: auto;
   margin-right: auto;
 }
+#main > .inner .result .chart_wrapper {
+  padding-bottom: 2rem;
+}
 #main .form-inline .form-row .form-group {
   min-height: 3.25rem;
 }
