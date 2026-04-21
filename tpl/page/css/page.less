@@ -1190,7 +1190,7 @@
 		margin-bottom: -0.01em;
 	}
 
-	.float-prompt{
+	.float-prompt {
 		position: fixed;
 		top: 100px;
 		background-color: @color_grey_dark;
@@ -1201,6 +1201,7 @@
 		border-radius:5px;
 		box-shadow: 8px 8px 10px 0px rgba(180, 180, 180, 0.8);
 		max-width: 600px;
+		z-index: 2;
 
 		@media screen and (max-width: @content_medium_max_width){
 			width: 90%;
@@ -1247,6 +1248,11 @@
 			padding:0.2em;
 			padding-bottom: 0;
 			margin-bottom: 0.2em;
+		}
+
+		.debug-info {
+			color: #c5c5c5;
+			font-size: 0.8rem;
 		}
 	}
 

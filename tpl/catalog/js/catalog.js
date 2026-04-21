@@ -209,9 +209,12 @@ var catalog = {
 
 				// if psqo is received, recreate the original search into the current form and submit
 				const decoded_psqo = psqo_factory.decode_psqo(psqo)
+				if(SHOW_DEBUG) {
+					console.log('decoded_psqo', decoded_psqo)
+				}
 				if (decoded_psqo) {
 
-					self.form.parse_psqo_to_form(decoded_psqo)
+					self.form.parse_psqo_to_form(decoded_psqo, false)
 
 					self.form_submit(form_node, {
 						scroll_result : true
@@ -1592,8 +1595,10 @@ var catalog = {
 					body : request_body
 				})
 				.then((response)=>{
-					// console.log("++++++++++++ request_body:",request_body);
-					// console.log("--- search_rows API response:",response);
+					if(SHOW_DEBUG) {
+						console.log("++++++++++++ request_body:",request_body);
+						console.log("--- search_rows API response:",response);
+					}
 
 					// data parsed
 					const data = page.parse_catalog_data(response.result)

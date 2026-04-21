@@ -208,7 +208,8 @@ var type =  {
 						// hoard resolution
 						"ref_coins_hoard_data"			: "hoards",
 						"hoards.bibliography_data"		: "bibliographic_references",
-						"denomination_data"				: "denomination",
+						// "denomination_data"			: "denomination",
+						"denomination_data"				: "ts_object",
 						"material_data"					: "material",
 						"related_types_data"			: "types",
 						// mint resolution

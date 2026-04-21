@@ -3700,100 +3700,160 @@ var type_row_fields_min = (function (exports) {
 
 
 
-		//CREATE A FLOAT PROMPT WHIT DESCRIPTION AND RELATED LINKS
-		// params:
-		// 	item: OBJECT item info
-		// 	parentNode: HTML node that will have the onclick event
-		// 	data_ref: STRING type of the item in DB ex: material_data
+		/**
+		* CREATE A FLOAT PROMPT WITH DESCRIPTION AND RELATED LINKS
+		* Creates a floating popup attached to a parent element that displays
+		* term information, definition, and external URIs. Clicking the parent
+		* shows the popup; a close button hides it.
+		*
+		* @param {Object} item
+		* 	The data item containing reference data and optional material info.
+		* 	Expected structure: { [data_ref]: Array<{table, term, definition?, iri?}>, material? }
+		* @param {HTMLElement} parentNode
+		* 	The DOM element that triggers the popup on click. Receives pointer/underline styling.
+		* @param {string} data_ref
+		* 	Key in item object referencing the data array (e.g., 'material_data', 'mint_data').
+		* 	When 'material_data', uses item.material as psqo_value instead of item[data_ref][0].term.
+		*
+		* @returns {void}
+		*
+		* @example
+		* 	type_row_fields.create_float_prompt(item, spanElement, 'material_data')
+		*/
 		create_float_prompt : function (item, parentNode, data_ref){
 
-			if (item[data_ref] && item[data_ref].length>0) {
+			const safe_item			= item ?? {};
+			const data_array		= safe_item[data_ref];
+			const first_data_item	= Array.isArray(data_array) && data_array.length > 0
+				? data_array[0]
+				: null;
 
-				parentNode.classList.add("active-pointer");
-				parentNode.classList.add("underline-text");
+			if (!first_data_item) {
+				return
+			}
 
-				const main_node = document.getElementById("main");
+			parentNode.classList.add("active-pointer");
+			parentNode.classList.add("underline-text");
 
-				const float_prompt = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "float-prompt hide",
-					parent 			: main_node
-				});
+			const main_node = document.getElementById("main");
+			if (!main_node) {
+				return
+			}
 
-				const url_label = (data_ref==="material_data")
-					? item.material
-					: item[data_ref][0].term;
+			const float_prompt = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "float-prompt hide",
+				parent 			: main_node
+			});
 
-				const psqo = [{
-					"$and" : [{
-						field	: item[data_ref][0].table,
-						value	: url_label, // Like '%${form_item.q}%'
-						op		: '=' // default is 'LIKE'
-					}]
-				}];
+			const table = first_data_item.table ?? 'unknown';
 
-				const parse_psqo	= psqo_factory.encode_psqo(psqo);
-				const catalog_url	= page_globals.__WEB_ROOT_WEB__+"/catalog/?psqo="+ parse_psqo;
+			// field and id
+			let field;
+			let id;
+			switch (table) {
+				case 'ts_object':
+					field = 'denomination';
+					id = 'denomination';
+					break
+				default:
+					field = table;
+					id = table;
+					break
+			}
 
+			// value
+			const value = data_ref === "material_data"
+				? (safe_item.material ?? '')
+				: (first_data_item.term ?? '');
+
+			// psqo
+			const psqo = {
+				"$and": [{
+					"id"		: id,
+					"field"		: field,
+					"q"			: value,
+					"q_type"	: "q_selected",
+					"op"		: "="
+				}]
+			};
+
+			if(SHOW_DEBUG) {
+				console.log("item", safe_item);
+				console.log("data_ref", data_ref);
+				console.log("psqo", psqo);
+			}
+
+			const parse_psqo	= psqo_factory.encode_psqo(psqo);
+			const catalog_url	= page_globals.__WEB_ROOT_WEB__+"/catalog/?psqo="+ parse_psqo;
+
+			const prompt_term = first_data_item.term ?? '';
+			common.create_dom_element({
+				element_type	: "a",
+				class_name		: "prompt-label underline-text",
+				inner_html 		: prompt_term,
+				href			: catalog_url,
+				parent 			: float_prompt
+			});
+
+			const close_button = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "close-button",
+				parent 			: float_prompt
+			});
+			close_button.addEventListener("click", function(e){
+				e.stopPropagation();
+				float_prompt.classList.add("hide");
+			});
+
+			const definition = first_data_item.definition;
+			if (definition) {
 				common.create_dom_element({
-					element_type	: "a",
-					class_name		: "prompt-label underline-text",
-					inner_html 		: item[data_ref][0].term,
-					href			: catalog_url,
+					element_type	: "p",
+					class_name		: "prompt-description",
+					inner_html		: definition,
 					parent 			: float_prompt
-				});
-
-				const close_button = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "close-button",
-					parent 			: float_prompt
-				});
-
-				if (item[data_ref][0].definition) {
-					common.create_dom_element({
-						element_type	: "p",
-						class_name		: "prompt-description",
-						inner_html		: item[data_ref][0].definition,
-						parent 			: float_prompt
-					});
-				}
-
-				if (item[data_ref][0].iri && item[data_ref][0].iri.length>0){
-					const uris	= page.split_data(item[data_ref][0].iri, ' | ');
-					for (let i=0; i<uris.length;i++){
-
-						common.create_dom_element({
-							element_type	: "a",
-							class_name		: "image_link underline-text",
-							target			: "_blank",
-							href			: uris[i],
-							inner_html		: uris[i],
-							parent			: float_prompt
-						});
-					}
-				}
-
-				parentNode.addEventListener("click",function(e){
-					e.stopPropagation();
-
-					const float_prompts_list = document.getElementsByClassName("float-prompt");
-					for (let i=0;i<float_prompts_list.length;i++){
-						if (!float_prompts_list[i].classList.contains("hide")){
-							float_prompts_list[i].classList.add("hide");
-						}
-					}
-
-					float_prompt.style.left = e.clientX+'px';
-					float_prompt.style.top = e.clientY+'px';
-					float_prompt.classList.remove("hide");
-				});
-
-				close_button.addEventListener("click",function(e){
-					e.stopPropagation();
-
-					float_prompt.classList.add("hide");
 				});
 			}
+
+			const iri = first_data_item.iri;
+			if (iri && iri.length > 0){
+				const uris = page.split_data(iri, ' | ');
+				for (let i=0; i<uris.length; i++){
+					common.create_dom_element({
+						element_type	: "a",
+						class_name		: "image_link underline-text",
+						target			: "_blank",
+						href			: uris[i],
+						inner_html		: uris[i],
+						parent			: float_prompt
+					});
+				}
+			}
+
+			if(SHOW_DEBUG) {
+				common.create_dom_element({
+					element_type	: "pre",
+					class_name		: "debug-info",
+					inner_html		: JSON.stringify(psqo, null, 2),
+					parent 			: float_prompt
+				});
+			}
+
+			parentNode.addEventListener("click", function(e){
+				e.stopPropagation();
+
+				const float_prompts_list = document.getElementsByClassName("float-prompt");
+				for (let i=0; i<float_prompts_list.length; i++){
+					if (!float_prompts_list[i].classList.contains("hide")){
+						float_prompts_list[i].classList.add("hide");
+					}
+				}
+
+				float_prompt.style.left = e.clientX+'px';
+				float_prompt.style.top = e.clientY+'px';
+				float_prompt.classList.remove("hide");
+			});
 		}//end create_float_prompt
 
 

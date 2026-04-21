@@ -445,7 +445,9 @@ function form_factory() {
 				// return false;
 			})();
 			if (!form_item) {
-				console.error("Error on get form item", psqo_item, self.form_items);
+				console.error("Error on get form item. psqo_item:", psqo_item);
+				console.log('psqo_item:', psqo_item)
+				console.log("form_items:", psqo_item, self.form_items);
 				return false
 			}
 
@@ -510,7 +512,7 @@ function form_factory() {
 				  group[group_op] = []
 
 			// q value or sql_filter
-				if ( (form_item.q.length!==0 && form_item.q!=='*') || (form_item.sql_filter) ) {
+				if ( (form_item.q?.length!==0 && form_item.q!=='*') || (form_item.sql_filter) ) {
 
 					if (form_item.input_type==='range_slider' && (!form_item.sql_filter || form_item.sql_filter.length<2)) {
 						continue;
