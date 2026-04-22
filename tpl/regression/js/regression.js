@@ -187,7 +187,7 @@ export const regression =  {
 
 		const request_body = {
 			dedalo_get	: 'records',
-			table		: 'denomination',
+			table		: 'ts_object',
 			ar_fields	: ['color', 'section_id', 'term'],
 			lang		: page_globals.WEB_CURRENT_LANG_CODE
 		}
