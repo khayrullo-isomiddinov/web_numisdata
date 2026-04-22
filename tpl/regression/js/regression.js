@@ -163,6 +163,11 @@ export const regression =  {
 						mint_item.node_input.value = random_mint
 						mint_item.q = random_mint
 
+						// trigger input event to update floating label
+						mint_item.node_input.dispatchEvent(new Event('input'))
+						// trigger blur event to ensure label is positioned correctly
+						mint_item.node_input.dispatchEvent(new Event('blur'))
+
 						// auto-submit search
 						self.form_submit()
 					}
