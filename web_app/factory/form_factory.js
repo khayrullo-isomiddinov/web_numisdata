@@ -199,6 +199,11 @@ function form_factory() {
 					})
 					this.attach_floating_label(form_item, node_input, group)
 
+					// sync input value to form_item.q on input
+					node_input.addEventListener('input', function(e) {
+						form_item.q = e.target.value
+					})
+
 				form_item.node_input = node_input
 					break;
 			}
