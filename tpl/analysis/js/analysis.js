@@ -148,7 +148,7 @@ export const analysis =  {
 	/**
 	 * Executes a first search with a random mint automatically.
 	 */
-	auto_search : function() {
+	auto_search : async function() {
 
 		const self = this
 
@@ -161,54 +161,52 @@ export const analysis =  {
 			group		: 'p_mint'
 		}
 
-		data_manager.request({
+		const api_response = await data_manager.request({
 			body : request_body
 		})
-		.then((response)=>{
-			if(SHOW_DEBUG) {
-				console.log('auto_search API calll response', response)
-			}
-			if (response.result && response.result.length > 0) {
-				// filter results to get valid mint names
-				const mints = response.result
-					.map(r => {
-						try {
-							return (typeof r.p_mint === 'string') ? JSON.parse(r.p_mint) : r.p_mint
-						} catch(e) {
-							return null
-						}
-					})
-					.filter(val => Array.isArray(val) && val.length > 0)
-					.map(val => val[0])
 
-				if (mints.length > 0) {
-					// pick a random mint
-					const random_mint = mints[Math.floor(Math.random() * mints.length)]
-					// find mint form item and set its value
-					const mint_item = self.form.form_items['mint']
-					if (mint_item) {
-						mint_item.node_input.value = random_mint
-						mint_item.q = random_mint
+		if(SHOW_DEBUG) {
+			console.log('auto_search API calll api_response', api_response)
+		}
 
-						// auto-submit search
-						self.form_submit()
+		if (api_response.result && api_response.result.length > 0) {
+			// filter results to get valid mint names
+			const mints = api_response.result
+				.map(r => {
+					try {
+						return (typeof r.p_mint === 'string') ? JSON.parse(r.p_mint) : r.p_mint
+					} catch(e) {
+						return null
 					}
+				})
+				.filter(val => Array.isArray(val) && val.length > 0)
+				.map(val => val[0])
+
+			if (mints.length > 0) {
+				// pick a random mint
+				const random_mint = mints[Math.floor(Math.random() * mints.length)]
+				// find mint form item and set its value
+				const mint_item = self.form.form_items['mint']
+				if (mint_item) {
+					mint_item.node_input.value = random_mint
+					mint_item.q = random_mint
+
+					// auto-submit search
+					self.form_submit()
 				}
 			}
-		})
+		}
 	},
 
 	/**
 	 * Call the Dedalo API and obtain colors for the different denominations
-	 */
-	/**
 	 * Loads color definitions for different coin denominations from the Dedalo API.
 	 * These colors are used for consistent visualization across different charts.
 	 * Once colors are loaded, the search submit button is enabled.
 	 *
 	 * @returns {void}
 	 */
-	load_denomination_colors : function() {
+	load_denomination_colors : async function() {
 
 		const self = this
 
@@ -218,20 +216,30 @@ export const analysis =  {
 			ar_fields	: ['color', 'section_id', 'term'],
 			lang		: page_globals.WEB_CURRENT_LANG_CODE
 		}
-		data_manager.request({
+
+		const api_response = await data_manager.request({
 			body : request_body
-		}).then((response)=>{
-			self.denomination_colors = response.result
-				.filter((ele) => ele.color && ele.color.length)
-				.map((ele) => {
-					return {
-						section_id	: ele.section_id,
-						color		: ele.color
-					}
-				})
-			// Enable submit button
-			self.submit_button.disabled = false
 		})
+		if(SHOW_DEBUG) {
+			console.log('load_denomination_colors API call response', api_response)
+		}
+
+		const result = api_response.result || []
+		self.denomination_colors = result
+			.filter((ele) => ele.color && ele.color.length)
+			.map((ele) => {
+				return {
+					section_id	: ele.section_id,
+					color		: ele.color
+				}
+			})
+
+		if(SHOW_DEBUG) {
+			console.log('load_denomination_colors processed colors', self.denomination_colors)
+		}
+
+		// Enable submit button
+		self.submit_button.disabled = false
 	},
 
 	/**
@@ -842,6 +850,11 @@ export const analysis =  {
 					order			: order,
 					process_result	: process_result
 				}
+
+				if(SHOW_DEBUG) {
+					console.log('search_rows request_body', request_body)
+				}
+
 				data_manager.request({
 					body : request_body
 				})

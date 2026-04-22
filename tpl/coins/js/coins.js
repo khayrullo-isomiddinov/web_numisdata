@@ -525,9 +525,10 @@ var coins =  {
 				const sql_filter	= parsed_filter
 					? '(' + parsed_filter + ')'
 					: null
+
+				// Debug log
 				if(SHOW_DEBUG===true) {
-					// console.log("-> filter:",filter);
-					console.log("-> coins form_submit sql_filter:",sql_filter);
+					console.log("-> coins form_submit sql_filter:", sql_filter);
 				}
 				// if (!sql_filter|| sql_filter.length<3) {
 				// 	return new Promise(function(resolve){
@@ -538,21 +539,28 @@ var coins =  {
 				// 	})
 				// }
 
-			data_manager.request({
-				body : {
-					dedalo_get		: 'records',
-					table			: table,
-					ar_fields		: ar_fields,
-					sql_filter		: sql_filter,
-					limit			: limit,
-					count			: count,
-					offset			: offset,
-					order			: order,
-					process_result	: null,
-					resolve_portals_custom	: {
-						'image_obverse_data' : 'images'
-					}
+			const body = {
+				dedalo_get		: 'records',
+				table			: table,
+				ar_fields		: ar_fields,
+				sql_filter		: sql_filter,
+				limit			: limit,
+				count			: count,
+				offset			: offset,
+				order			: order,
+				process_result	: null,
+				resolve_portals_custom	: {
+					'image_obverse_data' : 'images'
 				}
+			}
+
+			// Debug log
+			if(SHOW_DEBUG===true) {
+				console.log("-> coins form_submit body:", body);
+			}
+
+			data_manager.request({
+				body : body
 			})
 			.then(function(api_response){
 				// console.log("--------------- api_response:",api_response);

@@ -640,19 +640,25 @@ var map = {
 				// 	})
 				// }
 
+			const body = {
+				dedalo_get		: 'records',
+				table			: 'coins',
+				ar_fields		: ar_fields,
+				sql_filter		: sql_filter + " AND type_data IS NOT NULL",
+				limit			: 0,
+				count			: false,
+				offset			: 0,
+				order			: 'section_id ASC',
+				// group		: "type_data",
+				process_result	: null
+			}
+
+			if (SHOW_DEBUG) {
+				console.log('form_submit body:', body)
+			}
+
 			data_manager.request({
-				body : {
-					dedalo_get		: 'records',
-					table			: 'coins',
-					ar_fields		: ar_fields,
-					sql_filter		: sql_filter + " AND type_data IS NOT NULL",
-					limit			: 0,
-					count			: false,
-					offset			: 0,
-					order			: 'section_id ASC',
-					// group		: "type_data",
-					process_result	: null
-				}
+				body : body
 			})
 			.then(function(api_response){
 				// console.log("--------------- form_submit api_response:", api_response);
