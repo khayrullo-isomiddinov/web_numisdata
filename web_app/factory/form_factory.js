@@ -188,7 +188,6 @@ function form_factory() {
 					break;
 
 				default:
-					let label_node
 					const node_input = common.create_dom_element({
 						element_type	: 'input',
 						type			: 'text',
@@ -198,29 +197,9 @@ function form_factory() {
 						value			: form_item.q || '',
 						parent			: group
 					})
-					node_input.addEventListener("keyup", function(e){
-						// asign value
-						form_item.q = e.target.value
-						// show label at top
-						if (node_input.value.length>0) {
-							label_node = label_node || common.create_dom_element({
-								element_type	: 'span',
-								class_name		: "form_input_label",
-								inner_html		: form_item.label,
-								parent			: group
-							})
-						}else if (label_node) {
-							label_node.remove()
-							label_node = null
-						}
-					})
-					node_input.addEventListener("blur", function(e){
-						if (label_node && node_input.value.length===0) {
-							label_node.remove()
-							label_node = null
-						}
-					})
-					form_item.node_input = node_input
+					this.attach_floating_label(form_item, node_input, group)
+
+				form_item.node_input = node_input
 					break;
 			}
 
@@ -297,6 +276,53 @@ function form_factory() {
 		return group
 	}//end build_operators_node
 
+
+
+	/**
+	* ATTACH_FLOATING_LABEL
+	* Creates a floating label above input that shows when input has value
+	* @param object form_item
+	* @param HTMLElement node_input
+	* @param HTMLElement group
+	*/
+	this.attach_floating_label = function(form_item, node_input, group) {
+
+		// Prevent duplicate labels - check if already attached
+		const existing_label = group.querySelector('span.form_input_label')
+		if (existing_label) {
+			return
+		}
+
+		let label_node = null
+
+		/**
+		* update_label_visibility
+		* Shows/hides label based on input value
+		*/
+		const update_label_visibility = function() {
+			if (node_input.value.length > 0) {
+				if (!label_node) {
+					label_node = common.create_dom_element({
+						element_type	: 'span',
+						class_name		: "form_input_label",
+						text_content	: form_item.label,
+						parent			: group
+					})
+				}
+			}else if (label_node) {
+				label_node.remove()
+				label_node = null
+			}
+		}
+
+		// Attach event listeners
+		node_input.addEventListener("input", update_label_visibility)
+		node_input.addEventListener("blur", update_label_visibility)
+		node_input.addEventListener("focus", update_label_visibility)
+
+		// Initial check (for pre-filled values)
+		update_label_visibility()
+	}//end attach_floating_label
 
 
 
@@ -1197,6 +1223,13 @@ function form_factory() {
 		// .blur(function() {
 		//     //$(element).autocomplete('close');
 		// })
+
+
+		// Attach floating label for autocomplete inputs
+		const parent_group = form_item.node_input.parentNode
+		if (parent_group) {
+			self.attach_floating_label(form_item, form_item.node_input, parent_group)
+		}
 
 
 		return true
