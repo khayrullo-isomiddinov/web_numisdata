@@ -219,6 +219,7 @@ export const analysis =  {
 			dedalo_get	: 'records',
 			table		: 'ts_object',
 			ar_fields	: ['color', 'section_id', 'term'],
+			sql_filter	: "color IS NOT NULL AND color != ''",
 			lang		: page_globals.WEB_CURRENT_LANG_CODE
 		}
 
