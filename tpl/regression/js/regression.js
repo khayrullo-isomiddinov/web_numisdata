@@ -178,15 +178,13 @@ export const regression =  {
 
 	/**
 	 * Call the Dedalo API and obtain colors for the different denominations
-	 */
-	/**
 	 * Loads color definitions for different coin denominations from the Dedalo API.
 	 * These colors are used for consistent visualization across different charts.
 	 * Once colors are loaded, the search submit button is enabled.
 	 *
 	 * @returns {void}
 	 */
-	load_denomination_colors : function() {
+	load_denomination_colors : async function() {
 
 		const self = this
 
@@ -197,20 +195,30 @@ export const regression =  {
 			sql_filter	: "color IS NOT NULL AND color != ''",
 			lang		: page_globals.WEB_CURRENT_LANG_CODE
 		}
-		data_manager.request({
+
+		const api_response = await data_manager.request({
 			body : request_body
-		}).then((response)=>{
-			self.denomination_colors = response.result
-				.filter((ele) => ele.color && ele.color.length)
-				.map((ele) => {
-					return {
-						section_id	: ele.section_id,
-						color		: ele.color
-					}
-				})
-			// Enable submit button
-			self.submit_button.disabled = false
 		})
+		if(SHOW_DEBUG) {
+			console.log('load_denomination_colors API call response', api_response)
+		}
+
+		const result = api_response.result || []
+		self.denomination_colors = result
+			.filter((ele) => ele.color && ele.color.length)
+			.map((ele) => {
+				return {
+					section_id	: ele.section_id,
+					color		: ele.color
+				}
+			})
+
+		if(SHOW_DEBUG) {
+			console.log('load_denomination_colors processed colors', self.denomination_colors)
+		}
+
+		// Enable submit button
+		self.submit_button.disabled = false
 	},
 
 	/**
