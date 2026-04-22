@@ -2,6 +2,7 @@ config.php
 config.*
 !sample.config.php
 config.codekit3
+.env
 prepros.config
 .codekit-cache
 *codekit*
