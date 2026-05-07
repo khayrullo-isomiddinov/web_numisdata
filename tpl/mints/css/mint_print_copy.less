@@ -623,6 +623,7 @@
 			padding-left: 3em;
 			text-align: justify;
 			break-inside: avoid;
+			letter-spacing: 0px !important; // (!) removed letter space)
 
 			>.info_line {
 				text-wrap: pretty;
@@ -636,14 +637,11 @@
 							white-space: nowrap;
 						}
 					}
-					// magazine_union nowrap
-					&.magazine_union {
-					
-					 	&.nowrap {
-					 		white-space: nowrap !important;
-						}
-					}
-				}				
+				}
+
+				.magazine_union.nowrap {
+					white-space: nowrap; // (!) mix last word of 'ref_publications_magazine' with 'ref_publications_magazine_number' e.g. '<span><em>Glaux</em> 7</span>'
+				}
 			}
 		}
 	}//end biblio_print

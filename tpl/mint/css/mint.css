@@ -510,5 +510,7 @@
   .biblio_print .bibliographic_reference > .info_line > span.bib_page.nowrap {
     white-space: nowrap;
   }
+  .biblio_print .bibliographic_reference > .info_line > span.magazine_union.nowrap {
+    white-space: nowrap !important;
+  }
 }
-/*# sourceMappingURL=mint.css.map */

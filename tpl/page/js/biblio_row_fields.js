@@ -683,30 +683,43 @@ var biblio_row_fields = {
 				parent			: line
 			})
 
-		// magazine in italics
-			const magazine = (biblio_object.ref_publications_magazine)
-				? "<em>"+biblio_object.ref_publications_magazine + " </em>"
+		// magazine (in italics)
+			// magazine_parts. Split by words
+			const magazine_parts = (biblio_object.ref_publications_magazine || '').trim().split(/\s+/)
+			// join all parts except the last one with a space
+			const magazine_beginning = magazine_parts.slice(0, -1).join(' ')
+
+			const magazine_em = magazine_beginning.length > 0
+				? "<em>" + magazine_beginning + "</em> "
 				: ""
+
 			common.create_dom_element({
 				element_type	: "span",
-				inner_html		: magazine,
+				inner_html      : magazine_em,
 				parent			: line
 			})
 
-		// magazine number ref_publications_magazine_number	regular
+		// magazine number ref_publications_magazine_number
+			const magazine_last_word = magazine_parts.length > 0 && magazine_parts[magazine_parts.length - 1]
+				? "<em>" + magazine_parts[magazine_parts.length - 1] + "</em>"
+				: "";
+
 			const magazine_number = (biblio_object.ref_publications_magazine_number)
-				? " " +biblio_object.ref_publications_magazine_number
-				: ""
+				? magazine_last_word + " " + biblio_object.ref_publications_magazine_number
+				: magazine_last_word
+
 			common.create_dom_element({
 				element_type	: "span",
+				class_name      : "magazine_union nowrap",
 				inner_html		: magazine_number,
 				parent			: line
 			})
 
+
 		// other_people_info : name and role other_people_full_names
 			if (biblio_object.ref_publications_other_people_full_names && biblio_object.ref_publications_other_people_full_names.length>0) {
 				const other_people_full_names = biblio_object.ref_publications_other_people_full_names.split(" | ");
-				const other_people_full_roles = biblio_object.ref_publications_other_people_full_roles.split(" | ")
+				const other_people_full_roles = biblio_object.ref_publications_other_people_full_roles.split(" | ");
 
 				const particle_in = tstring.in || 'In'
 
