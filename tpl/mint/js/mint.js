@@ -55,10 +55,10 @@ var mint = {
 			})
 			.then(function(response){
 				if(SHOW_DEBUG===true) {
-					console.log("--> set_up get_row_data API response:", response.result);
+					console.log("--> set_up get_row_data API response.result:", response.result);
 				}
 
-				// mint draw
+				// mint draw (get data from request combi -> id : mint)
 					const mint = response.result.find( el => el.id==='mint')
 					const mint_data = page.parse_mint_data(mint.result[0])
 
@@ -114,7 +114,7 @@ var mint = {
 						}
 					}
 
-				// types draw
+				// types draw (get data from request combi -> id : mint_catalog)
 					const mint_catalog = response.result.find( el => el.id==='mint_catalog')
 					if (mint_catalog.result) {
 						const _mint_catalog = mint_catalog.result.find(el => el.term_table==='mints')
@@ -126,38 +126,46 @@ var mint = {
 							self.get_types_data2({
 								section_id : _mint_catalog.section_id
 							})
-							.then(async function(result){
+							.then(async function(ar_rows){
+
 								// self.draw_types({
 								// 	target	: document.getElementById('types'),
-								// 	ar_rows	: result
+								// 	ar_rows	: ar_rows
 								// })
 
-								//RESTORE term_section_id info
-								for (let i=0;i<result.length;i++){
-									result[i].catalog_info = result[i].term_section_id
+								// RESTORE term_section_id info
+								for (let i=0;i<ar_rows.length;i++){
+									ar_rows[i].catalog_info = ar_rows[i].term_section_id
 									//result[i].term_section_id = result[i].term_section_id.section_id
 								}
 
 								// types
-								const types_node = self.draw_types2({
-									ar_rows			: result,
-									mint_section_id	: _mint_catalog.section_id
-								})
-								if (types_node) {
-									const target = document.getElementById('types')
-									target.appendChild(types_node)
-									page.activate_images_gallery(target)
+								const types_container = document.getElementById('types')
+								if (types_container) {
+									const types_node = self.draw_types2({
+										ar_rows			: ar_rows,
+										mint_section_id	: _mint_catalog.section_id
+									})
+									if (types_node) {
+										types_container.appendChild(types_node)
+										page.when_in_viewport(types_container, () => {
+											page.activate_images_gallery(types_container)
+										})
+									}
 								}
 
 								// types print
-								const target = document.getElementById('types_print')
-								const rect = target.getBoundingClientRect();
-								const leftPosition = rect.left;
-								page_globals.types_print_left = leftPosition
+								const types_print_container = document.getElementById('types_print')
+								if(types_print_container) {
+									const rect = types_print_container.getBoundingClientRect();
+									page_globals.types_print_left = rect.left; // fix left position
 
-								const types_node_print = await mint_row.render_type_print(result)
-								if (types_node_print && target) {
-									target.appendChild(types_node_print)
+									const types_node_print = await mint_row.render_type_print(
+										ar_rows
+									)
+									if (types_node_print) {
+										types_print_container.appendChild(types_node_print)
+									}
 								}
 							})
 						}else{

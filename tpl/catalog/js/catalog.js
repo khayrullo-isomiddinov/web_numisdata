@@ -1620,6 +1620,14 @@ var catalog = {
 
 	/**
 	* DRAW_ROWS
+	* Renders catalog rows into the specified container.
+	* Groups mint items by their parent and builds the DOM structure.
+	* Handles empty results display and activates image galleries.
+	*
+	* @param {Object} options - Configuration options
+	* @param {HTMLElement} options.target - Container element to render rows into
+	* @param {Array} [options.ar_rows=[]] - Array of row data objects to render
+	* @return {Promise<HTMLElement>} Resolves with the container element when rendering is complete
 	*/
 	draw_rows : function(options) {
 
@@ -1759,12 +1767,15 @@ var catalog = {
 		if(children){
 			for (let i = 0; i < children.length; i++) {
 
-				const finded = self.parents.find(el => el.section_id == children[i])
+				const current_section_id = children[i]
+
+				const finded = self.parents.find(el => el.section_id == current_section_id)
 				if(finded){
 					continue
 				}
 
-				self.get_child(ar_rows, children[i], catalog_row_wrapper)
+
+				self.get_child(ar_rows, current_section_id, catalog_row_wrapper)
 			}
 		}
 	},
