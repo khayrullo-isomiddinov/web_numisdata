@@ -654,16 +654,22 @@ var biblio_row_fields = {
 
 			common.create_dom_element({
 				element_type	: "span",
+				class_name 		: '_authors',
 				inner_html		: authors,
 				parent			: line
 			})
 
-		// date
+		// date. E.g. '(1974-1975): '
+			let ref_publications_date_full = biblio_object.ref_publications_date || ''
+			if(biblio_object.ref_publications_date_end) {
+				ref_publications_date_full += '-' + biblio_object.ref_publications_date_end
+			}
 			const date = (biblio_object.ref_publications_date)
-				? " (" + biblio_object.ref_publications_date + "): "
+				? " (" + ref_publications_date_full + "): "
 				: ""
 			common.create_dom_element({
 				element_type	: "span",
+				class_name 		: '_ref_publications_date',
 				inner_html		: date,
 				parent			: line
 			})
@@ -679,6 +685,7 @@ var biblio_row_fields = {
 
 			common.create_dom_element({
 				element_type	: "span",
+				class_name 		: '_format_title',
 				inner_html		: format_title,
 				parent			: line
 			})
@@ -690,7 +697,7 @@ var biblio_row_fields = {
 			const magazine_beginning = magazine_parts.slice(0, -1).join(' ')
 
 			const magazine_em = magazine_beginning.length > 0
-				? "<em>" + magazine_beginning + "</em> "
+				? "<em class='_magazine_beginning'>" + magazine_beginning + "</em> "
 				: ""
 
 			common.create_dom_element({
@@ -724,10 +731,10 @@ var biblio_row_fields = {
 				const particle_in = tstring.in || 'In'
 
 				common.create_dom_element({
-						element_type 	: "span",
-						text_content 	: particle_in,
-						parent 			: line
-					})
+					element_type 	: "span",
+					text_content 	: particle_in,
+					parent 			: line
+				})
 
 				const other_people_length = other_people_full_names.length
 				for (let g = 0; g < other_people_length; g++) {
@@ -740,6 +747,7 @@ var biblio_row_fields = {
 
 					common.create_dom_element({
 						element_type 	: "span",
+						class_name		: "_other_people_full_names",
 						text_content 	: text_content,
 						parent 			: line
 					})
@@ -750,23 +758,29 @@ var biblio_row_fields = {
 					: ' '
 
 				common.create_dom_element({
-						element_type 	: "span",
-						text_content 	: role,
-						parent 			: line
-					})
+					element_type 	: "span",
+					class_name      : "_role",
+					text_content 	: role,
+					parent 			: line
+				})
 			}
 
 		// title collective ref_publications_title_colective cursive
 			const title_colective_previous = (biblio_object.ref_publications_title_colective)
 				? '<em>' +biblio_object.ref_publications_title_colective + '</em>'
 				: null
-			const title_colective = ( title_colective_previous && biblio_object.ref_publications_place)
-				? title_colective_previous +', '
-				: title_colective_previous
+			const title_colective = ( title_colective_previous && (biblio_object.ref_publications_place) )
+				? title_colective_previous + ', '
+				: title_colective_previous || ''
+
+			const title_colective_final = biblio_object.ref_publications_magazine_number && title_colective && title_colective !== ''
+				? ', ' + title_colective
+				: title_colective
 
 			common.create_dom_element({
 				element_type	: "span",
-				inner_html		: title_colective,
+				class_name		: "_title_colective_final",
+				inner_html		: title_colective_final,
 				parent			: line
 			})
 
@@ -790,6 +804,7 @@ var biblio_row_fields = {
 				: ""
 			common.create_dom_element({
 				element_type	: "span",
+				class_name		: "_place",
 				inner_html		: place,
 				parent			: line
 			})
