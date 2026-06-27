@@ -73,6 +73,12 @@ export const regression =  {
 	form_items_container				: null,
 	/** @type {HTMLElement|null} Container for the regression model visualization. */
 	regression_model_chart_container	: null,
+	/** @type {HTMLElement|null} Container for the regression data table. */
+	regression_model_table_container	: null,
+	/** @type {HTMLButtonElement|null} Toggle button to expand/collapse the data table. */
+	regression_model_table_toggle		: null,
+	/** @type {HTMLButtonElement|null} Download button for the data table CSV. */
+	regression_model_table_download		: null,
 
 	/**
 	 * Color hexadecimal code for each denomination
@@ -93,6 +99,9 @@ export const regression =  {
 	 * @param {Object} options.row - Current record data.
 	 * @param {HTMLElement} options.form_items_container - Target container for the form.
 	 * @param {HTMLElement} options.regression_model_chart_container - Target container for regression plot.
+	 * @param {HTMLElement} [options.regression_model_table_container] - Target container for the regression data table.
+	 * @param {HTMLButtonElement} [options.regression_model_table_toggle] - Toggle button to expand/collapse the data table.
+	 * @param {HTMLButtonElement} [options.regression_model_table_download] - Download button for the data table CSV.
 	 * @returns {boolean} Returns true if setup was initiated successfully.
 	 */
 	set_up : function(options) {
@@ -105,7 +114,29 @@ export const regression =  {
 			self.row								= options.row
 			self.form_items_container				= options.form_items_container
 			self.regression_model_chart_container	= options.regression_model_chart_container
+			self.regression_model_table_container	= options.regression_model_table_container
+			self.regression_model_table_toggle		= options.regression_model_table_toggle
+			self.regression_model_table_download	= options.regression_model_table_download
 			self.pdf_current						= options.pdf_current
+
+		// data table toggle (collapsible, collapsed by default)
+			if (self.regression_model_table_toggle && self.regression_model_table_container) {
+				self.regression_model_table_toggle.addEventListener('click', function() {
+					const is_hidden = self.regression_model_table_container.classList.toggle('hide')
+					self.regression_model_table_toggle.setAttribute('aria-expanded', String(!is_hidden))
+					const icon = self.regression_model_table_toggle.querySelector('.regression_table_toggle_icon')
+					if (icon) {
+						icon.textContent = is_hidden ? '\u25B6' : '\u25BC'
+					}
+				})
+			}
+
+		// data table download (CSV)
+			if (self.regression_model_table_download) {
+				self.regression_model_table_download.addEventListener('click', function() {
+					self.download_table_csv()
+				})
+			}
 
 		// form (render first so submit_button exists before async color load resolves)
 			const form_node = self.render_form()
@@ -557,6 +588,12 @@ export const regression =  {
 		// loading
 			// cleanup html
 				self.regression_model_chart_container.replaceChildren()
+				if (self.regression_model_table_container) {
+					self.regression_model_table_container.replaceChildren()
+				}
+				if (self.regression_model_table_download) {
+					self.regression_model_table_download.disabled = true
+				}
 				document.getElementById('regression_model_section').classList.add('hide')
 
 			// spinner
@@ -595,7 +632,14 @@ export const regression =  {
 						// Show hidden DOM node 'regression_model_chart_container'
 						document.getElementById('regression_model_section').classList.remove('hide')
 
-						this.plot_rev_and_anv(this.regression_model_chart_container,parsed_data)
+						this.plot_rev_and_anv(
+							this.regression_model_chart_container,
+							parsed_data,
+							{
+								table_container: this.regression_model_table_container,
+								download_button: this.regression_model_table_download
+							}
+						)
 							.then(() => {
 								// show pdf section if available
 								if (self.pdf_current) {

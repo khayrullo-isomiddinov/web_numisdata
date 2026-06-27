@@ -203,5 +203,12 @@
     "northern_palaeohispanic": "Paleohispánica nororiental",
     "southern_palaeohispanic": "Paleohispánica meridional",
     "south_western_palaeohispanic": "Paleohispánica sudoccidental",
-    "lookup_error_no_type": "Por favor seleccione un tipo de recurso"
+    "lookup_error_no_type": "Por favor seleccione un tipo de recurso",
+    "data_table": "Tabla de datos",
+    "mib": "MIB",
+    "coins_number": "Nº monedas",
+    "estimated_dies": "Estimación cuños",
+    "ci_bootstrap_95": "IC bootstrap 95%",
+    "ref_mint_number": "Ref. ceca",
+    "hide": "Ocultar"
 }

@@ -203,5 +203,12 @@
   "northern_palaeohispanic": "Northern Palaeohispanic",
   "southern_palaeohispanic": "Southern Palaeohispanic",
   "south_western_palaeohispanic": "South-Western Palaeohispanic",
-  "lookup_error_no_type": "Please select a resource type"
+  "lookup_error_no_type": "Please select a resource type",
+  "data_table": "Data table",
+  "mib": "MIB",
+  "coins_number": "Coins number",
+  "estimated_dies": "Estimated dies",
+  "ci_bootstrap_95": "Bootstrap CI 95%",
+  "ref_mint_number": "Mint ref.",
+  "hide": "Hide"
 }

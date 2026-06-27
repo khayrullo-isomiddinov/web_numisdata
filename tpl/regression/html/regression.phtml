@@ -49,6 +49,20 @@
 							<div id="regression_model_section" class="hide">
 								<div class="info_line separator"><div class="big_label"><?php echo tstring('regression_model')?></div></div>
 								<div id="regression_model_chart_container" class="chart_wrapper"></div>
+
+								<!-- Data table (collapsible) -->
+								<div id="regression_model_table_section" class="regression_table_section">
+									<div class="regression_table_header">
+										<button id="regression_model_table_toggle" type="button" class="regression_table_toggle" aria-expanded="false" aria-controls="regression_model_table_container">
+											<span class="regression_table_toggle_label"><?php echo tstring('data_table')?></span>
+											<span class="regression_table_toggle_icon" aria-hidden="true">&#9654;</span>
+										</button>
+										<button id="regression_model_table_download" type="button" class="regression_table_download" disabled>
+											<?php echo tstring('download')?>
+										</button>
+									</div>
+									<div id="regression_model_table_container" class="regression_table_wrapper hide"></div>
+								</div>
 							</div>
 
 						<!-- PDF -->
@@ -85,6 +99,9 @@ dom_ready(function(){
 		export_data_container				: document.getElementById('export_data'),
 		form_items_container				: document.getElementById('items_container'),
 		regression_model_chart_container	: document.getElementById('regression_model_chart_container'),
+		regression_model_table_container	: document.getElementById('regression_model_table_container'),
+		regression_model_table_toggle		: document.getElementById('regression_model_table_toggle'),
+		regression_model_table_download		: document.getElementById('regression_model_table_download'),
 		pdf_current							: <?php echo json_encode($pdf_current, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
 	})
 	// active expandable block

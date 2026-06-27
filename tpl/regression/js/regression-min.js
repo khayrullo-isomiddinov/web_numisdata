@@ -897,9 +897,12 @@ var regression_min = (function (exports) {
 		*
 		* @param {string|Element} regression_model_chart_container
 		* @param {Array<Object>} parsed_data
+		* @param {Object} [opts] - Extra options.
+		* @param {HTMLElement} [opts.table_container] - Container where the data table will be rendered.
+		* @param {HTMLButtonElement} [opts.download_button] - Download button to enable after the table is rendered.
 		* @returns {Promise<void>}
 		*/
-		plot_rev_and_anv: function(regression_model_chart_container, parsed_data) {
+		plot_rev_and_anv: function(regression_model_chart_container, parsed_data, opts = {}) {
 			const max_ir_search = this._get_max_ir_from_parsed_data(parsed_data);
 
 			return this.get_log_regression_coefficients().then((fit) => {
@@ -921,8 +924,331 @@ var regression_min = (function (exports) {
 						xLabel: "Índice de Rareza (IR)",
 						yLabel: "Número de cuños estimado"
 					});
+
+					// Optional data table visualization (in addition to the charts)
+					if (opts.table_container) {
+						try {
+							this.render_data_table(opts.table_container, parsed_data, max_ir)
+								.then(() => {
+									if (opts.download_button) {
+										opts.download_button.disabled = false;
+									}
+								});
+						} catch (err) {
+							if (SHOW_DEBUG === true) {
+								console.error('render_data_table error:', err);
+							}
+						}
+					}
 				});
 			});
+		},
+
+		/**
+		 * Builds the per-emblem row data (IR, estimated dies and bootstrap CI) for a given side.
+		 * Reuses the cached regression coefficients and bootstrap bands, so the cost is negligible
+		 * even when called again for the data table after the chart has been rendered.
+		 *
+		 * @private
+		 * @param {Array<Object>} parsed_data - Full parsed search result (header + emblems).
+		 * @param {'A'|'R'} side - 'A' for anverso (obverse), 'R' for reverso (reverse).
+		 * @param {number} max_ir - Maximum IR used to build the bootstrap bands grid.
+		 * @returns {Promise<Array<Object>>} Resolves to the array of per-emblem row objects keyed by section_id.
+		 */
+		_build_emblem_rows: function(parsed_data, side, max_ir) {
+			const emblems = (Array.isArray(parsed_data) ? parsed_data.slice(1) : []);
+
+			return Promise.all([
+				this.get_log_regression_coefficients(),
+				this.get_bootstrap_bands(2000, max_ir)
+			]).then(([fit, bootstrap]) => {
+				const alpha = (side === 'A') ? fit.alphaA : fit.alphaR;
+				const beta  = (side === 'A') ? fit.betaA  : fit.betaR;
+				const band  = (side === 'A') ? bootstrap.bandA : bootstrap.bandR;
+				const oneDie = (side === 'A') ? bootstrap.oneDieA : bootstrap.oneDieR;
+
+				return emblems.map(emblem => {
+					const index = emblem.full_coins_reference_calculable || [];
+					let ir = 0;
+					for (let i = 0; i < index.length; i++) {
+						if (index[i] === true) ir++;
+					}
+					const approx = this.predict_potential(ir, alpha, beta);
+					const approx_display = Math.max(1, approx);
+					const ci = (approx < 1)
+						? oneDie
+						: this.get_bootstrap_interval_for_ir(ir, band);
+
+					return {
+						section_id		: emblem.section_id,
+						ceca			: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,
+						ref_ceca		: emblem.ref_mint_number,
+						num				: emblem.ref_type_number,
+						ir				: ir,
+						approx_display	: approx_display,
+						ci_lwr			: ci ? ci.lwr : NaN,
+						ci_med			: ci ? ci.med : NaN,
+						ci_upr			: ci ? ci.upr : NaN
+					};
+				});
+			});
+		},
+
+		/**
+		 * Renders the regression data as an HTML table inside the given container.
+		 * One row per emblem, with the full set of columns for both obverse and reverse.
+		 * The table is rendered in addition to the charts and is intended to be collapsible.
+		 *
+		 * @param {HTMLElement} table_container - Container element where the table will be injected.
+		 * @param {Array<Object>} parsed_data - Full parsed search result (header + emblems).
+		 * @param {number} [max_ir=1500] - Maximum IR used to build the bootstrap bands grid.
+		 * @returns {Promise<void>}
+		 */
+		render_data_table: function(table_container, parsed_data, max_ir = 1500) {
+			const root = (typeof table_container === "string")
+				? document.querySelector(table_container)
+				: table_container;
+			if (!root) return Promise.resolve();
+
+			root.replaceChildren();
+
+			const emblems = (Array.isArray(parsed_data) ? parsed_data.slice(1) : []);
+			if (emblems.length === 0) {
+				root.replaceChildren();
+				return Promise.resolve();
+			}
+
+			const fmt = (v, d = 2) => this.format_tooltip_number(v, d);
+
+			return Promise.all([
+				this._build_emblem_rows(parsed_data, 'A', max_ir),
+				this._build_emblem_rows(parsed_data, 'R', max_ir)
+			]).then(([rowsA, rowsR]) => {
+				const mapA = new Map(rowsA.map(r => [r.section_id, r]));
+				const mapR = new Map(rowsR.map(r => [r.section_id, r]));
+
+				// Sort emblems by IR descending (most relevant first), then by section_id
+				const sorted_emblems = emblems.slice().sort((a, b) => {
+					const ira = mapA.get(a.section_id)?.ir ?? 0;
+					const irb = mapA.get(b.section_id)?.ir ?? 0;
+					return (irb - ira) || (String(a.section_id).localeCompare(String(b.section_id)));
+				});
+
+				const fragment = document.createDocumentFragment();
+
+				const table = common.create_dom_element({
+					element_type	: "table",
+					class_name		: "regression_data_table",
+					parent			: fragment
+				});
+
+				// colgroup: proportional column widths so the table fits without scroll
+					const colgroup = common.create_dom_element({
+						element_type	: "colgroup",
+						parent			: table
+					});
+					const col_widths = [18, 5, 7, 8, 11, 12, 8, 11, 12, 8]; // sums to 100
+					col_widths.forEach(w => {
+						const col = common.create_dom_element({
+							element_type	: "col",
+							parent			: colgroup
+						});
+						col.style.width = w + '%';
+					});
+
+				// thead (grouped: shared columns + Anverso/Reverso groups)
+					const thead = common.create_dom_element({
+						element_type	: "thead",
+						parent			: table
+					});
+
+					// first header row: shared columns (rowspan=2) + group labels (colspan=3)
+					const head_row_1 = common.create_dom_element({
+						element_type	: "tr",
+						parent			: thead
+					});
+					const shared_labels = [
+						tstring.mint || "Mint",
+						tstring.mib || "MIB",
+						tstring.ref_mint_number || "Mint ref.",
+						tstring.coins_number || "Coins number"
+					];
+					shared_labels.forEach(label => {
+						const th = common.create_dom_element({
+							element_type	: "th",
+							text_content	: label,
+							parent			: head_row_1
+						});
+						th.setAttribute("rowspan", "2");
+					});
+					const anv_group_th = common.create_dom_element({
+						element_type	: "th",
+						text_content	: tstring.obverse || "Obverse",
+						parent			: head_row_1
+					});
+					anv_group_th.setAttribute("colspan", "3");
+					anv_group_th.className = "group_th";
+					const rev_group_th = common.create_dom_element({
+						element_type	: "th",
+						text_content	: tstring.reverse || "Reverse",
+						parent			: head_row_1
+					});
+					rev_group_th.setAttribute("colspan", "3");
+					rev_group_th.className = "group_th";
+
+					// second header row: sub-labels for each side
+					const head_row_2 = common.create_dom_element({
+						element_type	: "tr",
+						parent			: thead
+					});
+					const sub_labels = [
+						(tstring.estimated_dies || "Estimated dies"),
+						(tstring.ci_bootstrap_95 || "Bootstrap CI 95%"),
+						(tstring.median || "Median"),
+						(tstring.estimated_dies || "Estimated dies"),
+						(tstring.ci_bootstrap_95 || "Bootstrap CI 95%"),
+						(tstring.median || "Median")
+					];
+					sub_labels.forEach(label => {
+						common.create_dom_element({
+							element_type	: "th",
+							text_content	: label,
+							parent			: head_row_2
+						});
+					});
+
+				// tbody
+					const tbody = common.create_dom_element({
+						element_type	: "tbody",
+						parent			: table
+					});
+
+					sorted_emblems.forEach(emblem => {
+						const sid = emblem.section_id;
+						const a = mapA.get(sid);
+						const r = mapR.get(sid);
+						if (!a && !r) return;
+
+						const tr = common.create_dom_element({
+							element_type	: "tr",
+							parent			: tbody
+						});
+
+						const cells = [
+							(a?.ceca ?? r?.ceca ?? ""),
+							(sid != null ? String(sid) : ""),
+							(a?.ref_ceca ?? r?.ref_ceca ?? ""),
+							fmt(a?.ir ?? r?.ir ?? 0, 0),
+							fmt(a?.approx_display, 2),
+							`[${fmt(a?.ci_lwr, 2)}, ${fmt(a?.ci_upr, 2)}]`,
+							fmt(a?.ci_med, 2),
+							fmt(r?.approx_display, 2),
+							`[${fmt(r?.ci_lwr, 2)}, ${fmt(r?.ci_upr, 2)}]`,
+							fmt(r?.ci_med, 2)
+						];
+
+						cells.forEach((cell, idx) => {
+							const cls = (idx === 0) ? "text" : (idx >= 4 ? "num" : "");
+							common.create_dom_element({
+								element_type	: "td",
+								text_content	: String(cell),
+								class_name		: cls,
+								parent			: tr
+							});
+						});
+					});
+
+				root.appendChild(fragment);
+			});
+		},
+
+		/**
+		 * Exports the rendered regression data table as a CSV file download.
+		 * Reads the table DOM directly, so it works as long as the table has been rendered.
+		 *
+		 * @returns {boolean} True if the download was triggered, false otherwise.
+		 */
+		download_table_csv: function() {
+			const container = this.regression_model_table_container;
+			if (!container) return false;
+
+			const table = container.querySelector('table.regression_data_table');
+			if (!table) return false;
+
+			const csv_rows = [];
+
+			// header (handle grouped two-row thead: combine group + sub labels)
+				const header_rows = table.querySelectorAll('thead tr');
+				const header = [];
+				if (header_rows.length >= 2) {
+					// first row: shared columns (rowspan=2) + group labels (colspan=3)
+					const row1_ths = header_rows[0].querySelectorAll('th');
+					const row2_ths = header_rows[1].querySelectorAll('th');
+					const groups = [];
+					row1_ths.forEach(th => {
+						const rowspan = th.getAttribute('rowspan');
+						if (rowspan === '2') {
+							// shared column, appears once
+							header.push('"' + String(th.textContent || '').replace(/"/g, '""') + '"');
+						} else {
+							// group label (colspan=3), applies to next 3 sub-headers
+							const group_label = String(th.textContent || '').replace(/"/g, '""');
+							const colspan = parseInt(th.getAttribute('colspan') || '1', 10);
+							for (let c = 0; c < colspan; c++) {
+								groups.push(group_label);
+							}
+						}
+					});
+					// combine group + sub labels
+					row2_ths.forEach((th, i) => {
+						const sub = String(th.textContent || '').replace(/"/g, '""');
+						const grp = groups[i] || '';
+						header.push('"' + grp + ' — ' + sub + '"');
+					});
+				} else {
+					// fallback: single-row header
+					const ths = table.querySelectorAll('thead th');
+					ths.forEach(th => {
+						header.push('"' + String(th.textContent || '').replace(/"/g, '""') + '"');
+					});
+				}
+				if (header.length > 0) {
+					csv_rows.push(header.join(','));
+				}
+
+			// body
+				const trs = table.querySelectorAll('tbody tr');
+				trs.forEach(tr => {
+					const tds = tr.querySelectorAll('td');
+					const row = [];
+					tds.forEach(td => {
+						row.push('"' + String(td.textContent || '').replace(/"/g, '""') + '"');
+					});
+					if (row.length > 0) {
+						csv_rows.push(row.join(','));
+					}
+				});
+
+			if (csv_rows.length < 2) return false;
+
+			const csv_string = csv_rows.join("\r\n");
+			const file_name = 'mib_regression_data.csv';
+
+			// Blob + temporal link download (same pattern as page_render export buttons)
+				const blob_data = new Blob(["\uFEFF" + csv_string], {
+					type	: 'text/csv;charset=utf-8',
+					name	: file_name
+				});
+				const href		= URL.createObjectURL(blob_data);
+				const link_obj	= common.create_dom_element({
+					element_type	: "a",
+					href			: href,
+					download		: file_name
+				});
+				link_obj.click();
+				link_obj.remove();
+
+			return true;
 		},
 		extract_mib_number: function(tooltip_element, fallback = "?") {
 			const text = tooltip_element.textContent || tooltip_element.innerText || "";
@@ -1540,6 +1866,12 @@ var regression_min = (function (exports) {
 		form_items_container				: null,
 		/** @type {HTMLElement|null} Container for the regression model visualization. */
 		regression_model_chart_container	: null,
+		/** @type {HTMLElement|null} Container for the regression data table. */
+		regression_model_table_container	: null,
+		/** @type {HTMLButtonElement|null} Toggle button to expand/collapse the data table. */
+		regression_model_table_toggle		: null,
+		/** @type {HTMLButtonElement|null} Download button for the data table CSV. */
+		regression_model_table_download		: null,
 
 		/**
 		 * Color hexadecimal code for each denomination
@@ -1560,6 +1892,9 @@ var regression_min = (function (exports) {
 		 * @param {Object} options.row - Current record data.
 		 * @param {HTMLElement} options.form_items_container - Target container for the form.
 		 * @param {HTMLElement} options.regression_model_chart_container - Target container for regression plot.
+		 * @param {HTMLElement} [options.regression_model_table_container] - Target container for the regression data table.
+		 * @param {HTMLButtonElement} [options.regression_model_table_toggle] - Toggle button to expand/collapse the data table.
+		 * @param {HTMLButtonElement} [options.regression_model_table_download] - Download button for the data table CSV.
 		 * @returns {boolean} Returns true if setup was initiated successfully.
 		 */
 		set_up : function(options) {
@@ -1572,7 +1907,29 @@ var regression_min = (function (exports) {
 				self.row								= options.row;
 				self.form_items_container				= options.form_items_container;
 				self.regression_model_chart_container	= options.regression_model_chart_container;
+				self.regression_model_table_container	= options.regression_model_table_container;
+				self.regression_model_table_toggle		= options.regression_model_table_toggle;
+				self.regression_model_table_download	= options.regression_model_table_download;
 				self.pdf_current						= options.pdf_current;
+
+			// data table toggle (collapsible, collapsed by default)
+				if (self.regression_model_table_toggle && self.regression_model_table_container) {
+					self.regression_model_table_toggle.addEventListener('click', function() {
+						const is_hidden = self.regression_model_table_container.classList.toggle('hide');
+						self.regression_model_table_toggle.setAttribute('aria-expanded', String(!is_hidden));
+						const icon = self.regression_model_table_toggle.querySelector('.regression_table_toggle_icon');
+						if (icon) {
+							icon.textContent = is_hidden ? '\u25B6' : '\u25BC';
+						}
+					});
+				}
+
+			// data table download (CSV)
+				if (self.regression_model_table_download) {
+					self.regression_model_table_download.addEventListener('click', function() {
+						self.download_table_csv();
+					});
+				}
 
 			// form (render first so submit_button exists before async color load resolves)
 				const form_node = self.render_form();
@@ -2024,6 +2381,12 @@ var regression_min = (function (exports) {
 			// loading
 				// cleanup html
 					self.regression_model_chart_container.replaceChildren();
+					if (self.regression_model_table_container) {
+						self.regression_model_table_container.replaceChildren();
+					}
+					if (self.regression_model_table_download) {
+						self.regression_model_table_download.disabled = true;
+					}
 					document.getElementById('regression_model_section').classList.add('hide');
 
 				// spinner
@@ -2062,7 +2425,14 @@ var regression_min = (function (exports) {
 							// Show hidden DOM node 'regression_model_chart_container'
 							document.getElementById('regression_model_section').classList.remove('hide');
 
-							this.plot_rev_and_anv(this.regression_model_chart_container,parsed_data)
+							this.plot_rev_and_anv(
+								this.regression_model_chart_container,
+								parsed_data,
+								{
+									table_container: this.regression_model_table_container,
+									download_button: this.regression_model_table_download
+								}
+							)
 								.then(() => {
 									// show pdf section if available
 									if (self.pdf_current) {
