@@ -105,18 +105,15 @@ export const regression =  {
 			self.row								= options.row
 			self.form_items_container				= options.form_items_container
 			self.regression_model_chart_container	= options.regression_model_chart_container
+			self.pdf_current						= options.pdf_current
 
-		// denomination colors
-			self.load_denomination_colors()
-
-		// form
+		// form (render first so submit_button exists before async color load resolves)
 			const form_node = self.render_form()
 			self.form_items_container.appendChild(form_node)
 
-		// first auto search
-		setTimeout(() => {
-			self.auto_search()
-		}, 100)
+		// denomination colors + first auto search, both gated on form readiness
+			self.load_denomination_colors()
+				.then(() => self.auto_search())
 
 		return true
 	},//end set_up
@@ -139,7 +136,8 @@ export const regression =  {
 
 		data_manager.request({
 			body : request_body
-		}).then((response)=>{
+		})
+		.then((response)=>{
 			if (response.result && response.result.length > 0) {
 				// filter results to get valid mint names
 				const mints = response.result
@@ -172,6 +170,11 @@ export const regression =  {
 						self.form_submit()
 					}
 				}
+			}
+		})
+		.catch((err) => {
+			if(SHOW_DEBUG===true) {
+				console.error('auto_search error:', err)
 			}
 		})
 	},
@@ -435,7 +438,7 @@ export const regression =  {
 									const value = (e.target.value<=range_data.max)
 										? e.target.value
 										: range_data.max
-									$(node_input).slider( "values", 1, e.target.value );
+									$(node_input).slider( "values", 1, value );
 									e.target.value = value
 								})
 
@@ -585,8 +588,6 @@ export const regression =  {
 					return el.full_coins_reference_calculable && el.full_coins_reference_calculable.length > 0
 				});
 
-				spinner.remove()
-
 				// Modelo_Regresión
 				if (!IS_PRODUCTION) { // Only display in PRE from now (!)
 					if (reference_calculable.length) {
@@ -595,8 +596,32 @@ export const regression =  {
 						document.getElementById('regression_model_section').classList.remove('hide')
 
 						this.plot_rev_and_anv(this.regression_model_chart_container,parsed_data)
+							.then(() => {
+								// show pdf section if available
+								if (self.pdf_current) {
+									requestAnimationFrame(() => {
+										const pdf_section = document.getElementById('pdf_section')
+										if (pdf_section) {
+											pdf_section.classList.remove('hide')
+										}
+									})
+								}
+							})
+							.catch((err) => {
+								if(SHOW_DEBUG===true) {
+									console.error('plot_rev_and_anv error:', err)
+								}
+							})
 					}
 				}
+			})
+			.catch((err) => {
+				if(SHOW_DEBUG===true) {
+					console.error('form_submit search error:', err)
+				}
+			})
+			.finally(() => {
+				spinner.remove()
 			})
 
 
@@ -626,7 +651,7 @@ export const regression =  {
 										? options.limit
 										: 100
 
-		return new Promise(function(resolve){
+		return new Promise(function(resolve, reject){
 			// parse_sql_filter
 				const group = []
 			// parsed filters
@@ -654,6 +679,9 @@ export const regression =  {
 
 					resolve(data)
 				})
+				.catch((err)=>{
+					reject(err)
+				})
 		})
 	},
 
@@ -663,7 +691,7 @@ export const regression =  {
 	 */
 	get_catalog_range_years : function() {
 
-		return new Promise(function(resolve){
+		return new Promise(function(resolve, reject){
 
 			const ar_fields = ['id','section_id','MIN(ref_date_in + 0) AS min','MAX(ref_date_in + 0) AS max']
 
@@ -708,6 +736,9 @@ export const regression =  {
 				}
 
 				resolve(data)
+			})
+			.catch((err)=>{
+				reject(err)
 			})
 		})
 	}, //end get_catalog_range_years

@@ -146,7 +146,17 @@ export const regression_logic = {
 				const vars = Object.fromEntries(
 					response.result
 						.filter(r => r.titulo && r.cuerpo)
-						.map(r => [r.titulo, JSON.parse(r.cuerpo)])
+						.map(r => {
+							try {
+								return [r.titulo, JSON.parse(r.cuerpo)];
+							} catch (e) {
+								if (SHOW_DEBUG === true) {
+									console.error('load_regression_vars: skipping malformed cuerpo for', r.titulo, e);
+								}
+								return null;
+							}
+						})
+						.filter(entry => entry !== null)
 				);
 
 				this.regression_vars = vars;
@@ -172,8 +182,8 @@ export const regression_logic = {
 	*
 	* Assumed variable mapping:
 	* IR_Ant   -> regression_vars.ir_ant
-	* D_A_Ant  -> regression_vars.d_anv
-	* D_R_Ant  -> regression_vars.d_rev
+	* D_A_Ant  -> regression_vars.anvers
+	* D_R_Ant  -> regression_vars.revers
 	*
 	* @returns {Promise<Object>}
 	*/
@@ -454,7 +464,7 @@ export const regression_logic = {
 	* @returns {{lwr:number, med:number, upr:number}|null}
 	*/
 	get_bootstrap_interval_for_ir: function(ir, band) {
-		if (!Number.isFinite(ir) || ir < 1 || ir > band.length || !Array.isArray(band)) {
+		if (!Array.isArray(band) || !Number.isFinite(ir) || ir < 1 || ir > band.length) {
 			return null;
 		}
 
@@ -611,20 +621,29 @@ export const regression_logic = {
 		const emblems = parsed_data.slice(1);
 
 		return Promise.all([
-			Promise.all(
-				emblems.map(emblem => this.calculation_IR_anv(emblem).then(({ ir, approx }) => {
-					return {
-						ir,
-						approx,
-						ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,
-						id: emblem.section_id,
-						num: emblem.ref_type_number,
-						ref_ceca: emblem.ref_mint_number
-					};
-				}))
-			),
+			this.get_log_regression_coefficients(),
 			this.get_bootstrap_bands(2000, max_ir)
-		]).then(([vect_tipos, bootstrap]) => {
+		]).then(([fit, bootstrap]) => {
+			const { alphaA, betaA } = fit;
+
+			// Compute IR + approx synchronously using cached coefficients (no per-emblem promise hops)
+			const vect_tipos = emblems.map(emblem => {
+				const index = emblem.full_coins_reference_calculable || [];
+				let ir = 0;
+				for (let i = 0; i < index.length; i++) {
+					if (index[i] === true) ir++;
+				}
+				const approx = this.predict_potential(ir, alphaA, betaA);
+				return {
+					ir,
+					approx,
+					ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,
+					id: emblem.section_id,
+					num: emblem.ref_type_number,
+					ref_ceca: emblem.ref_mint_number
+				};
+			});
+
 			const vect_tipos_with_ci = vect_tipos.map(obj => {
 				const approx_display = Math.max(1, obj.approx);
 
@@ -793,20 +812,29 @@ export const regression_logic = {
 		const emblems = parsed_data.slice(1);
 
 		return Promise.all([
-			Promise.all(
-				emblems.map(emblem =>
-					this.calculation_IR_rev(emblem).then(({ ir, approx }) => ({
-						ir,
-						approx,
-						ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,
-						id: emblem.section_id,
-						num: emblem.ref_type_number,
-						ref_ceca: emblem.ref_mint_number
-					}))
-				)
-			),
+			this.get_log_regression_coefficients(),
 			this.get_bootstrap_bands(2000, max_ir)
-		]).then(([vect_tipos, bootstrap]) => {
+		]).then(([fit, bootstrap]) => {
+			const { alphaR, betaR } = fit;
+
+			// Compute IR + approx synchronously using cached coefficients (no per-emblem promise hops)
+			const vect_tipos = emblems.map(emblem => {
+				const index = emblem.full_coins_reference_calculable || [];
+				let ir = 0;
+				for (let i = 0; i < index.length; i++) {
+					if (index[i] === true) ir++;
+				}
+				const approx = this.predict_potential(ir, alphaR, betaR);
+				return {
+					ir,
+					approx,
+					ceca: Array.isArray(emblem.p_mint) ? emblem.p_mint[0] : emblem.p_mint,
+					id: emblem.section_id,
+					num: emblem.ref_type_number,
+					ref_ceca: emblem.ref_mint_number
+				};
+			});
+
 			const vect_tipos_with_ci = vect_tipos.map(obj => {
 				const approx_display = Math.max(1, obj.approx);
 
@@ -1143,10 +1171,15 @@ export const regression_logic = {
 
 				const blue_circles = circles.filter(d => d.name === "Aproximación");
 
+				// Stale-tooltip guard: increments on each hover so async resolutions
+				// from previous hovers can be detected and ignored.
+				let hover_token = 0;
+
 				blue_circles
 					.style("cursor", "pointer")
 					.style("transition", "stroke 0.2s, stroke-width 0.2s, r 0.2s")
 					.on("mouseenter.tooltip", async (event, d) => {
+						const token = ++hover_token;
 						tooltip.style("opacity", 1);
 
 						const options = {
@@ -1157,6 +1190,8 @@ export const regression_logic = {
 
 						try {
 							const tooltip_element = await type_tooltip_callback(options);
+							// Ignore stale resolution if user has moved to another point
+							if (token !== hover_token) return;
 							const mib_number = this.extract_mib_number(
 								tooltip_element,
 								d.customdata?.[3] ?? "?"
@@ -1171,6 +1206,7 @@ export const regression_logic = {
 								<div><b>Mediana del intervalo:</b> ${this.format_tooltip_number(d.customdata?.[5], 2)}</div>
 							`);
 						} catch (error) {
+							if (token !== hover_token) return;
 							tooltip.html(`
 								<div><b>Ceca:</b> ${d.customdata?.[0] ?? ""}</div>
 								<div><b>MIB:</b> ${d.customdata?.[3] ?? "?"} | ${d.customdata?.[2] ?? ""} / ${d.customdata?.[3] ?? ""}</div>
@@ -1214,6 +1250,7 @@ export const regression_logic = {
 						tooltip.style("left", `${left}px`).style("top", `${top}px`);
 					})
 					.on("mouseleave.tooltip", () => {
+						hover_token++; // invalidate any in-flight tooltip request
 						tooltip.style("opacity", 0);
 					})
 					.on("click", async (event, d) => {
@@ -1297,7 +1334,7 @@ export const regression_logic = {
 								"<br>$2"
 							);
 
-							const mib_number = extract_mib_number(tooltip_element);
+							const mib_number = this.extract_mib_number(tooltip_element, d.customdata?.[3] ?? "?");
 
 							left_panel.innerHTML = `
 								<h3 style="margin: 0 0 15px 0; border-bottom: 2px solid #997f5a; padding-bottom: 10px;">
@@ -1330,24 +1367,6 @@ export const regression_logic = {
 						} catch (error) {
 							left_panel.innerHTML = `<div style="color: #c00;">Error: ${error.message}</div>`;
 							right_panel.innerHTML = `<div style="color: #c00;">Error: ${error.message}</div>`;
-						}
-
-						function extract_mib_number(tooltip_element) {
-							const text = tooltip_element.textContent || tooltip_element.innerText;
-							const match = text.match(/MIB\s*(\d+)/i);
-							if (match) {
-								return match[1];
-							}
-
-							const mib_element = tooltip_element.querySelector('[class*="mib"]') ||
-												tooltip_element.querySelector('[class*="MIB"]');
-							if (mib_element) {
-								const mib_text = mib_element.textContent;
-								const mib_match = mib_text.match(/\d+/);
-								if (mib_match) return mib_match[0];
-							}
-
-							return d.customdata?.[3] ?? "?";
 						}
 					});
 			});

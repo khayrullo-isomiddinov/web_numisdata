@@ -51,6 +51,21 @@
 								<div id="regression_model_chart_container" class="chart_wrapper"></div>
 							</div>
 
+						<!-- PDF -->
+							<?php if (!empty($pdf_current)) { ?>
+							<div id="pdf_section" class="hide">
+								<div class="info_line separator"><div class="big_label"><?php echo tstring('pdf')?></div></div>
+								<div class="pdf-container">
+									<div class="pdf-item">
+										<a href="<?php echo __WEB_MEDIA_BASE_URL__ . $pdf_current ?>" target="_blank">
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.3rem;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+											<?php echo $pdf_title ?? tstring('pdf') ?>
+										</a>
+									</div>
+								</div>
+							</div>
+							<?php } ?>
+
 					</section>
 				</div>
 			</div>
@@ -65,11 +80,12 @@
 dom_ready(function(){
 	var regression = regression_min.regression
 	regression.set_up({
-		row									: <?php echo json_encode($this->row) ?>,
-		area_name							: <?php echo json_encode($area_name) ?>,
+		row									: <?php echo json_encode($this->row, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+		area_name							: <?php echo json_encode($area_name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
 		export_data_container				: document.getElementById('export_data'),
 		form_items_container				: document.getElementById('items_container'),
-		regression_model_chart_container	: document.getElementById('regression_model_chart_container')
+		regression_model_chart_container	: document.getElementById('regression_model_chart_container'),
+		pdf_current							: <?php echo json_encode($pdf_current, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
 	})
 	// active expandable block
 	const block_expandable = document.getElementById('block_expandable')
