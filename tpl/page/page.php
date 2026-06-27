@@ -89,7 +89,7 @@
 		// li drawer
 			$li_drawer = function($menu_element, $embed_html='') {
 				$html  = '';
-				$html .= PHP_EOL . '<li role="'.$menu_element->web_path.'">';
+				$html .= PHP_EOL . '<li data-path="'.$menu_element->web_path.'">';
 				$web_path = $menu_element->web_path==='main_home' ? '' : $menu_element->web_path;
 				if (isset($menu_element->active) && $menu_element->active==='no') {
 					$html .= '<span class="unactive">'.$menu_element->term.'</span>';
@@ -155,7 +155,7 @@
 		}
 		// dump($footer_data, ' footer_data ++ '.to_string());
 		$this->footer_data = $footer_data;
-		$this->footer_root = $footer_row;
+		$this->footer_root = $footer_row ?? null;
 
 	# content_html
 		$content_options = new stdClass();

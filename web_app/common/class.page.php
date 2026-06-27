@@ -598,9 +598,13 @@ class page extends stdClass {
 		#	$data = json_web_data::get_data($options);
 		#		#dump($data, ' data ++ '.to_string());
 
-		$data = array_reduce($this->data_combi, function($carry, $item){
-			return ($item->id==='menu_all') ? $item : $carry;
+		$data = array_find($this->data_combi, function($item){
+			return ($item->id ?? null) === 'menu_all';
 		});
+
+		if ($data === null) {
+			return [];
+		}
 
 		if (empty($exclude)) {
 			$ar_data = $data->result;
@@ -676,23 +680,35 @@ class page extends stdClass {
 
 	/**
 	* RENDER_MENU_TREE_PLAIN
+	* @param string $term_id
+	* @param array $menu_tree
+	* @param callable $li_drawer
+	* @param callable $ul_drawer
+	* @param string $children_column_name
+	* @param array|null $index Pre-built index ['by_parent' => [...], 'by_section_id' => [...]]. Built on first call, passed through recursion.
+	* @return string $html
 	*/
-	public static function render_menu_tree_plain($term_id, $menu_tree, $li_drawer, $ul_drawer, $children_column_name='childrens') {
+	public static function render_menu_tree_plain($term_id, $menu_tree, $li_drawer, $ul_drawer, $children_column_name='childrens', ?array $index=null) {
 		#dump($menu_tree, ' menu_tree ++ '.to_string());
 
 		$html = '';
 
-			// filter menu tree for parent $term_id (and include root parent when is $term_id)
-				$items = array_filter($menu_tree,function($item) use($term_id) {
-					return ($item->parent===$term_id); //  || ($term_id===WEB_MENU_PARENT && $item->term_id===WEB_MENU_PARENT)
-				});
+			// build index once at top-level call, reuse through recursion (O(n) total instead of O(n^2))
+				if ($index === null) {
+					$index = ['by_parent' => [], 'by_section_id' => []];
+					foreach ($menu_tree as $item) {
+						$parent = $item->parent ?? null;
+						$index['by_parent'][$parent][] = $item;
+						$index['by_section_id'][(int)($item->section_id ?? 0)] = $item;
+					}
+				}
+
+			// filter menu tree for parent $term_id (O(1) lookup via index)
+				$items = $index['by_parent'][$term_id] ?? [];
 
 			// sort by norder asc
 				usort($items, function($a, $b){
-					if ((int)$a->norder > (int)$b->norder) {
-						return 1;
-					}
-					return 0;
+					return (int)$a->norder <=> (int)$b->norder;
 				});
 
 			// iterate items from filter
@@ -707,10 +723,10 @@ class page extends stdClass {
 
 					if (  !empty($menu_element->{$children_column_name})
 						&& $current_term_id!==WEB_MENU_PARENT
-						&& (true===page::have_menu_children($menu_element->{$children_column_name}, $menu_tree))
+						&& (true===page::have_menu_children_indexed($menu_element->{$children_column_name}, $index['by_section_id']))
 					) {
 						// recursion
-						$embed_html = self::render_menu_tree_plain($current_term_id, $menu_tree, $li_drawer, $ul_drawer, $children_column_name);
+						$embed_html = self::render_menu_tree_plain($current_term_id, $menu_tree, $li_drawer, $ul_drawer, $children_column_name, $index);
 					}else{
 						$embed_html = '';
 					}
@@ -761,6 +777,45 @@ class page extends stdClass {
 
 		return $found_child_with_active_menu;
 	}//end have_menu_children
+
+
+
+	/**
+	* HAVE_MENU_CHILDREN_INDEXED
+	* O(1) lookup variant of have_menu_children using a pre-built section_id => item index.
+	* @param mixed $children_data
+	* @param array $by_section_id Map of (int)section_id => item
+	* @return bool
+	*/
+	public static function have_menu_children_indexed($children_data, array $by_section_id) {
+
+		$ar_term_id = !empty($children_data) && is_string($children_data)
+			? json_decode($children_data)
+			: $children_data;
+
+		if (empty($ar_term_id)) {
+			return false;
+		}
+
+		foreach ($ar_term_id as $term_id) {
+
+			if (is_object($term_id)) {
+				// as locator (legacy)
+				$section_id = (int)$term_id->section_id;
+			}else{
+				// as term_id
+				$ar			= explode('_', $term_id);
+				$section_id	= (int)$ar[1];
+			}
+
+			$item = $by_section_id[$section_id] ?? null;
+			if ($item && $item->menu === 'yes') {
+				return true;
+			}
+		}
+
+		return false;
+	}//end have_menu_children_indexed
 
 
 
@@ -1728,20 +1783,30 @@ class page extends stdClass {
 
 	/**
 	* GET_CHILDREN
+	* @param string $term_id
+	* @param array $menu_elements
+	* @param bool $recursive
+	* @param string $children_column_name
+	* @param array|null $by_parent Pre-built parent => items index. Built on first call, passed through recursion.
+	* @return array
 	*/
-	public static function get_children($term_id, $menu_elements, $recursive=false, $children_column_name='childrens') {
+	public static function get_children($term_id, $menu_elements, $recursive=false, $children_column_name='childrens', ?array $by_parent=null) {
 
-		// filter menu tree for parent $term_id (and include root parent when is $term_id)
-			$items = array_filter($menu_elements,function($item) use($term_id) {
-				return ($item->parent==$term_id); //  || ($term_id===WEB_MENU_PARENT && $item->term_id===WEB_MENU_PARENT)
-			});
+		// build index once at top-level call, reuse through recursion
+			if ($by_parent === null) {
+				$by_parent = [];
+				foreach ($menu_elements as $item) {
+					$parent = $item->parent ?? null;
+					$by_parent[$parent][] = $item;
+				}
+			}
+
+		// filter menu tree for parent $term_id (O(1) lookup via index)
+			$items = $by_parent[$term_id] ?? [];
 
 		// sort by norder asc
 			usort($items, function($a, $b){
-				if ((int)$a->norder > (int)$b->norder) {
-					return 1;
-				}
-				return 0;
+				return (int)$a->norder <=> (int)$b->norder;
 			});
 
 		// iterate items from filter
@@ -1752,7 +1817,7 @@ class page extends stdClass {
 					if (!empty($menu_element->{$children_column_name})) {
 
 						// recursion
-							$children = self::get_children($menu_element->term_id, $menu_elements, $recursive, $children_column_name);
+							$children = self::get_children($menu_element->term_id, $menu_elements, $recursive, $children_column_name, $by_parent);
 
 							$items = array_merge($items, $children);
 					}
