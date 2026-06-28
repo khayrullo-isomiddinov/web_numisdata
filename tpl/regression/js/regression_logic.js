@@ -618,7 +618,7 @@ export const regression_logic = {
 	* @returns {Promise<Array<Object>>}
 	*/
 	plot_points_regression_anv: function(parsed_data, regression_model_chart_container, max_ir = 1500) {
-		const emblems = parsed_data.slice(1);
+		const emblems = Array.isArray(parsed_data) ? parsed_data.slice(1) : [];
 
 		return Promise.all([
 			this.get_log_regression_coefficients(),
@@ -809,7 +809,7 @@ export const regression_logic = {
 	* @returns {Promise<Array<Object>>}
 	*/
 	plot_points_regression_rev: function(parsed_data, regression_model_chart_container, max_ir = 1500) {
-		const emblems = parsed_data.slice(1);
+		const emblems = Array.isArray(parsed_data) ? parsed_data.slice(1) : [];
 
 		return Promise.all([
 			this.get_log_regression_coefficients(),
@@ -924,18 +924,17 @@ export const regression_logic = {
 
 				// Optional data table visualization (in addition to the charts)
 				if (opts.table_container) {
-					try {
-						this.render_data_table(opts.table_container, parsed_data, max_ir)
-							.then(() => {
-								if (opts.download_button) {
-									opts.download_button.disabled = false
-								}
-							})
-					} catch (err) {
-						if (SHOW_DEBUG === true) {
-							console.error('render_data_table error:', err);
-						}
-					}
+					this.render_data_table(opts.table_container, parsed_data, max_ir)
+						.then(() => {
+							if (opts.download_button) {
+								opts.download_button.disabled = false
+							}
+						})
+						.catch((err) => {
+							if (SHOW_DEBUG === true) {
+								console.error('render_data_table error:', err);
+							}
+						});
 				}
 			});
 		});
@@ -1145,7 +1144,7 @@ export const regression_logic = {
 					];
 
 					cells.forEach((cell, idx) => {
-						const cls = (idx === 0) ? "text" : (idx >= 4 ? "num" : "");
+						const cls = (idx === 0) ? "text" : (idx >= 3 ? "num" : "");
 						common.create_dom_element({
 							element_type	: "td",
 							text_content	: String(cell),
@@ -1245,6 +1244,7 @@ export const regression_logic = {
 			});
 			link_obj.click();
 			link_obj.remove();
+			URL.revokeObjectURL(href);
 
 		return true;
 	},

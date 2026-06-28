@@ -621,7 +621,7 @@ var regression_min = (function (exports) {
 		* @returns {Promise<Array<Object>>}
 		*/
 		plot_points_regression_anv: function(parsed_data, regression_model_chart_container, max_ir = 1500) {
-			const emblems = parsed_data.slice(1);
+			const emblems = Array.isArray(parsed_data) ? parsed_data.slice(1) : [];
 
 			return Promise.all([
 				this.get_log_regression_coefficients(),
@@ -812,7 +812,7 @@ var regression_min = (function (exports) {
 		* @returns {Promise<Array<Object>>}
 		*/
 		plot_points_regression_rev: function(parsed_data, regression_model_chart_container, max_ir = 1500) {
-			const emblems = parsed_data.slice(1);
+			const emblems = Array.isArray(parsed_data) ? parsed_data.slice(1) : [];
 
 			return Promise.all([
 				this.get_log_regression_coefficients(),
@@ -927,18 +927,17 @@ var regression_min = (function (exports) {
 
 					// Optional data table visualization (in addition to the charts)
 					if (opts.table_container) {
-						try {
-							this.render_data_table(opts.table_container, parsed_data, max_ir)
-								.then(() => {
-									if (opts.download_button) {
-										opts.download_button.disabled = false;
-									}
-								});
-						} catch (err) {
-							if (SHOW_DEBUG === true) {
-								console.error('render_data_table error:', err);
-							}
-						}
+						this.render_data_table(opts.table_container, parsed_data, max_ir)
+							.then(() => {
+								if (opts.download_button) {
+									opts.download_button.disabled = false;
+								}
+							})
+							.catch((err) => {
+								if (SHOW_DEBUG === true) {
+									console.error('render_data_table error:', err);
+								}
+							});
 					}
 				});
 			});
@@ -1148,7 +1147,7 @@ var regression_min = (function (exports) {
 						];
 
 						cells.forEach((cell, idx) => {
-							const cls = (idx === 0) ? "text" : (idx >= 4 ? "num" : "");
+							const cls = (idx === 0) ? "text" : (idx >= 3 ? "num" : "");
 							common.create_dom_element({
 								element_type	: "td",
 								text_content	: String(cell),
@@ -1247,6 +1246,7 @@ var regression_min = (function (exports) {
 				});
 				link_obj.click();
 				link_obj.remove();
+				URL.revokeObjectURL(href);
 
 			return true;
 		},
@@ -1874,6 +1874,12 @@ var regression_min = (function (exports) {
 		regression_model_table_download		: null,
 
 		/**
+		 * localStorage key used to persist the data table fold/unfold state.
+		 * @type {string}
+		 */
+		table_storage_key					: 'regression_table_expanded',
+
+		/**
 		 * Color hexadecimal code for each denomination
 		 * @type {{
 		 * 	section_id: number,
@@ -1912,14 +1918,33 @@ var regression_min = (function (exports) {
 				self.regression_model_table_download	= options.regression_model_table_download;
 				self.pdf_current						= options.pdf_current;
 
-			// data table toggle (collapsible, collapsed by default)
+			// data table toggle (collapsible, state persisted in localStorage)
 				if (self.regression_model_table_toggle && self.regression_model_table_container) {
+					// restore saved state (default: collapsed)
+						try {
+							if (localStorage.getItem(self.table_storage_key) === 'expanded') {
+								self.regression_model_table_container.classList.remove('hide');
+								self.regression_model_table_toggle.setAttribute('aria-expanded', 'true');
+								const icon = self.regression_model_table_toggle.querySelector('.regression_table_toggle_icon');
+								if (icon) {
+									icon.textContent = '\u25BC';
+								}
+							}
+						} catch (e) {
+							// localStorage may be unavailable (private mode, etc.); ignore
+						}
+
 					self.regression_model_table_toggle.addEventListener('click', function() {
 						const is_hidden = self.regression_model_table_container.classList.toggle('hide');
 						self.regression_model_table_toggle.setAttribute('aria-expanded', String(!is_hidden));
 						const icon = self.regression_model_table_toggle.querySelector('.regression_table_toggle_icon');
 						if (icon) {
 							icon.textContent = is_hidden ? '\u25B6' : '\u25BC';
+						}
+						try {
+							localStorage.setItem(self.table_storage_key, is_hidden ? 'collapsed' : 'expanded');
+						} catch (e) {
+							// ignore storage errors
 						}
 					});
 				}
@@ -1937,7 +1962,16 @@ var regression_min = (function (exports) {
 
 			// denomination colors + first auto search, both gated on form readiness
 				self.load_denomination_colors()
-					.then(() => self.auto_search());
+					.then(() => self.auto_search())
+					.catch((err) => {
+						if(SHOW_DEBUG===true) {
+							console.error('load_denomination_colors error:', err);
+						}
+						// ensure submit button is enabled even if colors fail to load
+						if (self.submit_button) {
+							self.submit_button.disabled = false;
+						}
+					});
 
 			return true
 		},//end set_up

@@ -81,6 +81,12 @@ export const regression =  {
 	regression_model_table_download		: null,
 
 	/**
+	 * localStorage key used to persist the data table fold/unfold state.
+	 * @type {string}
+	 */
+	table_storage_key					: 'regression_table_expanded',
+
+	/**
 	 * Color hexadecimal code for each denomination
 	 * @type {{
 	 * 	section_id: number,
@@ -119,14 +125,33 @@ export const regression =  {
 			self.regression_model_table_download	= options.regression_model_table_download
 			self.pdf_current						= options.pdf_current
 
-		// data table toggle (collapsible, collapsed by default)
+		// data table toggle (collapsible, state persisted in localStorage)
 			if (self.regression_model_table_toggle && self.regression_model_table_container) {
+				// restore saved state (default: collapsed)
+					try {
+						if (localStorage.getItem(self.table_storage_key) === 'expanded') {
+							self.regression_model_table_container.classList.remove('hide')
+							self.regression_model_table_toggle.setAttribute('aria-expanded', 'true')
+							const icon = self.regression_model_table_toggle.querySelector('.regression_table_toggle_icon')
+							if (icon) {
+								icon.textContent = '\u25BC'
+							}
+						}
+					} catch (e) {
+						// localStorage may be unavailable (private mode, etc.); ignore
+					}
+
 				self.regression_model_table_toggle.addEventListener('click', function() {
 					const is_hidden = self.regression_model_table_container.classList.toggle('hide')
 					self.regression_model_table_toggle.setAttribute('aria-expanded', String(!is_hidden))
 					const icon = self.regression_model_table_toggle.querySelector('.regression_table_toggle_icon')
 					if (icon) {
 						icon.textContent = is_hidden ? '\u25B6' : '\u25BC'
+					}
+					try {
+						localStorage.setItem(self.table_storage_key, is_hidden ? 'collapsed' : 'expanded')
+					} catch (e) {
+						// ignore storage errors
 					}
 				})
 			}
@@ -145,6 +170,15 @@ export const regression =  {
 		// denomination colors + first auto search, both gated on form readiness
 			self.load_denomination_colors()
 				.then(() => self.auto_search())
+				.catch((err) => {
+					if(SHOW_DEBUG===true) {
+						console.error('load_denomination_colors error:', err)
+					}
+					// ensure submit button is enabled even if colors fail to load
+					if (self.submit_button) {
+						self.submit_button.disabled = false
+					}
+				})
 
 		return true
 	},//end set_up
