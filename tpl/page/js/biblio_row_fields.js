@@ -115,7 +115,7 @@ var biblio_row_fields = {
 				: ''
 				// final_date = final_date //+ "-" + parseInt(ar_date[1])
 
-			if( typeof(ar_date[2]!=="undefined") && parseInt(ar_date[2]) > 0 ) {
+			if( typeof(ar_date[2])!=="undefined" && parseInt(ar_date[2]) > 0 ) {
 				final_date = final_date + "-" + parseInt(ar_date[2])
 			}
 		}
