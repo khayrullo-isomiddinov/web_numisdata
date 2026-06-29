@@ -196,8 +196,6 @@ class biblio {
 							$options->n_occurrences	= 10; // Only first occurrence for now
 
 						$ar_fragment_data = (array)self::build_fragment($options);
-							// dump($ar_fragment_data, ' ar_fragment_data 2');
-
 						$row->transcription = $ar_fragment_data;
 
 					}else{
