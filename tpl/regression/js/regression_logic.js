@@ -526,6 +526,11 @@ export const regression_logic = {
 			} = fit;
 			const { Mgrid, bandA } = bootstrap;
 
+			// Trim cached bootstrap band to the current max_ir so axes fit the data
+			const trim = Math.min(Mgrid.length, Math.floor(max_ir));
+			const Mgrid_t = Mgrid.slice(0, trim);
+			const bandA_t = bandA.slice(0, trim);
+
 			// Filter observed data to fit the display range
 			const observed_x = [];
 			const observed_y = [];
@@ -542,8 +547,8 @@ export const regression_logic = {
 
 			const traces = [
 				{
-					x: Mgrid,
-					y: bandA.map(row => row.lwr),
+					x: Mgrid_t,
+					y: bandA_t.map(row => row.lwr),
 					fill: "none",
 					mode: "lines",
 					line: { width: 1, color: "rgba(153, 127, 90, 0.2)" },
@@ -554,8 +559,8 @@ export const regression_logic = {
 					xaxis: "x1", yaxis: "y1"
 				},
 				{
-					x: Mgrid,
-					y: bandA.map(row => row.upr),
+					x: Mgrid_t,
+					y: bandA_t.map(row => row.upr),
 					fill: "tonexty",
 					fillcolor: "rgba(153, 127, 90, 0.1)", // Transparent brand color for band
 					mode: "lines",
@@ -717,6 +722,11 @@ export const regression_logic = {
 			} = fit;
 			const { Mgrid, bandR } = bootstrap;
 
+			// Trim cached bootstrap band to the current max_ir so axes fit the data
+			const trim = Math.min(Mgrid.length, Math.floor(max_ir));
+			const Mgrid_t = Mgrid.slice(0, trim);
+			const bandR_t = bandR.slice(0, trim);
+
 			const observed_x = [];
 			const observed_y = [];
 			for (let i = 0; i < IR_Ant_filtrat.length; i++) {
@@ -732,8 +742,8 @@ export const regression_logic = {
 
 			const traces = [
 				{
-					x: Mgrid,
-					y: bandR.map(row => row.lwr),
+					x: Mgrid_t,
+					y: bandR_t.map(row => row.lwr),
 					fill: "none",
 					mode: "lines",
 					line: { width: 1, color: "rgba(153, 127, 90, 0.2)" },
@@ -744,8 +754,8 @@ export const regression_logic = {
 					xaxis: "x2", yaxis: "y2"
 				},
 				{
-					x: Mgrid,
-					y: bandR.map(row => row.upr),
+					x: Mgrid_t,
+					y: bandR_t.map(row => row.upr),
 					fill: "tonexty",
 					fillcolor: "rgba(153, 127, 90, 0.1)",
 					mode: "lines",
@@ -924,6 +934,9 @@ export const regression_logic = {
 
 				// Optional data table visualization (in addition to the charts)
 				if (opts.table_container) {
+					if (SHOW_DEBUG === true) {
+						console.log('Rendering data table. parsed_data:', parsed_data);
+					}
 					this.render_data_table(opts.table_container, parsed_data, max_ir)
 						.then(() => {
 							if (opts.download_button) {
@@ -1023,11 +1036,17 @@ export const regression_logic = {
 			const mapA = new Map(rowsA.map(r => [r.section_id, r]));
 			const mapR = new Map(rowsR.map(r => [r.section_id, r]));
 
-			// Sort emblems by IR descending (most relevant first), then by section_id
-			const sorted_emblems = emblems.slice().sort((a, b) => {
+			// Filter emblems to mirror the graph: only those with finite approx_display
+			// (ir=0 → predict_potential returns NaN → point not plotted by D3)
+			const sorted_emblems = emblems.slice().filter(emblem => {
+				const a = mapA.get(emblem.section_id);
+				const r = mapR.get(emblem.section_id);
+				return (a && Number.isFinite(a.approx_display)) || (r && Number.isFinite(r.approx_display));
+			}).sort((a, b) => {
+				// Sort ascending by IR to match graph x-axis (left=low → right=high)
 				const ira = mapA.get(a.section_id)?.ir ?? 0;
 				const irb = mapA.get(b.section_id)?.ir ?? 0;
-				return (irb - ira) || (String(a.section_id).localeCompare(String(b.section_id)));
+				return (ira - irb) || (String(a.section_id).localeCompare(String(b.section_id)));
 			});
 
 			const fragment = document.createDocumentFragment();
@@ -1043,7 +1062,7 @@ export const regression_logic = {
 					element_type	: "colgroup",
 					parent			: table
 				});
-				const col_widths = [18, 5, 7, 8, 11, 12, 8, 11, 12, 8]; // sums to 100
+				const col_widths = [18, 12, 8, 11, 12, 8, 11, 12, 8]; // sums to 100 (9 cols)
 				col_widths.forEach(w => {
 					const col = common.create_dom_element({
 						element_type	: "col",
@@ -1066,7 +1085,6 @@ export const regression_logic = {
 				const shared_labels = [
 					tstring.mint || "Mint",
 					tstring.mib || "MIB",
-					tstring.ref_mint_number || "Mint ref.",
 					tstring.coins_number || "Coins number"
 				];
 				shared_labels.forEach(label => {
@@ -1132,8 +1150,7 @@ export const regression_logic = {
 
 					const cells = [
 						(a?.ceca ?? r?.ceca ?? ""),
-						(sid != null ? String(sid) : ""),
-						(a?.ref_ceca ?? r?.ref_ceca ?? ""),
+						`${sid ?? ""} | ${a?.ref_ceca ?? r?.ref_ceca ?? ""} / ${a?.num ?? r?.num ?? ""}`,
 						fmt(a?.ir ?? r?.ir ?? 0, 0),
 						fmt(a?.approx_display, 2),
 						`[${fmt(a?.ci_lwr, 2)}, ${fmt(a?.ci_upr, 2)}]`,
@@ -1144,7 +1161,7 @@ export const regression_logic = {
 					];
 
 					cells.forEach((cell, idx) => {
-						const cls = (idx === 0) ? "text" : (idx >= 3 ? "num" : "");
+						const cls = (idx === 0) ? "text" : (idx >= 2 ? "num" : "");
 						common.create_dom_element({
 							element_type	: "td",
 							text_content	: String(cell),
@@ -1299,6 +1316,14 @@ export const regression_logic = {
 	_render_rev_anv_d3: function(container, tracesAnv, tracesRev, labels) {
 		const root = (typeof container === "string") ? document.querySelector(container) : container;
 		if (!root) return;
+
+		// If the container is not visible yet (e.g., just unhidden after a search),
+		// clientWidth is 0 and the SVG would use the fallback width.
+		// Defer to the next animation frame so the browser reflows first.
+		if (root.clientWidth === 0) {
+			requestAnimationFrame(() => this._render_rev_anv_d3(container, tracesAnv, tracesRev, labels));
+			return;
+		}
 
 		root.innerHTML = "";
 		root.style.overflowX = "auto";
