@@ -14,6 +14,8 @@ acc
 *_old.*
 *_DES
 config
+.vscode
+.devin
 # images
 # vars.less
 page.css
