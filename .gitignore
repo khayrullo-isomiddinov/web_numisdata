@@ -1,9 +1,12 @@
-config.php
+# config
 config.*
-!sample.config.php
+tpl/config/*
+!tpl/config/sample.config.php
+!tpl/config/.htaccess
 config.codekit3
 .env
 prepros.config
+# others
 .codekit-cache
 *codekit*
 acc
@@ -13,7 +16,6 @@ acc
 *_OLD.*
 *_old.*
 *_DES
-config
 .vscode
 .devin
 # images
