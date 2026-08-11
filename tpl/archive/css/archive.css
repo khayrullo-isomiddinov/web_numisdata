@@ -1,0 +1,374 @@
+/* Reuses the site's existing primitives instead of inventing new ones:
+   - buttons / inputs: plain global styling from assets/sass/components/_button.scss
+     and tpl/page/css/form.less (.form-inline, .form-row.fields, .form-group.field,
+     .button_submit) - the exact same classes tpl/coins/js/coins.js uses.
+   - pagination: shared tpl/page/css/pagination.less via list_factory.
+   - row_wrapper / info_container / left-labels / rigth-values: same pattern as
+     tpl/coin and tpl/coins.
+   Only the grid/list toggle and the lightbox are genuinely new UI (nothing
+   equivalent exists elsewhere), so those are the only custom-styled pieces. */
+
+:root {
+	--archive_border: #e6dcc6;
+	--archive_card_bg: #fdfbf6;
+	--archive_media_bg: #f1e8d7;
+	--archive_accent: #be875a;
+}
+
+/* "Filtros" and "Buscar" sit right next to each other by default (both are
+   plain .form-group.field.button_submit children with no gap) */
+#archive_search_form .button_submit input[type="button"] {
+	margin-right: 0.75em;
+}
+
+/* pagination totals ("Mostrados 1 a 20 de 315") was wrapping onto two lines
+   because it shares a flex row with the page-number navigator; keep it on
+   one line and let the row wrap as a whole instead (pagination.less already
+   sets .pagination{flex-wrap:wrap}) */
+#rows_container .totals {
+	white-space: nowrap;
+}
+
+/* the results (grid or list) were touching the pagination bar right below
+   them with no breathing room */
+#rows_container .rows_container {
+	margin-bottom: 2em;
+}
+
+/* results toolbar (grid / list switch) */
+
+.archive_toolbar {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 1em;
+}
+
+.archive_view_toggle {
+	display: inline-flex;
+	border: 1px solid var(--archive_border);
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+/* every bare <button> on this site gets an inset box-shadow ring from the
+   global assets/sass/components/_button.scss (that's the "thick border" -
+   it's not actually an outline/border, so border:none alone doesn't clear
+   it); box-shadow:none here is what actually removes it */
+.archive_view_btn {
+	width: 2.5em;
+	height: 2.5em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	box-shadow: none;
+	background-color: var(--archive_card_bg);
+	color: #a89a86;
+	cursor: pointer;
+	text-transform: none;
+	letter-spacing: normal;
+	padding: 0;
+}
+
+.archive_view_btn:hover,
+.archive_view_btn:focus,
+.archive_view_btn:active {
+	outline: none;
+	box-shadow: none;
+}
+
+.archive_view_btn.active {
+	background-color: var(--archive_accent);
+	color: #fff;
+}
+
+/* cards. shared between grid and list view */
+
+.archive_item {
+	position: relative;
+}
+
+a.row_wrapper {
+	display: flex;
+	color: inherit;
+	text-decoration: none;
+}
+
+.archive_item .go_to_dedalo {
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+	font-size: 0.8em;
+	color: var(--archive_accent);
+	z-index: 1;
+}
+
+.info_container {
+	display: grid;
+	grid-template-columns: 25% auto;
+	grid-column-gap: 1em;
+	width: 100%;
+}
+
+.archive_title {
+	grid-column: 1 / span 2;
+	font-size: 1.1em;
+	font-weight: bold;
+	margin-bottom: 0.5em;
+	color: #333333;
+}
+
+.left-labels {
+	grid-column: 1;
+	text-align: right;
+	color: #585858;
+	margin: 0;
+}
+
+.rigth-values {
+	grid-column: 2;
+	text-align: left;
+}
+
+/* list view . horizontal rows (matches tpl/coins row layout) */
+
+#rows_container.view_list a.row_wrapper {
+	flex-wrap: wrap;
+	border-bottom: 1px solid var(--archive_border);
+	padding: 1.25em 0;
+}
+
+#rows_container.view_list .archive_item:last-child a.row_wrapper {
+	border-bottom: none;
+}
+
+#rows_container.view_list .image_wrapper {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--archive_media_bg);
+	border-radius: 4px;
+	overflow: hidden;
+	margin-bottom: 1em;
+}
+
+#rows_container.view_list .image_wrapper .thumb {
+	height: 10em;
+	max-width: 100%;
+	object-fit: contain;
+}
+
+@media screen and (min-width: 736px) {
+	#rows_container.view_list .image_wrapper {
+		width: 30%;
+		margin-bottom: 0;
+	}
+	#rows_container.view_list .info_container {
+		width: 70%;
+		padding-left: 1.5em;
+	}
+}
+
+/* grid view . card grid (default) */
+
+#rows_container.view_grid .rows_container {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(13.5em, 1fr));
+	gap: 1.25em;
+}
+
+#rows_container.view_grid a.row_wrapper {
+	flex-direction: column;
+	border: 1px solid var(--archive_border);
+	border-radius: 6px;
+	height: 100%;
+	background-color: var(--archive_card_bg);
+	box-shadow: 0 2px 6px rgba(90,70,40,0.08);
+}
+
+#rows_container.view_grid .image_wrapper {
+	width: 100%;
+	height: 9em;
+	background-color: var(--archive_media_bg);
+	overflow: hidden;
+}
+
+#rows_container.view_grid .image_wrapper .thumb {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+#rows_container.view_grid .info_container {
+	grid-template-columns: 100%;
+	padding: 0.9em 1em;
+}
+
+#rows_container.view_grid .archive_title {
+	grid-column: 1;
+	font-size: 0.95em;
+	margin-bottom: 0.35em;
+}
+
+#rows_container.view_grid .left-labels {
+	grid-column: 1;
+	text-align: left;
+	font-weight: bold;
+	font-size: 0.75em;
+}
+
+#rows_container.view_grid .rigth-values {
+	grid-column: 1;
+	margin-bottom: 0.3em;
+	font-size: 0.85em;
+}
+
+/* detail view */
+
+.row_wrapper.detail {
+	display: flex;
+	flex-wrap: wrap;
+	padding: 1em 0;
+}
+
+.row_wrapper.detail .gallery {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+}
+
+.row_wrapper.detail .gallery .thumb {
+	height: 14em;
+	max-width: 100%;
+	object-fit: contain;
+	cursor: zoom-in;
+	background-color: var(--archive_media_bg);
+	border-radius: 4px;
+}
+
+.row_wrapper.detail .go_to_dedalo {
+	position: static;
+	grid-column: 1 / span 2;
+	color: var(--archive_accent);
+	margin-bottom: 0.5em;
+	display: inline-block;
+}
+
+@media screen and (min-width: 736px) {
+	.row_wrapper.detail .image_wrapper {
+		width: 40%;
+	}
+	.row_wrapper.detail .info_container {
+		width: 55%;
+	}
+}
+
+/* lightbox. no equivalent exists elsewhere on the site */
+
+body.archive_lightbox_open {
+	overflow: hidden;
+}
+
+.archive_lightbox {
+	position: fixed;
+	inset: 0;
+	background-color: rgba(0,0,0,0.9);
+	z-index: 9999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.archive_lightbox_stage {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.archive_lightbox_img {
+	max-width: 90vw;
+	max-height: 90vh;
+	object-fit: contain;
+	cursor: zoom-in;
+	transition: transform 0.1s ease-out;
+	user-select: none;
+}
+
+.archive_lightbox_img.zoomed {
+	cursor: grab;
+}
+
+.archive_lightbox_img.dragging {
+	cursor: grabbing;
+	transition: none;
+}
+
+.archive_lightbox_nav {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 3.5em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background: none;
+	color: #fff;
+	font-size: 1.6em;
+	opacity: 0.55;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+}
+
+.archive_lightbox_nav:hover {
+	opacity: 1;
+}
+
+.archive_lightbox_nav.prev {
+	left: 0;
+}
+
+.archive_lightbox_nav.next {
+	right: 0;
+}
+
+.archive_lightbox_counter {
+	position: absolute;
+	bottom: 1.5em;
+	left: 50%;
+	transform: translateX(-50%);
+	color: #fff;
+	font-size: 0.85em;
+	background-color: rgba(255,255,255,0.1);
+	padding: 0.3em 1em;
+	border-radius: 1em;
+}
+
+@media screen and (max-width: 736px) {
+
+	#rows_container.view_list .info_container,
+	.row_wrapper.detail .info_container {
+		grid-template-columns: 100%;
+	}
+
+	#rows_container.view_list .left-labels,
+	.row_wrapper.detail .left-labels {
+		text-align: left;
+		font-weight: bold;
+	}
+
+	#rows_container.view_list .rigth-values,
+	.row_wrapper.detail .rigth-values {
+		grid-column: 1;
+		margin-bottom: 0.5em;
+	}
+
+	.archive_lightbox_nav {
+		width: 2.4em;
+		height: 2.4em;
+	}
+}

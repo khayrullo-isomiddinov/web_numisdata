@@ -37,3 +37,5 @@ package.json
 package-lock.json
 !analysis-min.js
 !analysis-min.js.map
+# AI tooling
+.claude/
