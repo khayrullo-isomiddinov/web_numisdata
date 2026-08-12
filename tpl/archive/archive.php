@@ -7,8 +7,7 @@
 		$abstract	= $this->get_element_from_template_map('abstract', $template_map->{$mode});
 		$body		= $this->get_element_from_template_map('body', $template_map->{$mode});
 
-	// title override . the ts_web "Archive" menu record has no per-language
-	// translations yet (curator only entered the English value), so use our
+	// use our
 	// own tpl/lang/lg-*.json string instead of the untranslated CMS value.
 	// Once the record is translated in Dédalo this override can be removed.
 		$lang_obj = lang::get_lang_obj(WEB_CURRENT_LANG_CODE);

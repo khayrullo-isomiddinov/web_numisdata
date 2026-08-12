@@ -1,6 +1,7 @@
 <?php
 # CONFIG
 include(dirname(dirname(dirname(__FILE__))) . '/config/config.php');
+
 # API PAGE GLOBALS
 $page_globals = array(
 	'JSON_TRIGGER_URL'			=> JSON_TRIGGER_URL,

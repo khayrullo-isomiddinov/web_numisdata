@@ -463,7 +463,7 @@ var archive = {
 			sql_filter	: options.sql_filter || null,
 			limit		: options.limit,
 			offset		: options.offset,
-			count		: true
+			count		:	 true
 		}
 
 		return data_manager.request({
@@ -518,12 +518,15 @@ var archive = {
 					parent			: card_link
 				})
 
-				const first_image = row.identifying_images.split(' | ')[0]
+				const first_image	= row.identifying_images.split(' | ')[0]
+				const full_url		= page_globals.__WEB_MEDIA_BASE_URL__ + first_image
+				// lighter rendition for cards, same '/1.5MB/' -> '/thumb/' swap used by tpl/coins
+				const thumb_url		= full_url.replace('/1.5MB/', '/thumb/')
 
 				common.create_dom_element({
 					element_type	: "img",
 					class_name		: "image thumb",
-					src				: page_globals.__WEB_MEDIA_BASE_URL__ + first_image,
+					src				: thumb_url,
 					title			: row.title || '',
 					loading			: 'lazy',
 					parent			: image_wrapper
