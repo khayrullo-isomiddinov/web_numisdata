@@ -1,4 +1,4 @@
-/*global tstring, page_globals, SHOW_DEBUG, event_manager, map_factory, biblio_row_fields, data_manager, dedalo_logged, Promise, common, page, console, mint_row, DocumentFragment  */
+/*global tstring, page_globals, SHOW_DEBUG, event_manager, map_factory, biblio_row_fields, data_manager, dedalo_logged, Promise, common, page, console, mint_row, catalog, DocumentFragment  */
 /*eslint no-undef: "error"*/
 "use strict";
 
@@ -139,19 +139,13 @@ var mint = {
 									//result[i].term_section_id = result[i].term_section_id.section_id
 								}
 
-								// types
+								// types. Reuse the /catalog card design so both pages stay visually consistent
 								const types_container = document.getElementById('types')
 								if (types_container) {
-									const types_node = self.draw_types2({
-										ar_rows			: ar_rows,
-										mint_section_id	: _mint_catalog.section_id
+									self.draw_types({
+										ar_rows	: ar_rows,
+										target	: types_container
 									})
-									if (types_node) {
-										types_container.appendChild(types_node)
-										page.when_in_viewport(types_container, () => {
-											page.activate_images_gallery(types_container)
-										})
-									}
 								}
 
 								// types print
@@ -387,23 +381,31 @@ var mint = {
 
 
 	/**
-	* DRAW_TYPES2
-	* @return
+	* DRAW_TYPES
+	* Renders the mint's coin production, reusing the same catalog card renderer as /catalog
+	* (catalog.draw_rows / catalog_row_fields.draw_item) so both pages stay visually consistent.
+	* @param object options
+	* 	options.ar_rows : array of catalog rows (mint + its periods/groups/types), as returned by get_types_data2
+	* 	options.target : container DOM node to render into
+	* @return promise
 	*/
-	draw_types2 : function(options) {
+	draw_types : function(options) {
 
 		// options
-			const ar_rows			= options.ar_rows
-			const mint_section_id	= options.mint_section_id
+			const ar_rows	= options.ar_rows
+			const target	= options.target
 
-		const fragment = new DocumentFragment()
+		// clean container
+			while (target.hasChildNodes()) {
+				target.removeChild(target.lastChild);
+			}
 
 		// label
 			const typesLabel = tstring.coin_production || "Coin production"
 			const lineSeparator = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "info_line separator",
-				parent 			: fragment
+				parent 			: target
 			})
 			common.create_dom_element({
 				element_type 	: "label",
@@ -412,53 +414,18 @@ var mint = {
 				parent 			: lineSeparator
 			})
 
-		// create all nodes. Add in parallel to fragment and ar_nodes
-			// const fragment = new DocumentFragment()
-			const ar_nodes = []
-			for (let i = 0; i < ar_rows.length; i++) {
+		// rows. Same renderer /catalog uses, so cards (images, term info, weight/diameter, etc.) match exactly
+			const rows_container = common.create_dom_element({
+				element_type	: "div",
+				id				: "mint_types_rows",
+				parent			: target
+			})
 
-				const row = ar_rows[i]
-
-				// exclude self mint
-					if (row.section_id==mint_section_id) continue;
-
-				// exclude non mint children (to parents)
-					const is_mint_child = row.parents
-						? row.parents.find(el => el==mint_section_id)
-						: false
-					if (!is_mint_child) {
-						console.log("Excluded row:", row, 'mint_section_id:', mint_section_id);
-						continue;
-					}
-
-				// append
-					const node = mint_row.draw_type_item(row)
-					if (node) {
-						ar_nodes.push(node)
-						fragment.appendChild(node)
-					}
-			}
-
-		// hierarchize nodes.
-		// (!) Note that changes in ar_nodes items are propagated to fragment becase the nodes are shared for both
-			for (let i = 0; i < ar_nodes.length; i++) {
-				const node = ar_nodes[i]
-				if (node.parent) {
-					const parent_node = ar_nodes.find(function(el){
-						return el.section_id==node.parent
-					})
-						// console.log("parent_node:",parent_node);
-					if (parent_node && parent_node.container) {
-							// console.log("placed node:",node);
-						parent_node.container.appendChild(node)
-					}
-				}else{
-					console.warn("node without parent:",node);
-				}
-			}
-
-		return fragment
-	},//end draw_types2
+		return catalog.draw_rows({
+			target	: rows_container,
+			ar_rows	: ar_rows
+		})
+	},//end draw_types
 
 
 

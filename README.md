@@ -29,6 +29,7 @@ License: [GNU Affero General Public License v3](LICENSE).
 - **Thematic search** — filtered research queries
 - **Research / analysis** — charts, regression, and related tools
 - **Multilingual UI** — Spanish, English, French, Italian, Portuguese, Valencian (`lg-spa`, `lg-eng`, `lg-fra`, `lg-ita`, `lg-por`, `lg-cat`)
+- **Archive** - browse archive documents and view details about them
 
 ## Repository layout
 
@@ -43,7 +44,7 @@ web_mib/
 └── AGENTS.md         # Conventions for contributors / AI agents
 ```
 
-Public requests are rewritten to `web_app/web/` (see `.htaccess`). Templates under `tpl/` render catalogue sections (e.g. `catalog`, `type`, `coin`, `mint`, `hoard`, `map`, `thesaurus`, `biblio`, `research`).
+Public requests are rewritten to `web_app/web/` (see `.htaccess`). Templates under `tpl/` render catalogue sections (e.g. `catalog`, `type`, `coin`, `mint`, `hoard`, `map`, `archive`, `thesaurus`, `biblio`, `research`).
 
 ## Configuration
 
