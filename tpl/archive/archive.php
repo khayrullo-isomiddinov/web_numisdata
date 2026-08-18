@@ -7,14 +7,6 @@
 		$abstract	= $this->get_element_from_template_map('abstract', $template_map->{$mode});
 		$body		= $this->get_element_from_template_map('body', $template_map->{$mode});
 
-	// use our
-	// own tpl/lang/lg-*.json string instead of the untranslated CMS value.
-	// Once the record is translated in Dédalo this override can be removed.
-		$lang_obj = lang::get_lang_obj(WEB_CURRENT_LANG_CODE);
-		if (!empty($lang_obj->archive)) {
-			$title = $lang_obj->archive;
-		}
-
 	// section_id . optional record detail, like '/archive/143'
 		// web.php routes '/archive' and '/archive/143' to this same template,
 		// ignoring the id part at the routing level, so we parse it ourselves
