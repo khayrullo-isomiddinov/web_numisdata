@@ -91,18 +91,7 @@
 				$html  = '';
 				$html .= PHP_EOL . '<li data-path="'.$menu_element->web_path.'">';
 				$web_path = $menu_element->web_path==='main_home' ? '' : $menu_element->web_path;
-
-				// term text override . the ts_web "archive" menu record has no
-				// per-language translations yet, so use our own tpl/lang/lg-*.json
-				// string instead of the untranslated CMS value (same override as
-				// $title in tpl/archive/archive.php). Remove once translated in Dédalo.
-					$term_text = $menu_element->term;
-					if ($menu_element->web_path==='archive') {
-						$lang_obj = lang::get_lang_obj(WEB_CURRENT_LANG_CODE);
-						if (!empty($lang_obj->archive)) {
-							$term_text = $lang_obj->archive;
-						}
-					}
+				$term_text = $menu_element->term;
 
 				if (isset($menu_element->active) && $menu_element->active==='no') {
 					$html .= '<span class="unactive">'.$term_text.'</span>';
