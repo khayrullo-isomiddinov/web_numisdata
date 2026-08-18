@@ -275,12 +275,15 @@ var catalog_row_fields = {
 								href			: item.ref_coins_image_obverse,
 								parent			: coins_images
 							})
+							const type_section_id = item.term_section_id && item.term_section_id.section_id
+								? item.term_section_id.section_id
+								: item.term_section_id
 							const type_string = page.compose_catalog_id({
-								archive		: page_globals.OWN_CATALOG_ACRONYM,
-								section_id	: item.term_section_id,
-								mint_number	: mint_number,
-								type		: c_name
-							})
+							archive		: page_globals.OWN_CATALOG_ACRONYM,
+							section_id	: type_section_id,
+							mint_number	: mint_number,
+							type		: c_name
+						})
 							const img_obverse = common.create_dom_element({
 								element_type	: "img",
 								class_name		: "image_obverse",
@@ -357,10 +360,14 @@ var catalog_row_fields = {
 				})
 
 				if (item.term_section_id) {
+					const section_id = item.term_section_id && item.term_section_id.section_id
+						? item.term_section_id.section_id
+						: item.term_section_id
+
 					const link = common.create_dom_element({
 						element_type	: "a",
 						class_name		: "link link_mint",
-						href			: page_globals.__WEB_ROOT_WEB__ + '/mint/' + item.term_section_id,
+						href			: page_globals.__WEB_ROOT_WEB__ + '/mint/' + section_id,
 						target			: '_blank',
 						parent			: fragment
 					})
