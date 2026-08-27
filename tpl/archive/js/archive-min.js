@@ -1,4 +1,4 @@
-/*global SHOW_DEBUG, data_manager, common, page, page_globals, dedalo_logged, tstring, event_manager, list_factory, form_factory, Promise */
+/*global SHOW_DEBUG, data_manager, common, page, page_globals, dedalo_logged, tstring, event_manager, list_factory, form_factory, biblio_row_fields, Promise */
 /*eslint no-undef: "error"*/
 
 "use strict";
@@ -8,9 +8,16 @@
 var archive = {
 
 
+	// root of the hierarchy, same convention as WEB_MENU_PARENT in config.php
+	ROOT_TERM_ID		: 'tch300_1',
+
 	rows_container		: null,
 	form_container		: null,
+	browse_container	: null,
+	search_status		: null,
+	toolbar				: null,
 	section_id			: null,
+	mode				: 'browse',
 	list				: null,
 	form				: null,
 	filters_panel		: null,
@@ -20,15 +27,6 @@ var archive = {
 	view_mode			: 'list',
 	grid_button			: null,
 	list_button			: null,
-
-	// lightbox state
-	lightbox_overlay	: null,
-	lightbox_img		: null,
-	lightbox_counter	: null,
-	lightbox_images		: [],
-	lightbox_index		: 0,
-	lightbox_scale		: 1,
-	lightbox_pan		: { x: 0, y: 0 },
 
 	pagination : {
 		total	: null,
@@ -47,28 +45,33 @@ var archive = {
 
 		const self = this
 
-		self.rows_container	= options.rows_container
-		self.form_container	= options.form_container
-		self.section_id		= options.section_id || null
+		self.rows_container		= options.rows_container
+		self.form_container		= options.form_container
+		self.browse_container	= options.browse_container
+		self.section_id			= options.section_id || null
 
 		if (self.section_id) {
-			// detail mode. e.g. '/archive/143'
 			self.load_detail()
 		}else{
-			// list mode. e.g. '/archive'
 
 			const form_node = self.render_form()
 			self.form_container.appendChild(form_node)
 
-			// results toolbar (view toggle), sits above the results, outside the
-			// pagination reload cycle so it isn't rebuilt on every page change
-				const toolbar = self.render_toolbar()
-				self.rows_container.parentNode.insertBefore(toolbar, self.rows_container)
+			// search status . "Search results (N)" + back-to-browse, hidden until searching
+				self.search_status = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "archive_search_status hide"
+				})
+				self.rows_container.parentNode.insertBefore(self.search_status, self.rows_container)
+
+			// results toolbar (grid/list switch), also hidden until searching
+				self.toolbar = self.render_toolbar()
+				self.toolbar.classList.add('hide')
+				self.rows_container.parentNode.insertBefore(self.toolbar, self.rows_container)
 				self.set_view_mode(self.view_mode)
 
-			self.load_list()
+			self.render_browse()
 
-			// paginate event, fired by the shared paginator (same mechanism as tpl/coins)
 			event_manager.subscribe('paginate', function(offset){
 				self.pagination.offset = offset
 				self.load_list()
@@ -82,9 +85,7 @@ var archive = {
 
 	/**
 	* RENDER_FORM
-	* Compact search bar (title) + collapsible advanced filters panel.
-	* Same underlying form_factory / sql filter mechanism as tpl/coins,
-	* different UI: a toolbar instead of a stacked form.
+	* Search bar (title) + collapsible advanced filters panel
 	*/
 	render_form : function() {
 
@@ -94,14 +95,14 @@ var archive = {
 
 		const fragment = new DocumentFragment()
 
-		// top row . title search, same "form-row fields" layout used by tpl/coins
+		// title
 			const top_row = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "form-row fields",
 				parent			: fragment
 			})
 
-			self.form.item_factory({
+			const title_form_item = self.form.item_factory({
 				id			: "title",
 				name		: "title",
 				label		: tstring.search_archive || "Search by title...",
@@ -115,12 +116,20 @@ var archive = {
 				callback	: function(form_item) {
 					self.form.activate_autocomplete({
 						form_item	: form_item,
-						table		: 'archive'
+						table		: 'documentation'
 					})
 				}
 			})
 
-		// filters_panel . collapsed by default, same field layout as the top row
+			if (title_form_item.node_input) {
+				common.create_dom_element({
+					element_type	: "i",
+					class_name		: "fa fa-search archive_search_icon",
+					parent			: title_form_item.node_input.parentNode
+				})
+			}
+
+		// filters_panel
 			const filters_panel = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "form-row fields hide",
@@ -128,7 +137,7 @@ var archive = {
 			})
 			self.filters_panel = filters_panel
 
-			// term (autocomplete) fields, resolved against the "archive" table itself
+			// term fields
 				const term_fields = [
 					{ id: "typology",   label: tstring.typology   || "Typology"   },
 					{ id: "material",   label: tstring.material   || "Material"   },
@@ -150,7 +159,7 @@ var archive = {
 						callback	: function(form_item) {
 							self.form.activate_autocomplete({
 								form_item	: form_item,
-								table		: 'archive'
+								table		: 'documentation'
 							})
 						}
 					})
@@ -185,7 +194,7 @@ var archive = {
 				self.clear_filters()
 			})
 
-		// buttons row . same "form-group field button_submit" wrapper + <input type> pattern used by tpl/coins
+		// buttons row
 			const buttons_row = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "form-group field button_submit",
@@ -312,10 +321,10 @@ var archive = {
 
 
 	/**
-	* CLEAR_FILTERS
-	* Reset every field and reload the unfiltered list
+	* RESET_FORM_FIELDS
+	* Clear every field's value without triggering a search
 	*/
-	clear_filters : function() {
+	reset_form_fields : function() {
 
 		const self = this
 
@@ -331,8 +340,17 @@ var archive = {
 				}
 			}
 		}
+	},//end reset_form_fields
 
-		self.form_submit()
+
+
+	/**
+	* CLEAR_FILTERS
+	* An empty form means "not searching" - go back to browsing
+	*/
+	clear_filters : function() {
+
+		this.exit_search_mode()
 	},//end clear_filters
 
 
@@ -353,27 +371,102 @@ var archive = {
 		self.pagination.offset	= 0
 		self.pagination.total	= null
 
+		self.enter_search_mode()
 		self.load_list()
 	},//end form_submit
 
 
 
 	/**
+	* ENTER_SEARCH_MODE
+	*/
+	enter_search_mode : function() {
+
+		const self = this
+
+		if (self.mode==='search') {
+			return
+		}
+
+		self.mode = 'search'
+		self.browse_container.classList.add('hide')
+		self.search_status.classList.remove('hide')
+		self.toolbar.classList.remove('hide')
+	},//end enter_search_mode
+
+
+
+	/**
+	* EXIT_SEARCH_MODE
+	*/
+	exit_search_mode : function() {
+
+		const self = this
+
+		self.mode = 'browse'
+		self.reset_form_fields()
+		self.current_sql_filter	= null
+		self.pagination.offset		= 0
+		self.pagination.total		= null
+
+		self.browse_container.classList.remove('hide')
+		self.search_status.classList.add('hide')
+		self.toolbar.classList.add('hide')
+
+		while (self.rows_container.hasChildNodes()) {
+			self.rows_container.removeChild(self.rows_container.lastChild)
+		}
+	},//end exit_search_mode
+
+
+
+	/**
+	* UPDATE_SEARCH_STATUS
+	* @param number total
+	*/
+	update_search_status : function(total) {
+
+		const self = this
+
+		while (self.search_status.hasChildNodes()) {
+			self.search_status.removeChild(self.search_status.lastChild)
+		}
+
+		common.create_dom_element({
+			element_type	: "span",
+			class_name		: "archive_search_status_text",
+			text_content	: (tstring.search_results || 'Search results') + ' (' + total + ')',
+			parent			: self.search_status
+		})
+
+		const back_button = common.create_dom_element({
+			element_type	: "button",
+			type			: "button",
+			class_name		: "archive_back_to_browse",
+			inner_html		: '<i class="fa fa-angle-left"></i> ' + (tstring.browse_archive || 'Browse archive'),
+			parent			: self.search_status
+		})
+		back_button.addEventListener('click', function(){
+			self.exit_search_mode()
+		})
+	},//end update_search_status
+
+
+
+	/**
 	* LOAD_LIST
 	* Fetch current pagination page and render it using list_factory
-	* (same paginated list UX used by tpl/coins)
 	*/
 	load_list : function() {
 
 		const self = this
 		const rows_container = self.rows_container
 
-		// loading start
-			if (!self.pagination.total) {
-				page.add_spinner(rows_container)
-			}else{
-				rows_container.classList.add('loading')
-			}
+		if (!self.pagination.total) {
+			page.add_spinner(rows_container)
+		}else{
+			rows_container.classList.add('loading')
+		}
 
 		self.get_rows({
 			limit		: self.pagination.limit,
@@ -383,32 +476,36 @@ var archive = {
 		.then(function(response){
 
 			self.pagination.total = response.total
+			self.update_search_status(response.total)
 
-			// clean container
-				while (rows_container.hasChildNodes()) {
-					rows_container.removeChild(rows_container.lastChild);
-				}
-				rows_container.classList.remove('loading')
+			while (rows_container.hasChildNodes()) {
+				rows_container.removeChild(rows_container.lastChild);
+			}
+			rows_container.classList.remove('loading')
 
 			if (!response.rows.length) {
-				rows_container.textContent = tstring.no_results || 'No records found.'
+				common.create_dom_element({
+					element_type	: "p",
+					class_name		: "archive_empty_state",
+					inner_html		: '<i class="fa fa-search"></i> ' + (tstring.no_results || 'No records found.'),
+					parent			: rows_container
+				})
 				return
 			}
 
-			// render (list_factory handles top/bottom pagination + totals, same as coins)
-				self.list = self.list || new list_factory()
-				self.list.init({
-					data			: response.rows,
-					fn_row_builder	: self.list_row_builder,
-					pagination		: self.pagination,
-					caller			: self
-				})
-				self.list.render_list()
-				.then(function(list_node){
-					if (list_node) {
-						rows_container.appendChild(list_node)
-					}
-				})
+			self.list = self.list || new list_factory()
+			self.list.init({
+				data			: response.rows,
+				fn_row_builder	: self.list_row_builder,
+				pagination		: self.pagination,
+				caller			: self
+			})
+			self.list.render_list()
+			.then(function(list_node){
+				if (list_node) {
+					rows_container.appendChild(list_node)
+				}
+			})
 		})
 	},//end load_list
 
@@ -422,14 +519,89 @@ var archive = {
 	*/
 	list_row_builder : function(row){
 
-		return archive.draw_item(row)
+		return archive.draw_item(row, { variant: 'search' })
 	},//end list_row_builder
 
 
 
 	/**
+	* RENDER_BROWSE
+	* Default landing state for '/documentation': the root's direct children
+	* (funds) as large editorial cards
+	*/
+	render_browse : function() {
+
+		const self = this
+
+		page.add_spinner(self.browse_container)
+
+		self.fetch_children(self.ROOT_TERM_ID).then(function(children){
+
+			while (self.browse_container.hasChildNodes()) {
+				self.browse_container.removeChild(self.browse_container.lastChild)
+			}
+
+			if (!children.length) {
+				return
+			}
+
+			common.create_dom_element({
+				element_type	: "h2",
+				class_name		: "archive_browse_heading",
+				text_content	: tstring.explore_the_archive || 'Explore the archive',
+				parent			: self.browse_container
+			})
+
+			const grid = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_fund_grid",
+				parent			: self.browse_container
+			})
+
+			children.forEach(function(fund_row){
+				grid.appendChild( self.draw_item(fund_row, { variant: 'fund' }) )
+			})
+		})
+	},//end render_browse
+
+
+
+	/**
+	* ANNOTATE_CHILD_COUNT
+	* Fires a count-only request and fills in a fund card's item count once
+	* it resolves, rather than blocking the whole card on it
+	* @param string term_id
+	* @param object target_el
+	*/
+	annotate_child_count : function(term_id, target_el) {
+
+		data_manager.request({
+			body : {
+				dedalo_get	: 'records',
+				table		: 'documentation',
+				ar_fields	: ['term_id'],
+				sql_filter	: 'parent_data LIKE \'%"' + term_id + '"%\'',
+				limit		: 1,
+				count		: true
+			}
+		})
+		.then(function(api_response){
+
+			const total = api_response.total || 0
+			if (total>0) {
+				target_el.textContent = total
+				target_el.classList.add('is_ready')
+			}else{
+				target_el.remove()
+			}
+		})
+	},//end annotate_child_count
+
+
+
+	/**
 	* LOAD_DETAIL
-	* Fetch single record by section_id and render it
+	* 'documentation' has no section_id column - term_id ('tch300_' + id) is the real key
 	*/
 	load_detail : function() {
 
@@ -440,7 +612,7 @@ var archive = {
 		self.get_rows({
 			limit		: 1,
 			offset		: 0,
-			sql_filter	: 'section_id=' + self.section_id
+			sql_filter	: "term_id='tch300_" + self.section_id + "'"
 		})
 		.then(function(response){
 			self.render_detail(response.rows[0] || null)
@@ -451,19 +623,29 @@ var archive = {
 
 	/**
 	* GET_ROWS
-	* Make a request to Dédalo public API to get "archive" table records
+	* Make a request to Dédalo public API to get "documentation" table records.
+	* parent_data/parents_data are NOT in resolve_portals_custom - self-referential
+	* portal resolution (a 'documentation' field resolving against 'documentation'
+	* itself) always comes back empty, so ancestors are walked manually instead,
+	* see resolve_ancestors
 	* @return promise : {rows, total}
 	*/
 	get_rows : function(options) {
 
 		const request_body = {
 			dedalo_get	: 'records',
-			table		: 'archive',
+			table		: 'documentation',
 			ar_fields	: ['*'],
 			sql_filter	: options.sql_filter || null,
 			limit		: options.limit,
 			offset		: options.offset,
-			count		: true
+			count		:	 true,
+			resolve_portals_custom : {
+				own_bibliography_data		: 'bibliographic_references',
+				related_bibliography_data	: 'bibliographic_references',
+				publications_data			: 'publications',
+				identifying_images_data	: 'images'
+			}
 		}
 
 		return data_manager.request({
@@ -488,39 +670,53 @@ var archive = {
 	* DRAW_ITEM
 	* Build one archive record card, linked to its detail page
 	* @param object row
+	* @param object options
+	* @param string options.variant. 'fund' (browse view, with an async item
+	*        count), 'child' (a record's own contents grid, opens in the same
+	*        tab) or 'search' (default - result card)
+	* @param string options.parent_title. 'child' only - see resolve_title
+	* @param number options.ordinal. 'child' only - see resolve_title
 	* @return HTMLElement
 	*/
-	draw_item : function(row) {
+	draw_item : function(row, options) {
+
+		const variant = (options && options.variant) || 'search'
+
+		const id = row.term_id.split('_').pop()
 
 		const item_wrapper = common.create_dom_element({
 			element_type	: "div",
 			class_name		: "archive_item"
+				+ (variant==='fund' ? ' archive_item_fund' : '')
+				+ (variant==='child' ? ' archive_item_child' : '')
 		})
 
-		const detail_url = page_globals.__WEB_ROOT_WEB__ + '/archive/' + row.section_id
+		const detail_url = page_globals.__WEB_ROOT_WEB__ + '/documentation/' + id
 
-		// card_link . whole card is clickable, opens detail in a new tab
+		// 'child' cards navigate same-tab (drilling in replaces the page);
+		// other variants open a new tab so browsing/searching keeps its place
 			const card_link = common.create_dom_element({
 				element_type	: "a",
 				class_name		: "row_wrapper",
 				href			: detail_url,
-				target			: "_blank",
+				target			: variant==='child' ? null : "_blank",
 				parent			: item_wrapper
 			})
-			card_link.setAttribute('rel', 'noopener')
+			if (variant!=='child') {
+				card_link.setAttribute('rel', 'noopener')
+			}
 
-		// thumbnail
+		// thumbnail, or a placeholder instead of an empty gap
+			const image_wrapper = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "image_wrapper",
+				parent			: card_link
+			})
+
 			if (row.identifying_images && row.identifying_images.length>0) {
-
-				const image_wrapper = common.create_dom_element({
-					element_type	: "div",
-					class_name		: "image_wrapper",
-					parent			: card_link
-				})
 
 				const first_image	= row.identifying_images.split(' | ')[0]
 				const full_url		= page_globals.__WEB_MEDIA_BASE_URL__ + first_image
-				// lighter rendition for cards, same '/1.5MB/' -> '/thumb/' swap used by tpl/coins
 				const thumb_url		= full_url.replace('/1.5MB/', '/thumb/')
 
 				common.create_dom_element({
@@ -531,40 +727,110 @@ var archive = {
 					loading			: 'lazy',
 					parent			: image_wrapper
 				})
+
+				const dating = [row.dating_start, row.dating_end].filter(Boolean).join(' - ') || row.dating
+				if (dating) {
+					common.create_dom_element({
+						element_type	: "span",
+						class_name		: "archive_card_dating",
+						text_content	: dating,
+						parent			: image_wrapper
+					})
+				}
+			}else{
+				common.create_dom_element({
+					element_type	: "i",
+					class_name		: "fa fa-archive archive_image_placeholder",
+					parent			: image_wrapper
+				})
 			}
 
-		// info_container
-			const info_container = common.create_dom_element({
-				element_type	: "div",
-				class_name		: "info_container",
-				parent			: card_link
-			})
+		const info_container = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "info_container",
+			parent			: card_link
+		})
 
-		// title
+		// title . see resolve_title
+			const display_title = this.resolve_title(row, options && options.parent_title, options && options.ordinal) || ('ID ' + id)
 			common.create_dom_element({
 				element_type	: "div",
 				class_name		: "archive_title",
-				text_content	: row.title || ('ID ' + row.section_id),
+				text_content	: display_title,
 				parent			: info_container
 			})
 
-		// simple label / value fields
-			archive.draw_fields(info_container, row)
+		if (variant==='fund') {
 
-		// dedalo edit link (sibling of the card link, avoids nested <a>)
-			if (dedalo_logged===true) {
-				const link = common.create_dom_element({
-					element_type	: "a",
-					class_name		: "go_to_dedalo",
-					text_content	: '#' + row.section_id,
-					href			: '/dedalo/core/page/?tipo=' + row.section_tipo + '&id=' + row.section_id,
-					parent			: item_wrapper
+			common.create_dom_element({
+				element_type	: "span",
+				class_name		: "archive_card_tag",
+				text_content	: tstring.fund || 'Fund',
+				parent			: info_container
+			})
+
+			const count_el = common.create_dom_element({
+				element_type	: "span",
+				class_name		: "archive_fund_count",
+				parent			: info_container
+			})
+			this.annotate_child_count(row.term_id, count_el)
+
+		}else{
+
+			const tag = row.typology || row.name
+			if (tag) {
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "archive_card_tag",
+					text_content	: tag,
+					parent			: info_container
 				})
-				link.setAttribute('target', '_blank');
 			}
+		}
+
+		if (dedalo_logged===true) {
+			const link = common.create_dom_element({
+				element_type	: "a",
+				class_name		: "go_to_dedalo",
+				text_content	: '#' + id,
+				href			: '/dedalo/core/page/?tipo=' + row.section_tipo + '&id=' + id,
+				parent			: item_wrapper
+			})
+			link.setAttribute('target', '_blank');
+		}
 
 		return item_wrapper
 	},//end draw_item
+
+
+
+	/**
+	* RESOLVE_TITLE
+	* Many records deep in the hierarchy just inherited their parent's title
+	* verbatim (confirmed against the live data) - falls back to the row's
+	* own 'name' field (what kind of object it is) plus its position among
+	* siblings when that happens, so cards stay visually distinct
+	* @param object row
+	* @param string|null parent_title
+	* @param number|null ordinal . this row's 1-based position among siblings
+	* @return string|null
+	*/
+	resolve_title : function(row, parent_title, ordinal) {
+
+		const title	= (row.title || '').trim()
+		const parent	= (parent_title || '').trim()
+
+		if (title && title.toLowerCase()!==parent.toLowerCase()) {
+			return title
+		}
+
+		if (row.name) {
+			return ordinal ? (row.name + ' ' + ordinal) : row.name
+		}
+
+		return null
+	},//end resolve_title
 
 
 
@@ -583,11 +849,14 @@ var archive = {
 		if (!row) {
 			common.create_dom_element({
 				element_type	: "p",
-				text_content	: tstring.no_results || 'This record does not exist.',
+				class_name		: "archive_empty_state",
+				inner_html		: '<i class="fa fa-archive"></i> ' + (tstring.no_results || 'This record does not exist.'),
 				parent			: container
 			})
 			return
 		}
+
+		const id = row.term_id.split('_').pop()
 
 		const row_wrapper = common.create_dom_element({
 			element_type	: "div",
@@ -595,12 +864,16 @@ var archive = {
 			parent			: container
 		})
 
-		// images. show all identifying images, not just the first
-		// click any image to open the zoomable lightbox
-			if (row.identifying_images && row.identifying_images.length>0) {
+		// nav placeholder . back link + breadcrumb, filled in below once
+		// resolve_ancestors resolves
+			const nav = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_detail_nav",
+				parent			: row_wrapper
+			})
 
-				const self = this
-				const image_paths = row.identifying_images.split(' | ')
+		// images . all identifying images at full size, each captioned
+			if (row.identifying_images_data && row.identifying_images_data.length>0) {
 
 				const gallery = common.create_dom_element({
 					element_type	: "div",
@@ -608,19 +881,62 @@ var archive = {
 					parent			: row_wrapper
 				})
 
-				image_paths.forEach(function(image_path, index){
-					const img = common.create_dom_element({
-						element_type	: "img",
-						class_name		: "image thumb zoomable",
-						src				: page_globals.__WEB_MEDIA_BASE_URL__ + image_path,
-						title			: row.title || '',
+				row.identifying_images_data.forEach(function(image_row){
+
+					const figure = common.create_dom_element({
+						element_type	: "figure",
+						class_name		: "gallery_figure",
 						parent			: gallery
 					})
-					img.addEventListener('click', function(){
-						self.open_lightbox(image_paths, index)
+
+					common.create_dom_element({
+						element_type	: "img",
+						class_name		: "image gallery_image",
+						src				: page_globals.__WEB_MEDIA_BASE_URL__ + image_row.image,
+						title			: image_row.title || row.title || '',
+						parent			: figure
 					})
+
+					const caption_text = [image_row.title, image_row.photographer].filter(Boolean).join(' — ')
+					if (caption_text) {
+						common.create_dom_element({
+							element_type	: "figcaption",
+							class_name		: "gallery_caption",
+							text_content	: caption_text,
+							parent			: figure
+						})
+					}
 				})
+
+			}else if (row.identifying_images && row.identifying_images.length>0) {
+
+				// fallback, used if the images portal resolves empty
+					const image_paths = row.identifying_images.split(' | ')
+
+					const gallery = common.create_dom_element({
+						element_type	: "div",
+						class_name		: "image_wrapper gallery",
+						parent			: row_wrapper
+					})
+
+					image_paths.forEach(function(image_path){
+						common.create_dom_element({
+							element_type	: "img",
+							class_name		: "image gallery_image",
+							src				: page_globals.__WEB_MEDIA_BASE_URL__ + image_path,
+							title			: row.title || '',
+							parent			: gallery
+						})
+					})
 			}
+
+		// title . corrected below once resolve_ancestors resolves the immediate parent
+			const title_el = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_title",
+				text_content	: this.resolve_title(row, null, null) || ('ID ' + id),
+				parent			: row_wrapper
+			})
 
 		const info_container = common.create_dom_element({
 			element_type	: "div",
@@ -628,19 +944,12 @@ var archive = {
 			parent			: row_wrapper
 		})
 
-		common.create_dom_element({
-			element_type	: "div",
-			class_name		: "archive_title",
-			text_content	: row.title || ('ID ' + row.section_id),
-			parent			: info_container
-		})
-
 		if (dedalo_logged===true) {
 			const link = common.create_dom_element({
 				element_type	: "a",
 				class_name		: "go_to_dedalo",
-				text_content	: (tstring.edit || 'Edit') + ' #' + row.section_id,
-				href			: '/dedalo/core/page/?tipo=' + row.section_tipo + '&id=' + row.section_id,
+				text_content	: (tstring.edit || 'Edit') + ' #' + id,
+				href			: '/dedalo/core/page/?tipo=' + row.section_tipo + '&id=' + id,
 				parent			: info_container
 			})
 			link.setAttribute('target', '_blank');
@@ -648,24 +957,47 @@ var archive = {
 
 		this.draw_fields(info_container, row)
 
-		// extra detail-only fields
-			this.add_field(info_container, tstring.recovery_mode || 'Recovery mode', row.recovery_mode)
-			this.add_field(info_container, tstring.recovery_place || 'Recovery place', row.recovery_place)
-			this.add_field(info_container, tstring.recovery_date || 'Recovery date', row.recovery_date)
-			this.add_field(info_container, tstring.source || 'Source', [row.source_name, row.source_surname].filter(Boolean).join(' '))
-			this.add_field(info_container, tstring.author || 'Author', row.author)
-			this.add_field(info_container, tstring.manufacturer || 'Manufacturer', row.manufacturer)
-			this.add_field(info_container, tstring.inscriptions || 'Inscriptions', row.inscriptions)
+		this.add_field(info_container, tstring.recovery_mode || 'Recovery mode', row.recovery_mode)
+		this.add_field(info_container, tstring.recovery_place || 'Recovery place', row.recovery_place)
+		this.add_field(info_container, tstring.recovery_date || 'Recovery date', row.recovery_date)
+		this.add_field(info_container, tstring.source || 'Source', [row.source_name, row.source_surname].filter(Boolean).join(' '))
+		this.add_field(info_container, tstring.author || 'Author', row.author)
+		this.add_field(info_container, tstring.manufacturer || 'Manufacturer', row.manufacturer)
+		this.add_field(info_container, tstring.inscriptions || 'Inscriptions', row.inscriptions)
+
+		this.draw_bibliography(info_container, tstring.own_bibliography || 'Own bibliography', row.own_bibliography_data)
+		this.draw_bibliography(info_container, tstring.related_bibliography || 'Related bibliography', row.related_bibliography_data)
+
+		this.draw_publications(info_container, row.publications_data)
+
+		this.draw_contents(row_wrapper, row)
+
+		// back link + breadcrumb + title correction, once the ancestor chain resolves
+			const self = this
+			self.resolve_ancestors(row.parent_data).then(function(ancestors){
+
+				self.draw_back_link(nav, ancestors)
+				self.draw_breadcrumb(nav, ancestors, row)
+
+				const immediate_parent	= ancestors[ancestors.length-1]
+				const corrected_title	= self.resolve_title(row, immediate_parent && immediate_parent.title, null)
+				if (corrected_title) {
+					title_el.textContent = corrected_title
+				}
+			})
 	},//end render_detail
 
 
 
 	/**
 	* DRAW_FIELDS
-	* Shared label / value fields for both card and detail views
+	* Full label / value field list, detail view only
+	* @param object info_container
+	* @param object row
 	*/
 	draw_fields : function(info_container, row) {
 
+		this.add_field(info_container, tstring.name || 'Name of the property', row.name)
 		this.add_field(info_container, tstring.typology || 'Typology', row.typology)
 		this.add_field(info_container, tstring.material || 'Material', row.material)
 		this.add_field(info_container, tstring.technique || 'Technique', row.technique)
@@ -687,6 +1019,11 @@ var archive = {
 	* Append a label/value pair to a container, skipping empty values
 	*/
 	add_field : function(container, label, value) {
+
+		// strip Dédalo's leading/trailing "|" join artifact on multi-value term fields
+			if (typeof value==='string') {
+				value = value.replace(/^(\s*\|\s*)+/, '').replace(/(\s*\|\s*)+$/, '').trim()
+			}
 
 		if (!value || (typeof value==='string' && value.trim().length===0)) {
 			return
@@ -710,227 +1047,345 @@ var archive = {
 
 
 	/**
-	* OPEN_LIGHTBOX
-	* Full screen, zoomable / pannable image viewer
-	* @param array images. relative paths, as returned by identifying_images
-	* @param number start_index
+	* DRAW_BIBLIOGRAPHY
+	* Render a resolved bibliographic_references portal, reusing the same
+	* shared helper tpl/coin, tpl/mint, tpl/hoard and tpl/type use
+	* @param object container
+	* @param string label
+	* @param array|null ar_biblio
 	*/
-	open_lightbox : function(images, start_index) {
+	draw_bibliography : function(container, label, ar_biblio) {
+
+		if (!ar_biblio || !ar_biblio.length) {
+			return
+		}
+
+		common.create_dom_element({
+			element_type	: "label",
+			class_name		: "left-labels",
+			text_content	: label,
+			parent			: container
+		})
+
+		const bibliography_group = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "vertical-group",
+			parent			: container
+		})
+
+		for (let i = 0; i < ar_biblio.length; i++) {
+
+			const biblio_row_node = biblio_row_fields.render_row_bibliography(ar_biblio[i])
+
+			const biblio_row_wrapper = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "rigth-values sub-vertical-group",
+				parent			: bibliography_group
+			})
+			biblio_row_wrapper.appendChild(biblio_row_node)
+		}
+	},//end draw_bibliography
+
+
+
+	/**
+	* DRAW_PUBLICATIONS
+	* Render a resolved 'publications' portal (different row shape than
+	* bibliographic_references, so it gets a plain label/value line)
+	* @param object container
+	* @param array|null ar_publications
+	*/
+	draw_publications : function(container, ar_publications) {
+
+		if (!ar_publications || !ar_publications.length) {
+			return
+		}
+
+		common.create_dom_element({
+			element_type	: "label",
+			class_name		: "left-labels",
+			text_content	: tstring.publications || 'Publications',
+			parent			: container
+		})
+
+		const publications_group = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "vertical-group",
+			parent			: container
+		})
+
+		for (let i = 0; i < ar_publications.length; i++) {
+
+			const publication	= ar_publications[i]
+			const date			= publication.publication_date ? ' (' + publication.publication_date.split('-')[0] + ')' : ''
+			const authors		= publication.authors ? publication.authors + '. ' : ''
+
+			common.create_dom_element({
+				element_type	: "div",
+				class_name		: "rigth-values sub-vertical-group",
+				inner_html		: authors + (publication.title || '') + date,
+				parent			: publications_group
+			})
+		}
+	},//end draw_publications
+
+
+
+	/**
+	* RESOLVE_ANCESTORS
+	* Walks the ancestor chain by hand (get_rows can't resolve parent_data
+	* server-side - see get_rows): fetch the immediate parent's own row,
+	* then repeat using its parent_data, until there isn't one left
+	* @param string|null parent_data . the starting row's own raw parent_data
+	* @return promise : array of {term_id, title, name}, root-to-immediate-parent
+	*/
+	resolve_ancestors : function(parent_data) {
 
 		const self = this
 
-		self.lightbox_images	= images
-		self.lightbox_index	= start_index
-		self.lightbox_scale		= 1
-		self.lightbox_pan		= { x: 0, y: 0 }
+		function step(raw_parent_data) {
 
-		const overlay = common.create_dom_element({
-			element_type	: "div",
-			class_name		: "archive_lightbox"
-		})
-		self.lightbox_overlay = overlay
+			let parent_ids = []
+			try { parent_ids = JSON.parse(raw_parent_data || '[]') } catch(e){ /* malformed, treat as root */ }
 
-		if (images.length>1) {
+			if (!parent_ids.length) {
+				return Promise.resolve([])
+			}
 
-			const prev_button = common.create_dom_element({
-				element_type	: "button",
-				type			: "button",
-				class_name		: "archive_lightbox_nav prev",
-				inner_html		: '<i class="fa fa-chevron-left"></i>',
-				parent			: overlay
+			return self.get_rows({
+				limit		: 1,
+				offset		: 0,
+				sql_filter	: "term_id='" + parent_ids[0] + "'"
 			})
-			prev_button.addEventListener('click', function(e){
-				e.stopPropagation()
-				self.lightbox_step(-1)
-			})
+			.then(function(response){
 
-			const next_button = common.create_dom_element({
-				element_type	: "button",
-				type			: "button",
-				class_name		: "archive_lightbox_nav next",
-				inner_html		: '<i class="fa fa-chevron-right"></i>',
-				parent			: overlay
-			})
-			next_button.addEventListener('click', function(e){
-				e.stopPropagation()
-				self.lightbox_step(1)
+				const parent_row = response.rows[0]
+				if (!parent_row) {
+					return []
+				}
+
+				// resolve everything above this parent first, so its own title
+				// can be checked against ITS parent (see resolve_title)
+					return step(parent_row.parent_data).then(function(higher_ancestors){
+
+						const grandparent = higher_ancestors[higher_ancestors.length-1]
+
+						higher_ancestors.push({
+							term_id	: parent_row.term_id,
+							title	: self.resolve_title(parent_row, grandparent && grandparent.title, null) || parent_row.title,
+							name	: parent_row.name
+						})
+						return higher_ancestors
+					})
 			})
 		}
 
-		const stage = common.create_dom_element({
-			element_type	: "div",
-			class_name		: "archive_lightbox_stage",
-			parent			: overlay
-		})
-
-		self.lightbox_img = common.create_dom_element({
-			element_type	: "img",
-			class_name		: "archive_lightbox_img",
-			parent			: stage
-		})
-
-		self.lightbox_counter = common.create_dom_element({
-			element_type	: "div",
-			class_name		: "archive_lightbox_counter",
-			parent			: overlay
-		})
-
-		self.update_lightbox()
-
-		// zoom (wheel)
-			stage.addEventListener('wheel', function(e){
-				e.preventDefault()
-				self.lightbox_zoom_by(e.deltaY<0 ? 0.4 : -0.4)
-			}, { passive: false })
-
-		// zoom (double click)
-			stage.addEventListener('dblclick', function(){
-				self.lightbox_scale	= (self.lightbox_scale>1) ? 1 : 2.5
-				self.lightbox_pan		= { x: 0, y: 0 }
-				self.apply_lightbox_transform()
-			})
-
-		// pan (drag, only while zoomed in)
-			let dragging	= false
-			let drag_start	= { x: 0, y: 0 }
-			let pan_start	= { x: 0, y: 0 }
-
-			self.lightbox_img.addEventListener('mousedown', function(e){
-				if (self.lightbox_scale<=1) return
-				dragging	= true
-				drag_start	= { x: e.clientX, y: e.clientY }
-				pan_start	= { x: self.lightbox_pan.x, y: self.lightbox_pan.y }
-				self.lightbox_img.classList.add('dragging')
-			})
-			self._lightbox_mousemove = function(e){
-				if (!dragging) return
-				self.lightbox_pan = {
-					x : pan_start.x + (e.clientX - drag_start.x),
-					y : pan_start.y + (e.clientY - drag_start.y)
-				}
-				self.apply_lightbox_transform()
-			}
-			self._lightbox_mouseup = function(){
-				dragging = false
-				if (self.lightbox_img) {
-					self.lightbox_img.classList.remove('dragging')
-				}
-			}
-			window.addEventListener('mousemove', self._lightbox_mousemove)
-			window.addEventListener('mouseup', self._lightbox_mouseup)
-
-		// close on backdrop click
-			overlay.addEventListener('click', function(e){
-				if (e.target===overlay || e.target===stage) {
-					self.close_lightbox()
-				}
-			})
-
-		// keyboard
-			self._lightbox_keydown = function(e){
-				if (e.key==='Escape') {
-					self.close_lightbox()
-				}else if (e.key==='ArrowLeft') {
-					self.lightbox_step(-1)
-				}else if (e.key==='ArrowRight') {
-					self.lightbox_step(1)
-				}
-			}
-			document.addEventListener('keydown', self._lightbox_keydown)
-
-		document.body.appendChild(overlay)
-		document.body.classList.add('archive_lightbox_open')
-	},//end open_lightbox
+		return step(parent_data)
+	},//end resolve_ancestors
 
 
 
 	/**
-	* UPDATE_LIGHTBOX
-	* Refresh image src / counter for the current lightbox_index
+	* DRAW_BACK_LINK
+	* A single "go back" step to the immediate parent. At the root (no
+	* ancestors) it goes to the browse landing instead
+	* @param object nav
+	* @param array ancestors . root-to-immediate-parent, see resolve_ancestors
 	*/
-	update_lightbox : function() {
+	draw_back_link : function(nav, ancestors) {
 
-		const self = this
+		const immediate_parent = ancestors[ancestors.length-1]
 
-		const image_path = self.lightbox_images[self.lightbox_index]
+		const href = immediate_parent
+			? page_globals.__WEB_ROOT_WEB__ + '/documentation/' + immediate_parent.term_id.split('_').pop()
+			: page_globals.__WEB_ROOT_WEB__ + '/documentation'
 
-		self.lightbox_img.src = page_globals.__WEB_MEDIA_BASE_URL__ + image_path
-		self.lightbox_counter.textContent = (self.lightbox_index+1) + ' / ' + self.lightbox_images.length
+		const label = immediate_parent
+			? immediate_parent.title
+			: (tstring.browse_archive || 'Browse archive')
 
-		self.apply_lightbox_transform()
-	},//end update_lightbox
+		common.create_dom_element({
+			element_type	: "a",
+			class_name		: "archive_back_link",
+			inner_html		: '<i class="fa fa-arrow-left"></i> ' + (tstring.back || 'Back') + ': ' + label,
+			href			: href,
+			parent			: nav
+		})
+	},//end draw_back_link
 
 
 
 	/**
-	* LIGHTBOX_STEP
-	* @param number direction. -1 | 1
+	* DRAW_BREADCRUMB
+	* Render the record's full ancestor chain, already resolved
+	* root-to-immediate-parent by resolve_ancestors
+	* @param object nav
+	* @param array ancestors
+	* @param object row . the current page's own record, for its own label
 	*/
-	lightbox_step : function(direction) {
+	draw_breadcrumb : function(nav, ancestors, row) {
 
-		const self = this
-
-		const length = self.lightbox_images.length
-		self.lightbox_index = (self.lightbox_index + direction + length) % length
-
-		self.lightbox_scale	= 1
-		self.lightbox_pan		= { x: 0, y: 0 }
-
-		self.update_lightbox()
-	},//end lightbox_step
-
-
-
-	/**
-	* LIGHTBOX_ZOOM_BY
-	* @param number delta
-	*/
-	lightbox_zoom_by : function(delta) {
-
-		const self = this
-
-		self.lightbox_scale = Math.min(5, Math.max(1, self.lightbox_scale + delta))
-
-		if (self.lightbox_scale===1) {
-			self.lightbox_pan = { x: 0, y: 0 }
+		if (!ancestors.length) {
+			return
 		}
 
-		self.apply_lightbox_transform()
-	},//end lightbox_zoom_by
+		const breadcrumb = common.create_dom_element({
+			element_type	: "nav",
+			class_name		: "archive_breadcrumb",
+			parent			: nav
+		})
+
+		common.create_dom_element({
+			element_type	: "i",
+			class_name		: "fa fa-archive archive_breadcrumb_icon",
+			parent			: breadcrumb
+		})
+
+		ancestors.forEach(function(ancestor){
+
+			const ancestor_id = ancestor.term_id.split('_').pop()
+
+			common.create_dom_element({
+				element_type	: "a",
+				class_name		: "archive_breadcrumb_link",
+				text_content	: ancestor.title,
+				href			: page_globals.__WEB_ROOT_WEB__ + '/documentation/' + ancestor_id,
+				parent			: breadcrumb
+			})
+
+			common.create_dom_element({
+				element_type	: "i",
+				class_name		: "fa fa-angle-right archive_breadcrumb_separator",
+				parent			: breadcrumb
+			})
+		})
+
+		const immediate_parent = ancestors[ancestors.length-1]
+		common.create_dom_element({
+			element_type	: "span",
+			class_name		: "archive_breadcrumb_current",
+			text_content	: this.resolve_title(row, immediate_parent && immediate_parent.title, null) || '',
+			parent			: breadcrumb
+		})
+	},//end draw_breadcrumb
 
 
 
 	/**
-	* APPLY_LIGHTBOX_TRANSFORM
+	* FETCH_CHILDREN
+	* Records whose parent_data points back at term_id - the only way to
+	* find a record's "children". limit:500 covers the largest group found
+	* in the live data so far (298)
+	* @param string term_id
+	* @return promise : array of rows
 	*/
-	apply_lightbox_transform : function() {
+	fetch_children : function(term_id) {
 
-		const self = this
-
-		self.lightbox_img.style.transform = 'translate(' + self.lightbox_pan.x + 'px,' + self.lightbox_pan.y + 'px) scale(' + self.lightbox_scale + ')'
-		self.lightbox_img.classList.toggle('zoomed', self.lightbox_scale>1)
-	},//end apply_lightbox_transform
+		return data_manager.request({
+			body : {
+				dedalo_get	: 'records',
+				table		: 'documentation',
+				ar_fields	: ['*'],
+				sql_filter	: 'parent_data LIKE \'%"' + term_id + '"%\'',
+				limit		: 500
+			}
+		})
+		.then(function(api_response){
+			return api_response.result || []
+		})
+	},//end fetch_children
 
 
 
 	/**
-	* CLOSE_LIGHTBOX
+	* DRAW_CONTENTS
+	* This record's direct children as a plain grid of cards, each linking
+	* to that child's own page (which has its own contents grid in turn).
+	* Past a handful of children, a live search box also filters the grid
+	* @param object row_wrapper
+	* @param object row
 	*/
-	close_lightbox : function() {
+	draw_contents : function(row_wrapper, row) {
 
 		const self = this
 
-		if (self.lightbox_overlay) {
-			self.lightbox_overlay.remove()
-			self.lightbox_overlay = null
-		}
+		self.fetch_children(row.term_id).then(function(children){
 
-		document.body.classList.remove('archive_lightbox_open')
+			if (!children.length) {
+				return
+			}
 
-		document.removeEventListener('keydown', self._lightbox_keydown)
-		window.removeEventListener('mousemove', self._lightbox_mousemove)
-		window.removeEventListener('mouseup', self._lightbox_mouseup)
-	}//end close_lightbox
+			const section = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_contents_section",
+				parent			: row_wrapper
+			})
+
+			common.create_dom_element({
+				element_type	: "h3",
+				class_name		: "archive_contents_title",
+				inner_html		: '<i class="fa fa-folder-open"></i> ' + (tstring.contents || 'Contents') + ' (' + children.length + ')',
+				parent			: section
+			})
+
+			let filter_input = null
+			if (children.length>12) {
+				filter_input = common.create_dom_element({
+					element_type	: "input",
+					type			: "text",
+					class_name		: "archive_contents_filter",
+					placeholder		: tstring.search_contents || 'Search within these items...',
+					parent			: section
+				})
+			}
+
+			const grid = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_contents_grid",
+				parent			: section
+			})
+
+			const empty_state = common.create_dom_element({
+				element_type	: "p",
+				class_name		: "archive_empty_state hide",
+				inner_html		: '<i class="fa fa-search"></i> ' + (tstring.no_results || 'No records found.'),
+				parent			: section
+			})
+
+			const entries = children.map(function(child_row, index){
+
+				const display_title	= self.resolve_title(child_row, row.title, index+1) || ''
+				const search_text		= [display_title, child_row.name, child_row.typology].filter(Boolean).join(' ').toLowerCase()
+
+				const card = self.draw_item(child_row, {
+					variant			: 'child',
+					parent_title	: row.title,
+					ordinal			: index+1
+				})
+				grid.appendChild(card)
+
+				return { card: card, search_text: search_text }
+			})
+
+			if (filter_input) {
+				filter_input.addEventListener('input', function(){
+
+					const query		= filter_input.value.trim().toLowerCase()
+					let visible_count	= 0
+
+					entries.forEach(function(entry){
+						const match = !query || entry.search_text.indexOf(query)>-1
+						entry.card.classList.toggle('hide', !match)
+						if (match) {
+							visible_count++
+						}
+					})
+
+					empty_state.classList.toggle('hide', visible_count>0)
+				})
+			}
+		})
+	}//end draw_contents
 
 
 }//end archive
