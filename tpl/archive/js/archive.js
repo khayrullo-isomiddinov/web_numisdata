@@ -130,11 +130,16 @@ var archive = {
 				parent			: fragment
 			})
 
-			const title_form_item = self.form.item_factory({
+			self.form.item_factory({
 				id			: "title",
 				name		: "title",
 				label		: tstring.search_archive || "Search by title...",
-				q_column	: "title",
+				// title+name, not title alone - resolve_title (below) documents why:
+				// records deep in the hierarchy often just inherit their parent's
+				// title verbatim and carry their own distinguishing text in 'name'
+				// instead, so a title-only search only ever turns up the top-level
+				// fund/archive records, never their child cards
+				q_column	: "CONCAT_WS(' ', title, name)",
 				eq			: "LIKE",
 				eq_in		: "%",
 				eq_out		: "%",
@@ -148,14 +153,6 @@ var archive = {
 					})
 				}
 			})
-
-			if (title_form_item.node_input) {
-				common.create_dom_element({
-					element_type	: "i",
-					class_name		: "fa fa-search archive_search_icon",
-					parent			: title_form_item.node_input.parentNode
-				})
-			}
 
 		// filters_panel
 			const filters_panel = common.create_dom_element({
@@ -192,17 +189,30 @@ var archive = {
 					})
 				})
 
-			const clear_button = common.create_dom_element({
-				element_type	: "input",
-				type			: "button",
-				value			: tstring.clear_filters || "Clear filters",
-				parent			: filters_panel
-			})
-			clear_button.addEventListener("click", function(){
-				self.clear_filters()
-			})
+			// description . last in draw_fields' own order (see add_long_field there).
+			// Plain free-text LIKE, not wired to activate_autocomplete like the term
+			// fields above: that callback does a GROUP BY on the raw column to build
+			// its suggestion dropdown, which fits controlled-vocabulary columns like
+			// typology/material but not a paragraph-length prose field where almost
+			// every value is unique
+				self.form.item_factory({
+					id			: "description",
+					name		: "description",
+					label		: tstring.description || "Description",
+					q_column	: "description",
+					eq			: "LIKE",
+					eq_in		: "%",
+					eq_out		: "%",
+					is_term		: false,
+					parent		: filters_panel
+				})
 
-		// buttons row
+		// buttons row . Filtros/Borrar filtros/Buscar all live together here
+		// (same convention as catalog.js's own submit_group: submit + reset
+		// side by side), instead of the clear button sitting inside the
+		// filters_panel grid itself - mixed into that 25%-wide field grid, it
+		// was landing wherever the last field's wrap happened to leave room,
+		// not lined up with the rest of the row of buttons
 			const buttons_row = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "form-group field button_submit",
@@ -217,6 +227,16 @@ var archive = {
 			})
 			self.filters_toggle.addEventListener("click", function(){
 				self.toggle_filters()
+			})
+
+			const clear_button = common.create_dom_element({
+				element_type	: "input",
+				type			: "button",
+				value			: tstring.clear_filters || "Clear filters",
+				parent			: buttons_row
+			})
+			clear_button.addEventListener("click", function(){
+				self.clear_filters()
 			})
 
 			common.create_dom_element({

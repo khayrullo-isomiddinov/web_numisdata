@@ -1503,7 +1503,6 @@ var type_row_fields_min = (function (exports) {
 
 							const first_image	= doc.identifying_images.split(' | ')[0];
 							const full_url		= page_globals.__WEB_MEDIA_BASE_URL__ + first_image;
-							const thumb_url		= full_url.replace('/1.5MB/', '/thumb/');
 
 							const images = common.create_dom_element({
 								element_type	: "div",
@@ -1512,7 +1511,7 @@ var type_row_fields_min = (function (exports) {
 							});
 							const img = common.create_dom_element({
 								element_type	: "img",
-								src				: thumb_url,
+								src				: full_url,
 								title			: doc_title,
 								loading			: "lazy",
 								parent			: images

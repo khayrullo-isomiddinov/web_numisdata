@@ -514,8 +514,10 @@ export const type_row_fields = {
 					if (doc.identifying_images && doc.identifying_images.length>0) {
 
 						const first_image	= doc.identifying_images.split(' | ')[0]
+						// full-resolution ('/1.5MB/') image, not '/thumb/' - shown at full
+						// width/natural height below (see .ref_documentation in type.less),
+						// not cropped into a fixed-size box
 						const full_url		= page_globals.__WEB_MEDIA_BASE_URL__ + first_image
-						const thumb_url		= full_url.replace('/1.5MB/', '/thumb/')
 
 						const images = common.create_dom_element({
 							element_type	: "div",
@@ -524,7 +526,7 @@ export const type_row_fields = {
 						})
 						const img = common.create_dom_element({
 							element_type	: "img",
-							src				: thumb_url,
+							src				: full_url,
 							title			: doc_title,
 							loading			: "lazy",
 							parent			: images

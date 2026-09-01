@@ -1,10 +1,15 @@
 :root {
-	--archive_border: #e6dcc6;
-	--archive_card_bg: #fdfbf6;
-	--archive_media_bg: #f1e8d7;
-	--archive_accent: #be875a;
-	--archive_ink: #3a3226;
-	--archive_muted: #8a7a5c;
+	/* matches the shared design tokens coins/catalog/type already use -
+	   rgb(227,227,227) is the site's standard row/card border (coins_common.less,
+	   type.less, catalog.less), #b7996d is the same gold accent coins_common.less
+	   uses for .sorted_coin .type, #333333/#767676 are @color_grey_dark and the
+	   muted-text grey coin.less's ref_documentation_field already uses */
+	--archive_border: rgb(227, 227, 227);
+	--archive_card_bg: #ffffff;
+	--archive_media_bg: #f6f6f6;
+	--archive_accent: #b7996d;
+	--archive_ink: #333333;
+	--archive_muted: #767676;
 
 	/* small, local spacing vocabulary - not a design-system, just enough to keep
 	   the vertical rhythm on this page consistent instead of ad-hoc per rule */
@@ -67,74 +72,39 @@
 	outline-offset: 2px;
 }
 
-#main .inner > h1 {
-	font-size: 2.4em;
-	font-weight: 600;
-	letter-spacing: -0.01em;
-	color: var(--archive_ink);
-	margin-bottom: 0.2em;
-}
-
-#main .inner > .golden-separator {
-	width: 3em;
-	height: 2px;
-	background-color: var(--archive_accent);
-	border: none;
-	margin: 0 0 1.2em;
-}
+/* h1 and .golden-separator are deliberately NOT styled here - coins.phtml and
+   catalog.phtml render the exact same title markup and don't touch either one,
+   so they get the shared global look (main.css's h1: 2.75em/700/-0.035em, and
+   page.less's full-width golden .golden-separator). This page previously
+   overrode both with a smaller/lighter title and a short 3em accent underline,
+   which is why "Documentación" didn't match "Coins"/"Catalogo" - removed so
+   the title renders identically to every other page */
 
 #main .inner > p {
 	max-width: 42em;
 	font-size: 1.05em;
 	line-height: 1.6;
-	color: #6b6153;
+	color: #767676;
 	margin-bottom: 2em;
 }
 
-/* left-aligned to the same edge as the title/headings/grids below it, instead
-   of floating centered - the search input is the primary action on this page,
-   it should read as part of the same column, not a separately-composed block */
+/* the search bar/filters themselves are intentionally NOT styled here - they're
+   the same form_factory .form-inline markup (.global_search, .button_submit)
+   coins.js/catalog.js build, so they get the exact shared look from
+   page/css/form.less (plain underlined input[type=text], global button style)
+   instead of a one-off pill-shaped input with its own icon and focus ring.
+   Only the vertical gap before the form is set here - a little more room
+   between the golden-separator and the search bar than the 0 this used to be */
 #archive_search_form {
-	max-width: 36em;
-	margin: 0 0 var(--archive_space_lg);
+	margin: var(--archive_space_md) 0 var(--archive_space_lg);
 }
 
-#archive_search_form .global_search {
-	position: relative;
-}
-
-#archive_search_form .global_search input[type="text"] {
-	width: 100%;
-	padding: 0.95em 1.2em 0.95em 2.75em;
-	border: 1px solid var(--archive_border);
-	border-radius: 2em;
-	font-size: 1.05em;
-	background-color: var(--archive_card_bg);
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-#archive_search_form .global_search input[type="text"]:focus {
-	outline: none;
-	border-color: var(--archive_accent);
-	box-shadow: 0 0 0 3px rgba(190,135,90,0.15);
-}
-
-.archive_search_icon {
-	position: absolute;
-	left: 1.05em;
-	top: 50%;
-	transform: translateY(-50%);
-	color: var(--archive_muted);
-	pointer-events: none;
-}
-
-#archive_search_form .form-group.field.button_submit {
-	justify-content: flex-start;
-	margin-top: var(--archive_space_xs);
-}
-
+/* spacing between the Filtros/Buscar buttons - same 1rem gap form.less's own
+   .button_reset already uses between a form's two action buttons elsewhere,
+   just without that class's opacity:0.33 (both buttons here are equally live
+   actions, not a dim secondary reset) */
 #archive_search_form .button_submit input[type="button"] {
-	margin-right: var(--archive_space_xs);
+	margin-right: 1rem;
 }
 
 #rows_container .totals {
@@ -367,8 +337,8 @@ a.row_wrapper {
 	position: absolute;
 	bottom: 0.5em;
 	right: 0.5em;
-	background-color: rgba(253,251,246,0.92);
-	color: #6b5a3e;
+	background-color: rgba(255,255,255,0.92);
+	color: #333333;
 	font-size: 0.7em;
 	font-weight: 600;
 	padding: 0.15em 0.55em;
@@ -536,7 +506,7 @@ a.row_wrapper {
 	border-radius: 8px;
 	height: 100%;
 	background-color: var(--archive_card_bg);
-	box-shadow: 0 1px 3px rgba(90,70,40,0.08);
+	box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 	overflow: hidden;
 	transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
@@ -547,7 +517,7 @@ a.row_wrapper {
 .archive_item_child a.row_wrapper:hover,
 .related_coin_item:hover,
 #rows_container.view_grid a.row_wrapper:hover {
-	box-shadow: 0 4px 10px rgba(90,70,40,0.12);
+	box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 	border-color: var(--archive_accent);
 	transform: translateY(-1px);
 }
@@ -641,7 +611,7 @@ a.row_wrapper {
 }
 
 .archive_breadcrumb_separator {
-	color: #c9bb9c;
+	color: #c9c9c9;
 	font-size: 0.75em;
 }
 
@@ -740,7 +710,7 @@ a.row_wrapper {
 .archive_sibling_jump:focus {
 	outline: none;
 	border-color: var(--archive_accent);
-	box-shadow: 0 0 0 3px rgba(190,135,90,0.15);
+	box-shadow: 0 0 0 3px rgba(183,153,109,0.15);
 }
 
 .archive_sibling_position {
@@ -785,7 +755,7 @@ a.row_wrapper {
 	background-color: var(--archive_card_bg);
 	border: 1px solid var(--archive_border);
 	border-radius: 6px;
-	box-shadow: 0 3px 14px rgba(90,70,40,0.14);
+	box-shadow: 0 3px 14px rgba(0,0,0,0.14);
 	cursor: zoom-in;
 	opacity: 0;
 	transition: box-shadow 0.2s ease, transform 0.2s ease, opacity 0.35s ease;
@@ -796,7 +766,7 @@ a.row_wrapper {
 }
 
 .row_wrapper.detail .gallery .gallery_image:hover {
-	box-shadow: 0 8px 24px rgba(90,70,40,0.22);
+	box-shadow: 0 8px 24px rgba(0,0,0,0.22);
 	transform: translateY(-2px);
 }
 
@@ -815,7 +785,7 @@ a.row_wrapper {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: rgba(15,12,8,0.985);
+	background-color: rgba(0,0,0,0.985);
 	opacity: 0;
 	transition: opacity 0.3s ease;
 }
@@ -1028,7 +998,7 @@ a.row_wrapper {
 	gap: 0.5em;
 	font-size: 1.05em;
 	font-weight: 700;
-	color: #6b5a3e;
+	color: #333333;
 	margin: 0 0 1em;
 }
 
@@ -1052,7 +1022,7 @@ a.row_wrapper {
 .archive_contents_filter:focus {
 	outline: none;
 	border-color: var(--archive_accent);
-	box-shadow: 0 0 0 3px rgba(190,135,90,0.15);
+	box-shadow: 0 0 0 3px rgba(183,153,109,0.15);
 }
 
 .archive_contents_grid {
@@ -1234,93 +1204,10 @@ a.row_wrapper {
 	}
 }
 
-/* pagination . list_factory's markup (.pagination > .paginator_wrapper.navigator > a,
-   plus .spacer and .totals) arrives completely unstyled - scoped to #rows_container
-   only, list_factory itself is untouched */
-#rows_container .pagination {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: var(--archive_space_xs);
-	margin: var(--archive_space_md) 0;
-}
-
-#rows_container .pagination.top {
-	margin-top: 0;
-	margin-bottom: var(--archive_space_lg);
-}
-
-#rows_container .pagination .spacer {
-	flex: 1 1 auto;
-}
-
-#rows_container .paginator_wrapper.navigator {
-	display: flex;
-	align-items: center;
-	gap: 0.25em;
-	flex-wrap: wrap;
-}
-
-#rows_container .paginator_wrapper.navigator a {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 2.1em;
-	height: 2.1em;
-	padding: 0 0.5em;
-	border: 1px solid var(--archive_border);
-	border-radius: 4px;
-	background-color: var(--archive_card_bg);
-	color: var(--archive_ink);
-	font-size: 0.85em;
-	font-weight: 600;
-	text-decoration: none;
-	cursor: pointer;
-	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-#rows_container .paginator_wrapper.navigator a:hover {
-	border-color: var(--archive_accent);
-	color: var(--archive_accent);
-}
-
-#rows_container .paginator_wrapper.navigator a.selected {
-	background-color: var(--archive_accent);
-	border-color: var(--archive_accent);
-	color: #fff;
-	cursor: default;
-}
-
-#rows_container .paginator_wrapper.navigator a.unactive {
-	opacity: 0.4;
-	cursor: default;
-	pointer-events: none;
-}
-
-#rows_container .paginator_wrapper.navigator a.navigator {
-	font-size: 0.8em;
-	color: var(--archive_muted);
-	border-color: transparent;
-	background-color: transparent;
-}
-
-#rows_container .paginator_wrapper.navigator a.navigator:hover {
-	color: var(--archive_accent);
-}
-
-#rows_container .pagination .totals {
-	font-size: 0.85em;
-	color: var(--archive_muted);
-	white-space: nowrap;
-}
-
-@media screen and (max-width: 480px) {
-	#rows_container .pagination .totals {
-		flex-basis: 100%;
-		order: 3;
-		text-align: center;
-	}
-	#rows_container .pagination .spacer {
-		display: none;
-	}
-}
+/* pagination . intentionally NOT styled here - list_factory's markup
+   (.pagination > .paginator_wrapper.navigator > a, plus .spacer and .totals)
+   is already styled globally by page/css/pagination.less (loaded site-wide via
+   page.less), which is exactly what coins/catalog/type rely on for their own
+   pagination. Overriding it here just for this page was what produced a
+   different (and, at narrow widths, wrapping) look than every other list page -
+   removed so archive matches them exactly instead of re-implementing it. */
