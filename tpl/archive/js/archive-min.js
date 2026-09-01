@@ -15,6 +15,7 @@ var archive = {
 	form_container		: null,
 	browse_container	: null,
 	search_status		: null,
+	search_status_info	: null,
 	toolbar				: null,
 	section_id			: null,
 	mode				: 'browse',
@@ -27,6 +28,15 @@ var archive = {
 	view_mode			: 'list',
 	grid_button			: null,
 	list_button			: null,
+
+	// term_id -> promise of a fully resolved sibling row, see prefetch_sibling
+	sibling_prefetch_cache	: null,
+
+	// parent term_id -> promise of that group's full sibling list, see draw_sibling_nav
+	sibling_list_cache		: null,
+
+	// parent term_id -> promise of that group's resolved ancestor chain, see render_detail
+	ancestors_cache			: null,
 
 	pagination : {
 		total	: null,
@@ -52,22 +62,40 @@ var archive = {
 
 		if (self.section_id) {
 			self.load_detail()
+
+			// back/forward after a go_to_row client-side jump - re-fetch fresh
+			// rather than trying to restore from cache, correctness over speed here
+				window.addEventListener('popstate', function(){
+					const match = window.location.pathname.match(/\/documentation\/(\d+)/)
+					if (match) {
+						self.section_id = match[1]
+						self.load_detail()
+					}
+				})
 		}else{
 
 			const form_node = self.render_form()
 			self.form_container.appendChild(form_node)
 
-			// search status . "Search results (N)" + back-to-browse, hidden until searching
+			// search status . "Search results (N)" + back-to-browse, and the results
+			// toolbar (grid/list switch) live in one header row instead of two -
+			// both hidden together until searching, see enter/exit_search_mode.
+			// search_status_info is a separate inner node because update_search_status
+			// rebuilds its contents on every search - the toolbar must survive that
 				self.search_status = common.create_dom_element({
 					element_type	: "div",
 					class_name		: "archive_search_status hide"
 				})
 				self.rows_container.parentNode.insertBefore(self.search_status, self.rows_container)
 
-			// results toolbar (grid/list switch), also hidden until searching
+				self.search_status_info = common.create_dom_element({
+					element_type	: "div",
+					class_name		: "archive_search_status_info",
+					parent			: self.search_status
+				})
+
 				self.toolbar = self.render_toolbar()
-				self.toolbar.classList.add('hide')
-				self.rows_container.parentNode.insertBefore(self.toolbar, self.rows_container)
+				self.search_status.appendChild(self.toolbar)
 				self.set_view_mode(self.view_mode)
 
 			self.render_browse()
@@ -137,13 +165,12 @@ var archive = {
 			})
 			self.filters_panel = filters_panel
 
-			// term fields
+			// term fields . same order as draw_fields shows them on the detail page
 				const term_fields = [
-					{ id: "typology",   label: tstring.typology   || "Typology"   },
-					{ id: "material",   label: tstring.material   || "Material"   },
-					{ id: "technique",  label: tstring.technique  || "Technique"  },
 					{ id: "collection", label: tstring.collection || "Collection" },
-					{ id: "fund",       label: tstring.fund       || "Fund"       }
+					{ id: "fund",       label: tstring.fund       || "Fund"       },
+					{ id: "typology",   label: tstring.typology   || "Typology"   },
+					{ id: "material",   label: tstring.material   || "Material"   }
 				]
 				term_fields.forEach(function(field){
 					self.form.item_factory({
@@ -162,25 +189,6 @@ var archive = {
 								table		: 'documentation'
 							})
 						}
-					})
-				})
-
-			// plain text fields
-				const text_fields = [
-					{ id: "municipality", label: tstring.municipality || "Municipality" },
-					{ id: "curator",      label: tstring.curator      || "Curator"      }
-				]
-				text_fields.forEach(function(field){
-					self.form.item_factory({
-						id			: field.id,
-						name		: field.id,
-						label		: field.label,
-						q_column	: field.id,
-						eq			: "LIKE",
-						eq_in		: "%",
-						eq_out		: "%",
-						is_term		: false,
-						parent		: filters_panel
 					})
 				})
 
@@ -391,7 +399,6 @@ var archive = {
 		self.mode = 'search'
 		self.browse_container.classList.add('hide')
 		self.search_status.classList.remove('hide')
-		self.toolbar.classList.remove('hide')
 	},//end enter_search_mode
 
 
@@ -411,7 +418,6 @@ var archive = {
 
 		self.browse_container.classList.remove('hide')
 		self.search_status.classList.add('hide')
-		self.toolbar.classList.add('hide')
 
 		while (self.rows_container.hasChildNodes()) {
 			self.rows_container.removeChild(self.rows_container.lastChild)
@@ -428,15 +434,15 @@ var archive = {
 
 		const self = this
 
-		while (self.search_status.hasChildNodes()) {
-			self.search_status.removeChild(self.search_status.lastChild)
+		while (self.search_status_info.hasChildNodes()) {
+			self.search_status_info.removeChild(self.search_status_info.lastChild)
 		}
 
 		common.create_dom_element({
 			element_type	: "span",
 			class_name		: "archive_search_status_text",
 			text_content	: (tstring.search_results || 'Search results') + ' (' + total + ')',
-			parent			: self.search_status
+			parent			: self.search_status_info
 		})
 
 		const back_button = common.create_dom_element({
@@ -444,7 +450,7 @@ var archive = {
 			type			: "button",
 			class_name		: "archive_back_to_browse",
 			inner_html		: '<i class="fa fa-angle-left"></i> ' + (tstring.browse_archive || 'Browse archive'),
-			parent			: self.search_status
+			parent			: self.search_status_info
 		})
 		back_button.addEventListener('click', function(){
 			self.exit_search_mode()
@@ -482,6 +488,16 @@ var archive = {
 				rows_container.removeChild(rows_container.lastChild);
 			}
 			rows_container.classList.remove('loading')
+
+			if (response.error) {
+				common.create_dom_element({
+					element_type	: "p",
+					class_name		: "archive_empty_state archive_error_state",
+					inner_html		: '<i class="fa fa-exclamation-triangle"></i> ' + (tstring.load_error || 'Something went wrong loading these records. Please try again.'),
+					parent			: rows_container
+				})
+				return
+			}
 
 			if (!response.rows.length) {
 				common.create_dom_element({
@@ -589,7 +605,7 @@ var archive = {
 
 			const total = api_response.total || 0
 			if (total>0) {
-				target_el.textContent = total
+				target_el.innerHTML = '<i class="fa fa-cubes"></i> ' + total + ' ' + (tstring.items || 'Items')
 				target_el.classList.add('is_ready')
 			}else{
 				target_el.remove()
@@ -615,7 +631,7 @@ var archive = {
 			sql_filter	: "term_id='tch300_" + self.section_id + "'"
 		})
 		.then(function(response){
-			self.render_detail(response.rows[0] || null)
+			self.render_detail(response.rows[0] || null, response.error)
 		})
 	},//end load_detail
 
@@ -657,9 +673,21 @@ var archive = {
 				console.log("-> archive api_response:", api_response);
 			}
 
+			// data_manager's catch resolves (never rejects) with result:false on a
+			// genuine request failure - distinguish that from a legitimate empty
+			// result set (result: []) so callers can show an error, not "no records"
+			if (api_response.result===false) {
+				return {
+					rows	: [],
+					total	: 0,
+					error	: true
+				}
+			}
+
 			return {
 				rows	: api_response.result || [],
-				total	: api_response.total || 0
+				total	: api_response.total || 0,
+				error	: false
 			}
 		})
 	},//end get_rows
@@ -675,7 +703,6 @@ var archive = {
 	*        count), 'child' (a record's own contents grid, opens in the same
 	*        tab) or 'search' (default - result card)
 	* @param string options.parent_title. 'child' only - see resolve_title
-	* @param number options.ordinal. 'child' only - see resolve_title
 	* @return HTMLElement
 	*/
 	draw_item : function(row, options) {
@@ -719,13 +746,17 @@ var archive = {
 				const full_url		= page_globals.__WEB_MEDIA_BASE_URL__ + first_image
 				const thumb_url		= full_url.replace('/1.5MB/', '/thumb/')
 
-				common.create_dom_element({
+				const thumb_img = common.create_dom_element({
 					element_type	: "img",
 					class_name		: "image thumb",
 					src				: thumb_url,
 					title			: row.title || '',
 					loading			: 'lazy',
 					parent			: image_wrapper
+				})
+				thumb_img.alt = row.title || ''
+				thumb_img.addEventListener('load', function(){
+					thumb_img.classList.add('is_loaded')
 				})
 
 				const dating = [row.dating_start, row.dating_end].filter(Boolean).join(' - ') || row.dating
@@ -751,8 +782,22 @@ var archive = {
 			parent			: card_link
 		})
 
+		const tag = variant==='fund' ? (tstring.fund || 'Fund') : (row.typology || row.name)
+
+		// 'child' cards show the tag right under the image, above the title - a compact
+		// label instead of another stacked row, so the card doesn't grow taller than it
+		// needs to. Other variants keep it below the title, unchanged
+			if (variant==='child' && tag) {
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "archive_card_tag",
+					text_content	: tag,
+					parent			: info_container
+				})
+			}
+
 		// title . see resolve_title
-			const display_title = this.resolve_title(row, options && options.parent_title, options && options.ordinal) || ('ID ' + id)
+			const display_title = this.resolve_title(row, options && options.parent_title) || ('ID ' + id)
 			common.create_dom_element({
 				element_type	: "div",
 				class_name		: "archive_title",
@@ -765,21 +810,20 @@ var archive = {
 			common.create_dom_element({
 				element_type	: "span",
 				class_name		: "archive_card_tag",
-				text_content	: tstring.fund || 'Fund',
+				text_content	: tag,
 				parent			: info_container
 			})
 
 			const count_el = common.create_dom_element({
 				element_type	: "span",
-				class_name		: "archive_fund_count",
+				class_name		: "archive_item_count",
 				parent			: info_container
 			})
 			this.annotate_child_count(row.term_id, count_el)
 
 		}else{
 
-			const tag = row.typology || row.name
-			if (tag) {
+			if (variant!=='child' && tag) {
 				common.create_dom_element({
 					element_type	: "span",
 					class_name		: "archive_card_tag",
@@ -787,6 +831,18 @@ var archive = {
 					parent			: info_container
 				})
 			}
+
+			// 'child' cards sit within a record's own contents grid (see draw_contents) and
+			// can themselves have children (e.g. a box containing coin sheets) - surface that
+			// count too, same as 'fund' cards do on the browse landing
+				if (variant==='child') {
+					const count_el = common.create_dom_element({
+						element_type	: "span",
+						class_name		: "archive_item_count",
+						parent			: info_container
+					})
+					this.annotate_child_count(row.term_id, count_el)
+				}
 		}
 
 		if (dedalo_logged===true) {
@@ -808,15 +864,17 @@ var archive = {
 	/**
 	* RESOLVE_TITLE
 	* Many records deep in the hierarchy just inherited their parent's title
-	* verbatim (confirmed against the live data) - falls back to the row's
-	* own 'name' field (what kind of object it is) plus its position among
-	* siblings when that happens, so cards stay visually distinct
+	* verbatim (confirmed against the live data) - falls back to the row's own
+	* 'name' field (what kind of object it is) when that happens. Only ever
+	* returns a value straight from the API - never invents distinguishing text
+	* (no appended numbering, no synthesized labels); if several sibling records
+	* share the same title and name, they're shown identically, on purpose -
+	* that's a data issue for the source system to fix, not the frontend's to mask
 	* @param object row
 	* @param string|null parent_title
-	* @param number|null ordinal . this row's 1-based position among siblings
 	* @return string|null
 	*/
-	resolve_title : function(row, parent_title, ordinal) {
+	resolve_title : function(row, parent_title) {
 
 		const title	= (row.title || '').trim()
 		const parent	= (parent_title || '').trim()
@@ -825,11 +883,7 @@ var archive = {
 			return title
 		}
 
-		if (row.name) {
-			return ordinal ? (row.name + ' ' + ordinal) : row.name
-		}
-
-		return null
+		return row.name || null
 	},//end resolve_title
 
 
@@ -838,12 +892,22 @@ var archive = {
 	* RENDER_DETAIL
 	* Full single-record view
 	*/
-	render_detail : function(row) {
+	render_detail : function(row, has_error) {
 
 		const container = this.rows_container
 
 		while (container.hasChildNodes()) {
 			container.removeChild(container.lastChild);
+		}
+
+		if (has_error) {
+			common.create_dom_element({
+				element_type	: "p",
+				class_name		: "archive_empty_state archive_error_state",
+				inner_html		: '<i class="fa fa-exclamation-triangle"></i> ' + (tstring.load_error || 'Something went wrong loading this record. Please try again.'),
+				parent			: container
+			})
+			return
 		}
 
 		if (!row) {
@@ -872,7 +936,19 @@ var archive = {
 				parent			: row_wrapper
 			})
 
-		// images . all identifying images at full size, each captioned
+		// sibling nav placeholder . previous/next among this record's siblings
+		// (same parent), filled in below once fetch_children resolves
+			const sibling_nav = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_sibling_nav",
+				parent			: row_wrapper
+			})
+
+		// images . all identifying images at full size, each captioned, each opening
+		// the zoom/pan lightbox (see open_lightbox) on click
+			const self = this
+			const lightbox_images = []
+
 			if (row.identifying_images_data && row.identifying_images_data.length>0) {
 
 				const gallery = common.create_dom_element({
@@ -889,15 +965,26 @@ var archive = {
 						parent			: gallery
 					})
 
-					common.create_dom_element({
+					const caption_text = [image_row.title, image_row.photographer].filter(Boolean).join(' — ')
+
+					const image_el = common.create_dom_element({
 						element_type	: "img",
 						class_name		: "image gallery_image",
 						src				: page_globals.__WEB_MEDIA_BASE_URL__ + image_row.image,
 						title			: image_row.title || row.title || '',
 						parent			: figure
 					})
+					image_el.alt = caption_text || row.title || ''
+					image_el.addEventListener('load', function(){
+						image_el.classList.add('is_loaded')
+					})
 
-					const caption_text = [image_row.title, image_row.photographer].filter(Boolean).join(' — ')
+					const lightbox_index = lightbox_images.length
+					lightbox_images.push({ src: image_el.src, caption: caption_text })
+					image_el.addEventListener('click', function(){
+						self.open_lightbox(lightbox_images, lightbox_index)
+					})
+
 					if (caption_text) {
 						common.create_dom_element({
 							element_type	: "figcaption",
@@ -920,12 +1007,23 @@ var archive = {
 					})
 
 					image_paths.forEach(function(image_path){
-						common.create_dom_element({
+
+						const image_el = common.create_dom_element({
 							element_type	: "img",
 							class_name		: "image gallery_image",
 							src				: page_globals.__WEB_MEDIA_BASE_URL__ + image_path,
 							title			: row.title || '',
 							parent			: gallery
+						})
+						image_el.alt = row.title || ''
+						image_el.addEventListener('load', function(){
+							image_el.classList.add('is_loaded')
+						})
+
+						const lightbox_index = lightbox_images.length
+						lightbox_images.push({ src: image_el.src, caption: row.title || '' })
+						image_el.addEventListener('click', function(){
+							self.open_lightbox(lightbox_images, lightbox_index)
 						})
 					})
 			}
@@ -934,7 +1032,7 @@ var archive = {
 			const title_el = common.create_dom_element({
 				element_type	: "div",
 				class_name		: "archive_title",
-				text_content	: this.resolve_title(row, null, null) || ('ID ' + id),
+				text_content	: this.resolve_title(row, null) || ('ID ' + id),
 				parent			: row_wrapper
 			})
 
@@ -963,7 +1061,7 @@ var archive = {
 		this.add_field(info_container, tstring.source || 'Source', [row.source_name, row.source_surname].filter(Boolean).join(' '))
 		this.add_field(info_container, tstring.author || 'Author', row.author)
 		this.add_field(info_container, tstring.manufacturer || 'Manufacturer', row.manufacturer)
-		this.add_field(info_container, tstring.inscriptions || 'Inscriptions', row.inscriptions)
+		this.add_long_field(info_container, tstring.inscriptions || 'Inscriptions', row.inscriptions)
 
 		this.draw_bibliography(info_container, tstring.own_bibliography || 'Own bibliography', row.own_bibliography_data)
 		this.draw_bibliography(info_container, tstring.related_bibliography || 'Related bibliography', row.related_bibliography_data)
@@ -971,16 +1069,31 @@ var archive = {
 		this.draw_publications(info_container, row.publications_data)
 
 		this.draw_contents(row_wrapper, row)
+		this.draw_related_coins(row_wrapper, row)
+		this.draw_sibling_nav(sibling_nav, row)
 
-		// back link + breadcrumb + title correction, once the ancestor chain resolves
-			const self = this
-			self.resolve_ancestors(row.parent_data).then(function(ancestors){
+		// back link + breadcrumb + title correction, once the ancestor chain
+		// resolves. Cached by immediate parent term_id (same key draw_sibling_nav's
+		// own sibling_list_cache uses) - every sibling in a group shares the exact
+		// same ancestor chain, so without this, an otherwise-instant Previous/Next
+		// step would still leave the breadcrumb empty for a moment on every single
+		// click, popping in afterwards and shifting the gallery/fields below it
+			const parent_term_id = self.resolve_parent_term_id(row)
+
+			self.ancestors_cache = self.ancestors_cache || {}
+			if (parent_term_id) {
+				self.ancestors_cache[parent_term_id] = self.ancestors_cache[parent_term_id] || self.resolve_ancestors(row.parent_data)
+			}
+
+			const ancestors_promise = parent_term_id ? self.ancestors_cache[parent_term_id] : self.resolve_ancestors(row.parent_data)
+
+			ancestors_promise.then(function(ancestors){
 
 				self.draw_back_link(nav, ancestors)
 				self.draw_breadcrumb(nav, ancestors, row)
 
 				const immediate_parent	= ancestors[ancestors.length-1]
-				const corrected_title	= self.resolve_title(row, immediate_parent && immediate_parent.title, null)
+				const corrected_title	= self.resolve_title(row, immediate_parent && immediate_parent.title)
 				if (corrected_title) {
 					title_el.textContent = corrected_title
 				}
@@ -990,26 +1103,294 @@ var archive = {
 
 
 	/**
+	* RESOLVE_PARENT_TERM_ID
+	* This row's own immediate parent term_id, parsed from its raw parent_data -
+	* the same value fetch_children/resolve_ancestors/draw_sibling_nav all key
+	* off, so it's pulled out once here rather than re-parsed in each of them
+	* @param object row
+	* @return string|null
+	*/
+	resolve_parent_term_id : function(row) {
+
+		let parent_ids = []
+		try { parent_ids = JSON.parse(row.parent_data || '[]') } catch(e) { /* malformed */ }
+
+		return parent_ids[0] || null
+	},//end resolve_parent_term_id
+
+
+
+	/**
+	* DRAW_SIBLING_NAV
+	* First/previous/next/last among this record's siblings (same immediate
+	* parent), plus a "go to number" jump - lets someone flip through a set of
+	* index cards without going back to the Contenido grid each time. Reuses
+	* fetch_children against the parent's own term_id, same set and order the
+	* parent page's own Contenido grid shows, so position numbers line up with
+	* the ordinal shown there. Previous/Next are prefetched (see prefetch_sibling)
+	* so the common case - stepping one at a time - renders instantly instead of
+	* waiting on a fresh request each click; First/Last/jump stay plain
+	* navigations since prefetching every possible target isn't worth it.
+	* The sibling list itself is cached by parent term_id (see sibling_list_cache)
+	* - stepping through the same group would otherwise re-fetch and briefly
+	* empty this whole bar on every click, which reads as a flicker/jump since
+	* the gallery directly below it shifts up and back down with it
+	* @param object container
+	* @param object row
+	*/
+	draw_sibling_nav : function(container, row) {
+
+		const self = this
+
+		const parent_term_id = self.resolve_parent_term_id(row)
+		if (!parent_term_id) {
+			return
+		}
+
+		self.sibling_list_cache = self.sibling_list_cache || {}
+		self.sibling_list_cache[parent_term_id] = self.sibling_list_cache[parent_term_id] || self.fetch_children(parent_term_id)
+
+		self.sibling_list_cache[parent_term_id].then(function(siblings){
+
+			if (!siblings || siblings.length<2) {
+				return
+			}
+
+			const index = siblings.findIndex(function(sibling_row){
+				return sibling_row.term_id===row.term_id
+			})
+			if (index===-1) {
+				return
+			}
+
+			const first_row	= siblings[0]
+			const prev_row		= index>0 ? siblings[index-1] : null
+			const next_row		= (index<siblings.length-1) ? siblings[index+1] : null
+			const last_row		= siblings[siblings.length-1]
+			const detail_url_prefix = page_globals.__WEB_ROOT_WEB__ + '/documentation/'
+
+			function sibling_url(sibling_row) {
+				return detail_url_prefix + sibling_row.term_id.split('_').pop()
+			}
+
+			// icon-only first/last - secondary actions, kept out of the way of
+			// the primary previous/next pair
+				function draw_edge_link(class_name, icon_class, label, target_row) {
+					const active = target_row && target_row.term_id!==row.term_id
+					const el = common.create_dom_element({
+						element_type	: active ? "a" : "span",
+						class_name		: "archive_sibling_link " + class_name + (active ? "" : " is_disabled"),
+						href			: active ? sibling_url(target_row) : null,
+						inner_html		: '<i class="fa ' + icon_class + '"></i>',
+						parent			: container
+					})
+					el.setAttribute('aria-label', label)
+					return el
+				}
+
+			draw_edge_link('archive_sibling_first', 'fa-angle-double-left', tstring.first || 'First', first_row)
+
+			// previous - prefetched, click hijacked to render from cache once ready
+				if (prev_row) {
+					self.prefetch_sibling(prev_row.term_id)
+					const prev_link = common.create_dom_element({
+						element_type	: "a",
+						class_name		: "archive_sibling_link archive_sibling_prev",
+						href			: sibling_url(prev_row),
+						inner_html		: '<i class="fa fa-chevron-left"></i> ' + (tstring.prev || 'Previous'),
+						parent			: container
+					})
+					self.bind_instant_nav(prev_link, prev_row.term_id)
+				}else{
+					common.create_dom_element({
+						element_type	: "span",
+						class_name		: "archive_sibling_link archive_sibling_prev is_disabled",
+						inner_html		: '<i class="fa fa-chevron-left"></i> ' + (tstring.prev || 'Previous'),
+						parent			: container
+					})
+				}
+
+			// position . "N / total", N editable to jump straight to that item
+				const position = common.create_dom_element({
+					element_type	: "span",
+					class_name		: "archive_sibling_position",
+					parent			: container
+				})
+
+				const jump_input = common.create_dom_element({
+					element_type	: "input",
+					type			: "number",
+					class_name		: "archive_sibling_jump",
+					value			: String(index+1),
+					parent			: position
+				})
+				jump_input.setAttribute('min', '1')
+				jump_input.setAttribute('max', String(siblings.length))
+				jump_input.setAttribute('aria-label', tstring.go_to_item || 'Go to item number')
+
+				common.create_dom_element({
+					element_type	: "span",
+					text_content	: '/ ' + siblings.length,
+					parent			: position
+				})
+
+				function jump_to_typed_value() {
+					let target = parseInt(jump_input.value, 10)
+					if (!target || target<1) { target = 1 }
+					if (target>siblings.length) { target = siblings.length }
+
+					const target_row = siblings[target-1]
+					if (target_row && target_row.term_id!==row.term_id) {
+						window.location.href = sibling_url(target_row)
+					}
+				}
+				jump_input.addEventListener('keydown', function(e){
+					if (e.key==='Enter') {
+						e.preventDefault()
+						jump_to_typed_value()
+					}
+				})
+				jump_input.addEventListener('change', jump_to_typed_value)
+
+			// next - prefetched, same instant-render treatment as previous
+				if (next_row) {
+					self.prefetch_sibling(next_row.term_id)
+					const next_link = common.create_dom_element({
+						element_type	: "a",
+						class_name		: "archive_sibling_link archive_sibling_next",
+						href			: sibling_url(next_row),
+						inner_html		: (tstring.next || 'Next') + ' <i class="fa fa-chevron-right"></i>',
+						parent			: container
+					})
+					self.bind_instant_nav(next_link, next_row.term_id)
+				}else{
+					common.create_dom_element({
+						element_type	: "span",
+						class_name		: "archive_sibling_link archive_sibling_next is_disabled",
+						inner_html		: (tstring.next || 'Next') + ' <i class="fa fa-chevron-right"></i>',
+						parent			: container
+					})
+				}
+
+			draw_edge_link('archive_sibling_last', 'fa-angle-double-right', tstring.last || 'Last', last_row)
+		})
+	},//end draw_sibling_nav
+
+
+
+	/**
+	* PREFETCH_SIBLING
+	* Fetches a sibling's fully resolved row (same shape load_detail produces -
+	* bibliography/images portals included) ahead of a click, so Previous/Next
+	* can render instantly instead of waiting on a fresh request. Cached by
+	* promise rather than resolved value, so a click landing mid-flight reuses
+	* the in-flight request instead of firing a duplicate one
+	* @param string term_id
+	*/
+	prefetch_sibling : function(term_id) {
+
+		const self = this
+
+		self.sibling_prefetch_cache = self.sibling_prefetch_cache || {}
+
+		if (!term_id || self.sibling_prefetch_cache[term_id]) {
+			return
+		}
+
+		self.sibling_prefetch_cache[term_id] = self.get_rows({
+			limit		: 1,
+			offset		: 0,
+			sql_filter	: "term_id='" + term_id + "'"
+		}).then(function(response){
+			return (!response.error && response.rows[0]) || null
+		})
+	},//end prefetch_sibling
+
+
+
+	/**
+	* BIND_INSTANT_NAV
+	* Hijacks a plain click on a sibling link to render from the prefetched
+	* row instead of a full navigation, once it's ready. Modified clicks
+	* (middle-click, ctrl/cmd/shift/alt+click) are left alone so "open in a
+	* new tab" etc. still works normally
+	* @param HTMLElement link
+	* @param string term_id
+	*/
+	bind_instant_nav : function(link, term_id) {
+
+		const self = this
+
+		link.addEventListener('click', function(e){
+
+			if (e.button!==0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+				return
+			}
+			e.preventDefault()
+
+			self.prefetch_sibling(term_id)
+			self.sibling_prefetch_cache[term_id].then(function(cached_row){
+				if (cached_row) {
+					self.go_to_row(cached_row)
+				}else{
+					window.location.href = link.href
+				}
+			})
+		})
+	},//end bind_instant_nav
+
+
+
+	/**
+	* GO_TO_ROW
+	* Client-side transition to an already-fetched sibling row - no network
+	* round-trip. Updates the URL (so reload/copy-link/back-button all still
+	* work, see the popstate handler in set_up), then re-renders in place,
+	* immediately and without touching scroll position - whatever part of the
+	* record someone was reading stays exactly where it was. No fade here
+	* (unlike load_list's pagination, which keeps its own .loading dip) -
+	* nav/sibling-nav are cached (see ancestors_cache/sibling_list_cache) so
+	* they update within the same paint instead of needing one to hide behind
+	* @param object row
+	*/
+	go_to_row : function(row) {
+
+		const self = this
+		const id = row.term_id.split('_').pop()
+
+		history.pushState({ term_id: row.term_id }, '', page_globals.__WEB_ROOT_WEB__ + '/documentation/' + id)
+		self.section_id = id
+		self.render_detail(row)
+	},//end go_to_row
+
+
+
+	/**
 	* DRAW_FIELDS
-	* Full label / value field list, detail view only
+	* Full label / value field list, detail view only. Title itself is the page's
+	* own heading (see render_detail), so the field list starts right after it -
+	* collection, fund, typology, material, then description (the rest of the
+	* record's own fields, then the remaining recovery/source/etc. fields render_detail
+	* appends after this)
 	* @param object info_container
 	* @param object row
 	*/
 	draw_fields : function(info_container, row) {
 
-		this.add_field(info_container, tstring.name || 'Name of the property', row.name)
-		this.add_field(info_container, tstring.typology || 'Typology', row.typology)
-		this.add_field(info_container, tstring.material || 'Material', row.material)
-		this.add_field(info_container, tstring.technique || 'Technique', row.technique)
 		this.add_field(info_container, tstring.collection || 'Collection', row.collection)
 		this.add_field(info_container, tstring.fund || 'Fund', row.fund)
+		this.add_field(info_container, tstring.typology || 'Typology', row.typology)
+		this.add_field(info_container, tstring.material || 'Material', row.material)
+
+		this.add_field(info_container, tstring.name || 'Name of the property', row.name)
+		this.add_field(info_container, tstring.technique || 'Technique', row.technique)
 
 		const dating = [row.dating_start, row.dating_end].filter(Boolean).join(' - ') || row.dating
 		this.add_field(info_container, tstring.dating || 'Dating', dating)
 
 		this.add_field(info_container, tstring.municipality || 'Municipality', row.municipality)
 		this.add_field(info_container, tstring.curator || 'Curator', row.curator)
-		this.add_field(info_container, tstring.description || 'Description', row.description)
+		this.add_long_field(info_container, tstring.description || 'Description', row.description)
 	},//end draw_fields
 
 
@@ -1043,6 +1424,48 @@ var archive = {
 			parent			: container
 		})
 	},//end add_field
+
+
+
+	/**
+	* ADD_LONG_FIELD
+	* Same empty-skip behavior as add_field, but for prose (description,
+	* inscriptions) - a full-width block with the label read as a small
+	* heading above, instead of squeezed into the label/value grid row
+	* @param object container
+	* @param string label
+	* @param string value
+	*/
+	add_long_field : function(container, label, value) {
+
+		if (typeof value==='string') {
+			value = value.replace(/^(\s*\|\s*)+/, '').replace(/(\s*\|\s*)+$/, '').trim()
+		}
+
+		if (!value || (typeof value==='string' && value.trim().length===0)) {
+			return
+		}
+
+		const field = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "long_field",
+			parent			: container
+		})
+
+		common.create_dom_element({
+			element_type	: "span",
+			class_name		: "long_field_label",
+			text_content	: label,
+			parent			: field
+		})
+
+		common.create_dom_element({
+			element_type	: "p",
+			class_name		: "long_field_value",
+			inner_html		: value,
+			parent			: field
+		})
+	},//end add_long_field
 
 
 
@@ -1152,6 +1575,14 @@ var archive = {
 				return Promise.resolve([])
 			}
 
+			// ROOT_TERM_ID is itself a real 'documentation' row (title "Archivo"), but it's
+			// a structural anchor, not a navigable ancestor - stop here so a fund's back link
+			// (and top-of-chain breadcrumb) points at the browse landing, not at ROOT's own
+			// (filter-less) detail page
+				if (parent_ids[0]===self.ROOT_TERM_ID) {
+					return Promise.resolve([])
+				}
+
 			return self.get_rows({
 				limit		: 1,
 				offset		: 0,
@@ -1172,7 +1603,7 @@ var archive = {
 
 						higher_ancestors.push({
 							term_id	: parent_row.term_id,
-							title	: self.resolve_title(parent_row, grandparent && grandparent.title, null) || parent_row.title,
+							title	: self.resolve_title(parent_row, grandparent && grandparent.title) || parent_row.title,
 							name	: parent_row.name
 						})
 						return higher_ancestors
@@ -1264,7 +1695,7 @@ var archive = {
 		common.create_dom_element({
 			element_type	: "span",
 			class_name		: "archive_breadcrumb_current",
-			text_content	: this.resolve_title(row, immediate_parent && immediate_parent.title, null) || '',
+			text_content	: this.resolve_title(row, immediate_parent && immediate_parent.title) || '',
 			parent			: breadcrumb
 		})
 	},//end draw_breadcrumb
@@ -1352,15 +1783,14 @@ var archive = {
 				parent			: section
 			})
 
-			const entries = children.map(function(child_row, index){
+			const entries = children.map(function(child_row){
 
-				const display_title	= self.resolve_title(child_row, row.title, index+1) || ''
+				const display_title	= self.resolve_title(child_row, row.title) || ''
 				const search_text		= [display_title, child_row.name, child_row.typology].filter(Boolean).join(' ').toLowerCase()
 
 				const card = self.draw_item(child_row, {
 					variant			: 'child',
-					parent_title	: row.title,
-					ordinal			: index+1
+					parent_title	: row.title
 				})
 				grid.appendChild(card)
 
@@ -1385,7 +1815,543 @@ var archive = {
 				})
 			}
 		})
-	}//end draw_contents
+	},//end draw_contents
+
+
+
+	/**
+	* FETCH_RELATED_COINS
+	* Coins whose related_heritage_data points back at this record's term_id -
+	* the reverse of fetch_children's LIKE-filter approach, against 'coins' instead
+	* of 'documentation'
+	* @param string term_id
+	* @return promise : array of rows
+	*/
+	fetch_related_coins : function(term_id) {
+
+		return data_manager.request({
+			body : {
+				dedalo_get	: 'records',
+				table		: 'coins',
+				ar_fields	: ['section_id', 'mint_name', 'type', 'number', 'collection', 'image_obverse', 'image_reverse'],
+				sql_filter	: 'related_heritage_data LIKE \'%"' + term_id + '"%\'',
+				limit		: 100
+			}
+		})
+		.then(function(api_response){
+			return api_response.result || []
+		})
+	},//end fetch_related_coins
+
+
+
+	/**
+	* DRAW_RELATED_COIN_ITEM
+	* One card in the related-coins grid: obverse/reverse thumbnails + a mint/type
+	* label, linking out (new tab, same convention as the fund/search cards in
+	* draw_item) to that coin's own page
+	* @param object coin
+	* @return HTMLElement
+	*/
+	draw_related_coin_item : function(coin) {
+
+		const card = common.create_dom_element({
+			element_type	: "a",
+			class_name		: "related_coin_item row_wrapper",
+			href			: page_globals.__WEB_ROOT_WEB__ + '/coin/' + coin.section_id,
+			target			: "_blank"
+		})
+		card.setAttribute('rel', 'noopener')
+
+		const images = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "related_coin_images",
+			parent			: card
+		})
+
+		if (coin.image_obverse) {
+			const obverse_img = common.create_dom_element({
+				element_type	: "img",
+				class_name		: "image",
+				src				: page_globals.__WEB_MEDIA_BASE_URL__ + coin.image_obverse,
+				loading			: "lazy",
+				parent			: images
+			})
+			obverse_img.alt = [coin.mint_name, tstring.obverse || 'Obverse'].filter(Boolean).join(' — ')
+		}
+		if (coin.image_reverse) {
+			const reverse_img = common.create_dom_element({
+				element_type	: "img",
+				class_name		: "image",
+				src				: page_globals.__WEB_MEDIA_BASE_URL__ + coin.image_reverse,
+				loading			: "lazy",
+				parent			: images
+			})
+			reverse_img.alt = [coin.mint_name, tstring.reverse || 'Reverse'].filter(Boolean).join(' — ')
+		}
+
+		const info = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "related_coin_info",
+			parent			: card
+		})
+
+		if (coin.mint_name) {
+			common.create_dom_element({
+				element_type	: "span",
+				class_name		: "related_coin_mint",
+				text_content	: coin.mint_name,
+				parent			: info
+			})
+		}
+
+		const secondary = [coin.type, coin.number].filter(Boolean).join(' | ')
+		if (secondary) {
+			common.create_dom_element({
+				element_type	: "span",
+				class_name		: "related_coin_secondary",
+				text_content	: secondary,
+				parent			: info
+			})
+		}
+
+		return card
+	},//end draw_related_coin_item
+
+
+
+	/**
+	* DRAW_RELATED_COINS
+	* Coins that reference this documentation record (via related_heritage_data) -
+	* same section shape as draw_contents: a heading with the count, then a card grid
+	* @param object row_wrapper
+	* @param object row
+	*/
+	draw_related_coins : function(row_wrapper, row) {
+
+		const self = this
+
+		self.fetch_related_coins(row.term_id).then(function(coins){
+
+			if (!coins.length) {
+				return
+			}
+
+			const section = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_related_coins_section",
+				parent			: row_wrapper
+			})
+
+			common.create_dom_element({
+				element_type	: "h3",
+				class_name		: "archive_contents_title",
+				inner_html		: '<i class="fa fa-money"></i> ' + (tstring.coins || 'Coins') + ' (' + coins.length + ')',
+				parent			: section
+			})
+
+			const grid = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_related_coins_grid",
+				parent			: section
+			})
+
+			coins.forEach(function(coin){
+				grid.appendChild( self.draw_related_coin_item(coin) )
+			})
+		})
+	},//end draw_related_coins
+
+
+
+	/**
+	* OPEN_LIGHTBOX
+	* Full-screen zoom/pan image viewer for the detail page gallery. Wheel or
+	* pinch to zoom (centered on the cursor/pinch midpoint), drag to pan once
+	* zoomed in, double-click/double-tap to toggle zoom, arrow keys or on-screen
+	* buttons to move between images, Escape or a click on the backdrop to close.
+	* No third-party lightbox exists anywhere in this app to reuse (jquery.poptrox
+	* is bundled but fully disconnected - never enqueued, its activation code is
+	* commented out - and the custom image_gallery module it was replaced by is
+	* hardcoded to obverse/reverse coin pairs), so this is purpose-built
+	* @param array images : [{src, caption}]
+	* @param number start_index
+	*/
+	open_lightbox : function(images, start_index) {
+
+		if (!images || !images.length) {
+			return
+		}
+
+		const MIN_SCALE = 1
+		const MAX_SCALE = 4
+
+		const state = {
+			index				: start_index || 0,
+			scale				: 1,
+			x					: 0,
+			y					: 0,
+			dragging			: false,
+			drag_start_x		: 0,
+			drag_start_y		: 0,
+			start_x				: 0,
+			start_y				: 0,
+			pointers			: new Map(),
+			pinch_start_distance	: 0,
+			pinch_start_scale	: 1
+		}
+
+		const previous_overflow = document.body.style.overflow
+		document.body.style.overflow = 'hidden'
+
+		// restore focus to whatever opened the lightbox (a gallery image) once closed
+			const previously_focused_element = document.activeElement
+
+		const overlay = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "archive_lightbox"
+		})
+		overlay.setAttribute('role', 'dialog')
+		overlay.setAttribute('aria-modal', 'true')
+		overlay.tabIndex = -1
+
+		const stage = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "archive_lightbox_stage",
+			parent			: overlay
+		})
+
+		const img = common.create_dom_element({
+			element_type	: "img",
+			class_name		: "archive_lightbox_image",
+			parent			: stage
+		})
+
+		const spinner = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "archive_lightbox_spinner",
+			parent			: stage
+		})
+
+		const caption = common.create_dom_element({
+			element_type	: "div",
+			class_name		: "archive_lightbox_caption",
+			parent			: overlay
+		})
+
+		let prev_button = null
+		let next_button = null
+		if (images.length>1) {
+			prev_button = common.create_dom_element({
+				element_type	: "button",
+				type			: "button",
+				class_name		: "archive_lightbox_nav archive_lightbox_prev",
+				inner_html		: '<i class="fa fa-chevron-left"></i>',
+				parent			: overlay
+			})
+			prev_button.setAttribute('aria-label', tstring.prev || 'Previous')
+
+			next_button = common.create_dom_element({
+				element_type	: "button",
+				type			: "button",
+				class_name		: "archive_lightbox_nav archive_lightbox_next",
+				inner_html		: '<i class="fa fa-chevron-right"></i>',
+				parent			: overlay
+			})
+			next_button.setAttribute('aria-label', tstring.next || 'Next')
+		}
+
+		// apply_transform . reflects state.x/y/scale onto the image. Transitions
+		// are only enabled for discrete jumps (wheel step, double-click, nav) -
+		// live drag/pinch apply instantly so the image tracks the pointer 1:1
+			function apply_transform(animate) {
+				img.style.transition = animate ? 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)' : 'none'
+				img.style.transform  = 'translate(' + state.x + 'px, ' + state.y + 'px) scale(' + state.scale + ')'
+				img.style.cursor     = state.scale>1 ? (state.dragging ? 'grabbing' : 'grab') : 'zoom-in'
+			}
+
+		// clamp_pan . keeps panning proportional to how far zoomed in the image
+		// is, regardless of whether the scaled image has actually overflowed the
+		// viewport yet - comparing against the viewport instead (as opposed to the
+		// image's own unscaled footprint) would leave panning dead at any zoom
+		// level where object-fit:contain still happens to fit inside it
+			function clamp_pan() {
+				const rect = img.getBoundingClientRect()
+
+				const max_x = rect.width  * (1 - 1/state.scale) / 2
+				const max_y = rect.height * (1 - 1/state.scale) / 2
+
+				state.x = Math.min(max_x, Math.max(-max_x, state.x))
+				state.y = Math.min(max_y, Math.max(-max_y, state.y))
+			}
+
+		// set_scale . zoom around a given viewport point (page coordinates),
+		// clamped to [MIN_SCALE, MAX_SCALE], keeping that point visually fixed
+			function set_scale(new_scale, origin_x, origin_y) {
+
+				const clamped = Math.min(MAX_SCALE, Math.max(MIN_SCALE, new_scale))
+				if (clamped===state.scale) {
+					return
+				}
+
+				const stage_rect	= stage.getBoundingClientRect()
+				const cx			= (typeof origin_x==='number') ? (origin_x - stage_rect.left - stage_rect.width/2)  : 0
+				const cy			= (typeof origin_y==='number') ? (origin_y - stage_rect.top  - stage_rect.height/2) : 0
+
+				const ratio = clamped / state.scale
+				state.x = cx - (cx - state.x) * ratio
+				state.y = cy - (cy - state.y) * ratio
+				state.scale = clamped
+
+				if (state.scale===MIN_SCALE) {
+					state.x = 0
+					state.y = 0
+				}
+
+				clamp_pan()
+				apply_transform(true)
+			}
+
+		// load_image . swaps src/caption for the current index, resets zoom/pan
+			function load_image() {
+
+				const current = images[state.index]
+
+				state.scale	= 1
+				state.x		= 0
+				state.y		= 0
+
+				img.classList.remove('is_loaded')
+				spinner.classList.remove('hide')
+				apply_transform(false)
+
+				img.src	= current.src
+				img.alt	= current.caption || ''
+
+				caption.textContent = current.caption || ''
+				caption.classList.toggle('hide', !current.caption)
+
+				if (prev_button) {
+					prev_button.classList.toggle('hide', state.index<=0)
+					next_button.classList.toggle('hide', state.index>=images.length-1)
+				}
+			}
+
+			// position_nav_buttons . prev/next sit just outside the image's own
+			// rendered edges instead of pinned to the far viewport corners, so they
+			// stay close to the photograph regardless of its size. Recomputed per
+			// image (aspect ratio varies) and on resize
+				function position_nav_buttons() {
+
+					if (!prev_button) {
+						return
+					}
+
+					const rect			= img.getBoundingClientRect()
+					const gap			= 24
+					const min_margin	= 20
+
+					prev_button.style.left		= Math.max(min_margin, rect.left - prev_button.offsetWidth - gap) + 'px'
+					prev_button.style.right	= 'auto'
+					next_button.style.right	= Math.max(min_margin, window.innerWidth - next_button.offsetWidth - rect.right - gap) + 'px'
+					next_button.style.left		= 'auto'
+				}
+
+			img.addEventListener('load', function(){
+				spinner.classList.add('hide')
+				img.classList.add('is_loaded')
+				position_nav_buttons()
+			})
+
+			window.addEventListener('resize', position_nav_buttons)
+
+		function go_to(new_index) {
+			if (new_index<0 || new_index>images.length-1) {
+				return
+			}
+			state.index = new_index
+			load_image()
+		}
+
+		function close() {
+			overlay.classList.remove('is_open')
+			document.removeEventListener('keydown', on_keydown)
+			window.removeEventListener('resize', position_nav_buttons)
+			document.body.style.overflow = previous_overflow
+			if (previously_focused_element && typeof previously_focused_element.focus==='function') {
+				previously_focused_element.focus()
+			}
+			setTimeout(function(){
+				overlay.remove()
+			}, 250)
+		}
+
+		// trap_focus . Tab/Shift+Tab cycle only through the lightbox's own visible
+		// controls (prev/next - hidden at the ends of the image list), instead of
+		// escaping into the page underneath
+			function trap_focus(e) {
+				const focusable = [prev_button, next_button].filter(function(el){
+					return el && !el.classList.contains('hide')
+				})
+
+				if (!focusable.length) {
+					e.preventDefault()
+					overlay.focus()
+					return
+				}
+
+				const first = focusable[0]
+				const last  = focusable[focusable.length-1]
+
+				if (e.shiftKey && document.activeElement===first) {
+					e.preventDefault()
+					last.focus()
+				}else if (!e.shiftKey && document.activeElement===last) {
+					e.preventDefault()
+					first.focus()
+				}else if (focusable.indexOf(document.activeElement)===-1) {
+					e.preventDefault()
+					first.focus()
+				}
+			}
+
+		// wheel zoom, centered on the cursor
+			stage.addEventListener('wheel', function(e){
+				e.preventDefault()
+				const delta = e.deltaY>0 ? -0.35 : 0.35
+				set_scale(state.scale + delta, e.clientX, e.clientY)
+			}, { passive: false })
+
+		// double-click / double-tap . toggle between fit and a fixed zoom level
+			stage.addEventListener('dblclick', function(e){
+				e.preventDefault()
+				if (state.scale>1) {
+					set_scale(1, e.clientX, e.clientY)
+				}else{
+					set_scale(2.5, e.clientX, e.clientY)
+				}
+			})
+
+		// pointer drag (mouse/touch/pen, unified via the Pointer Events API) +
+		// two-finger pinch zoom, tracked through the same pointer map
+			stage.addEventListener('pointerdown', function(e){
+				state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+				if (state.pointers.size===2) {
+
+					const pts = Array.from(state.pointers.values())
+					state.pinch_start_distance	= Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y)
+					state.pinch_start_scale	= state.scale
+					state.dragging = false
+
+				}else if (state.scale>1) {
+
+					state.dragging		= true
+					state.drag_start_x	= e.clientX
+					state.drag_start_y	= e.clientY
+					state.start_x		= state.x
+					state.start_y		= state.y
+					stage.setPointerCapture(e.pointerId)
+				}
+			})
+
+			stage.addEventListener('pointermove', function(e){
+
+				if (!state.pointers.has(e.pointerId)) {
+					return
+				}
+				state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+				if (state.pointers.size===2) {
+
+					const pts		= Array.from(state.pointers.values())
+					const distance	= Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y)
+					const mid_x		= (pts[0].x+pts[1].x)/2
+					const mid_y		= (pts[0].y+pts[1].y)/2
+
+					if (state.pinch_start_distance>0) {
+						set_scale(state.pinch_start_scale * (distance / state.pinch_start_distance), mid_x, mid_y)
+					}
+
+				}else if (state.dragging) {
+
+					state.x = state.start_x + (e.clientX - state.drag_start_x)
+					state.y = state.start_y + (e.clientY - state.drag_start_y)
+					clamp_pan()
+					apply_transform(false)
+				}
+			})
+
+			function end_pointer(e) {
+				state.pointers.delete(e.pointerId)
+				if (state.pointers.size<2) {
+					state.pinch_start_distance = 0
+				}
+				if (state.pointers.size===0) {
+					state.dragging = false
+					apply_transform(false)
+				}
+			}
+			stage.addEventListener('pointerup', end_pointer)
+			stage.addEventListener('pointercancel', end_pointer)
+			stage.addEventListener('pointerleave', end_pointer)
+
+		// clicking the dimmed backdrop (not the image) closes, but only while
+		// not zoomed in - avoids an accidental close mid-pan
+			stage.addEventListener('click', function(e){
+				if (e.target===stage && state.scale<=1) {
+					close()
+				}
+			})
+
+		if (prev_button) {
+			prev_button.addEventListener('click', function(){ go_to(state.index-1) })
+			next_button.addEventListener('click', function(){ go_to(state.index+1) })
+		}
+
+		function on_keydown(e) {
+			if (e.key==='Escape') {
+				close()
+			}else if (e.key==='ArrowLeft') {
+				go_to(state.index-1)
+			}else if (e.key==='ArrowRight') {
+				go_to(state.index+1)
+			}else if (e.key==='+' || e.key==='=') {
+				set_scale(state.scale + 0.5)
+			}else if (e.key==='-') {
+				set_scale(state.scale - 0.5)
+			}else if (e.key==='0') {
+				set_scale(1)
+			}else if (e.key==='Tab') {
+				trap_focus(e)
+			}
+		}
+		document.addEventListener('keydown', on_keydown)
+
+		document.body.appendChild(overlay)
+		load_image()
+
+		// move focus into the dialog - prev/next when available (start_index
+		// determines which are visible), otherwise the dialog surface itself
+			const initial_focus_target = (prev_button && !prev_button.classList.contains('hide'))
+				? prev_button
+				: ((next_button && !next_button.classList.contains('hide')) ? next_button : overlay)
+			initial_focus_target.focus()
+
+		// double rAF so the initial (pre-.is_open) styles are committed by the
+		// browser before the class flips, guaranteeing the fade/scale-in transition
+		// actually runs instead of snapping straight to the open state
+			requestAnimationFrame(function(){
+				requestAnimationFrame(function(){
+					overlay.classList.add('is_open')
+					// position_nav_buttons (see above) may have already run against
+					// the image's pre-entrance, still-scaling-in rect if 'load' fired
+					// early (likely, since the thumbnail is already cached) - reposition
+					// once more after the stage's own entrance transition settles
+						setTimeout(position_nav_buttons, 360)
+				})
+			})
+	}//end open_lightbox
 
 
 }//end archive

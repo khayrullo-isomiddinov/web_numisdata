@@ -312,6 +312,76 @@
 				}
 			}
 		}
+
+		// related documentation record (the archive index card this coin was
+		// catalogued from, if any) - the reverse of what /documentation/{id}
+		// already shows in its own "Coins" section. The .info_line.separator +
+		// .big_label header comes from the shared page.less (#main .inner ...),
+		// same gold-tab section header the type page's own MONEDAS/PESO/etc.
+		// sections use. .ref_documentation itself is one single card link (not
+		// two separate image/title links) so the whole thing is clickable and
+		// the title never inherits the site's default dotted <a> underline -
+		// border/color/text-decoration are all reset here instead. Absent
+		// entirely when there's no relation, see coin.js get_related_documentation
+		a.ref_documentation {
+			display: flex;
+			align-items: center;
+			gap: 1.25em;
+			margin-top: 1em;
+			padding: 1em;
+			border: 1px solid #e3e3e3;
+			border-radius: 6px;
+			text-decoration: none;
+			color: @color_grey_dark;
+			transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+			&:hover {
+				border-color: @color_gold_logo;
+				box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+
+				.ref_documentation_title {
+					color: @color_gold_logo;
+				}
+			}
+
+			.ref_documentation_image_wrapper {
+				width: 7em;
+				height: 7em;
+				flex: 0 0 auto;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background-color: #f7f7f7;
+				border-radius: 4px;
+				overflow: hidden;
+
+				img {
+					width: 100%;
+					height: 100%;
+					object-fit: contain;
+					object-position: center center;
+				}
+			}
+
+			.ref_documentation_info {
+				display: flex;
+				flex-direction: column;
+				gap: 0.3em;
+				min-width: 0;
+			}
+
+			.ref_documentation_title {
+				font-weight: 600;
+				font-size: 1.1em;
+				color: @color_grey_dark;
+				transition: color 0.15s ease;
+			}
+
+			.ref_documentation_field {
+				font-size: 0.85em;
+				color: #767676;
+			}
+		}
 	}
 
 
