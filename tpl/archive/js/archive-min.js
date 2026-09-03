@@ -1019,15 +1019,6 @@ var archive = {
 					image_el.addEventListener('click', function(){
 						self.open_lightbox(lightbox_images, lightbox_index)
 					})
-
-					if (caption_text) {
-						common.create_dom_element({
-							element_type	: "figcaption",
-							class_name		: "gallery_caption",
-							text_content	: caption_text,
-							parent			: figure
-						})
-					}
 				})
 
 			}else if (row.identifying_images && row.identifying_images.length>0) {

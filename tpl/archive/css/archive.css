@@ -784,13 +784,6 @@ a.row_wrapper {
 	transform: translateY(-2px);
 }
 
-.row_wrapper.detail .gallery .gallery_caption {
-	margin-top: 0.5em;
-	font-size: 0.85em;
-	color: var(--archive_muted);
-	text-align: center;
-}
-
 /* lightbox . full-screen zoom/pan viewer, see archive.js open_lightbox */
 .archive_lightbox {
 	position: fixed;
@@ -985,11 +978,20 @@ a.row_wrapper {
 	max-width: var(--archive_text_measure);
 }
 
+/* divider sits above each row instead of below - so the very last field in
+   the container (whatever type it happens to be: value, vertical-group,
+   bibliography...) doesn't trail a dangling empty-looking line before the
+   next section starts */
 .row_wrapper.detail .info_container > .left-labels,
 .row_wrapper.detail .info_container > .rigth-values,
 .row_wrapper.detail .info_container > .vertical-group {
 	padding: 0.3em 0;
-	border-bottom: 1px solid var(--archive_border);
+	border-top: 1px solid var(--archive_border);
+}
+
+.row_wrapper.detail .info_container > .left-labels:first-of-type,
+.row_wrapper.detail .info_container > .rigth-values:first-of-type {
+	border-top: none;
 }
 
 .row_wrapper.detail .info_container > .left-labels {
@@ -1005,11 +1007,26 @@ a.row_wrapper {
 	line-height: 1.5;
 }
 
+/* a short centered gold rule instead of a full-width grey line - reads as a
+   deliberate section break rather than just one more row divider like the
+   thin lines running through .info_container above */
 .archive_contents_section,
 .archive_related_coins_section {
+	position: relative;
 	margin-top: var(--archive_space_lg);
-	padding-top: var(--archive_space_md);
-	border-top: 1px solid var(--archive_border);
+	padding-top: var(--archive_space_lg);
+}
+
+.archive_contents_section::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 3em;
+	height: 3px;
+	border-radius: 2px;
+	background-color: var(--archive_accent);
 }
 
 .archive_contents_title {
