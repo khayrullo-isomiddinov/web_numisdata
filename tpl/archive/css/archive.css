@@ -129,6 +129,9 @@
 	grid-template-columns: repeat(auto-fill, minmax(18em, 1fr));
 	gap: 1.75em;
 	margin-bottom: 2.5em;
+	/* see #rows_container.view_grid .rows_container - same fix, cards size to
+	   their own content instead of stretching to match the tallest sibling */
+	align-items: start;
 }
 
 .archive_item_fund .image_wrapper {
@@ -140,8 +143,19 @@
 	gap: 0.6em;
 }
 
+/* min-height + line-clamp reserve the same 2-line block for every title
+   regardless of actual length, so cards come out the same size on their own
+   merits instead of needing the grid to stretch (and pad) shorter ones */
 .archive_item_fund .archive_title {
-	font-size: 1.15em;
+	font-size: 1em;
+	font-weight: 600;
+	line-height: 1.35;
+	min-height: 2.7em;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
 }
 
 .archive_item_count {
@@ -157,6 +171,15 @@
 	font-weight: 600;
 	opacity: 0;
 	transition: opacity 0.3s ease;
+	/* reserves its slot even empty (a zero-count card leaves this with no text,
+	   see annotate_child_count) - without a line-height's worth of min-height,
+	   an empty flex container collapses to just its own padding, which would
+	   make zero-count cards shorter than ones with a real count. 2.15em matches
+	   this element's own default line-height + padding exactly (same value
+	   .archive_card_tag uses for the identical reason), so a populated badge's
+	   real height is unaffected, only the empty one grows to match it */
+	min-height: 2.15em;
+	box-sizing: border-box;
 }
 
 .archive_item_count i {
@@ -356,6 +379,18 @@ a.row_wrapper {
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
+	/* a genuinely empty inline element (see .is_empty) has no text to establish
+	   a line box, so it'd collapse to just its padding without this - box-sizing
+	   keeps that reserved height inclusive of the padding above, not additional.
+	   2.15em matches this element's own default line-height + padding exactly,
+	   so a populated tag's real height is unaffected, only the empty one grows */
+	min-height: 2.15em;
+	box-sizing: border-box;
+}
+
+/* reserves its slot (see draw_item) without showing an empty pill */
+.archive_card_tag.is_empty {
+	opacity: 0;
 }
 
 .info_container {
@@ -495,6 +530,11 @@ a.row_wrapper {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(13.5em, 1fr));
 	gap: 1.25em;
+	/* default grid behavior stretches every card in a row to match the tallest
+	   one - since title length varies per record, that left short titles
+	   sitting in a card with a lot of dead space at the bottom. Cards size to
+	   their own content instead */
+	align-items: start;
 }
 
 .archive_item_fund a.row_wrapper,
@@ -561,26 +601,6 @@ a.row_wrapper {
 
 .archive_detail_nav:empty {
 	margin: 0;
-}
-
-.archive_back_link {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4em;
-	margin-bottom: 0.75em;
-	color: var(--archive_muted);
-	font-size: 0.85em;
-	font-weight: 600;
-	text-decoration: none;
-	transition: color 0.15s ease;
-}
-
-.archive_back_link:hover {
-	color: var(--archive_accent);
-}
-
-.archive_back_link i {
-	font-size: 0.9em;
 }
 
 .archive_breadcrumb {
@@ -1029,6 +1049,9 @@ a.row_wrapper {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(18em, 1fr));
 	gap: 0.75em;
+	/* see #rows_container.view_grid .rows_container - same fix, cards size to
+	   their own content instead of stretching to match the tallest sibling */
+	align-items: start;
 }
 
 .archive_item_child .image_wrapper {
@@ -1037,7 +1060,7 @@ a.row_wrapper {
 
 .archive_item_child .info_container {
 	padding: 0.9em 1em;
-	gap: 0.4em;
+	gap: 0.3em;
 }
 
 /* pulled flush against the image using the negative of .info_container's own
@@ -1048,10 +1071,24 @@ a.row_wrapper {
 	border-radius: 0;
 }
 
-/* kill the title's own margin, the flex gap on .info_container above already
-   spaces it - same fix #rows_container.view_grid .archive_title uses */
+/* lighter than the base .archive_title (these repeat often in a dense grid,
+   see .archive_contents_grid) but still semi-bold - light enough to be calm,
+   heavy enough to still read as a title rather than plain body text */
 .archive_item_child .archive_title {
 	margin-bottom: 0;
+	font-size: 0.88em;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--archive_ink);
+	/* min-height + line-clamp reserve the same 2-line block for every title
+	   regardless of actual length, so cards come out the same size on their
+	   own merits instead of needing the grid to stretch (and pad) shorter ones */
+	min-height: 2.7em;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
 }
 
 /* related coins - same heading/grid rhythm as .archive_contents_section above

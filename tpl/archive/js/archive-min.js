@@ -605,7 +605,10 @@ var archive = {
 	/**
 	* ANNOTATE_CHILD_COUNT
 	* Fires a count-only request and fills in a fund card's item count once
-	* it resolves, rather than blocking the whole card on it
+	* it resolves, rather than blocking the whole card on it. On a zero count
+	* target_el is left in place (empty, opacity:0 per CSS) rather than removed -
+	* every card in the grid reserves the same badge slot either way, so cards
+	* come out a uniform size instead of the zero-count ones ending up shorter
 	* @param string term_id
 	* @param object target_el
 	*/
@@ -627,8 +630,6 @@ var archive = {
 			if (total>0) {
 				target_el.innerHTML = '<i class="fa fa-cubes"></i> ' + total + ' ' + (tstring.items || 'Items')
 				target_el.classList.add('is_ready')
-			}else{
-				target_el.remove()
 			}
 		})
 	},//end annotate_child_count
@@ -806,14 +807,19 @@ var archive = {
 
 		// 'child' cards show the tag right under the image, above the title - a compact
 		// label instead of another stacked row, so the card doesn't grow taller than it
-		// needs to. Other variants keep it below the title, unchanged
-			if (variant==='child' && tag) {
-				common.create_dom_element({
+		// needs to. Other variants keep it below the title, unchanged. Always reserves
+		// the slot (even with nothing to show) so every card in the grid comes out the
+		// same height - see .archive_card_tag.is_empty
+			if (variant==='child') {
+				const tag_el = common.create_dom_element({
 					element_type	: "span",
 					class_name		: "archive_card_tag",
-					text_content	: tag,
+					text_content	: tag || '',
 					parent			: info_container
 				})
+				if (!tag) {
+					tag_el.classList.add('is_empty')
+				}
 			}
 
 		// title . see resolve_title
@@ -1109,7 +1115,6 @@ var archive = {
 
 			ancestors_promise.then(function(ancestors){
 
-				self.draw_back_link(nav, ancestors)
 				self.draw_breadcrumb(nav, ancestors, row)
 
 				const immediate_parent	= ancestors[ancestors.length-1]
@@ -1389,13 +1394,18 @@ var archive = {
 	* DRAW_FIELDS
 	* Full label / value field list, detail view only. Title itself is the page's
 	* own heading (see render_detail), so the field list starts right after it -
-	* collection, fund, typology, material, then description (the rest of the
+	* ID, collection, fund, typology, material, then description (the rest of the
 	* record's own fields, then the remaining recovery/source/etc. fields render_detail
 	* appends after this)
 	* @param object info_container
 	* @param object row
 	*/
 	draw_fields : function(info_container, row) {
+
+		// ID . the record's own numeric section_id, same value the URL uses -
+		// "ID" itself isn't translated anywhere in this app (coin_row.js uses
+		// the same literal label), so no tstring lookup here either
+			this.add_field(info_container, "ID", row.term_id.split('_').pop())
 
 		this.add_field(info_container, tstring.collection || 'Collection', row.collection)
 		this.add_field(info_container, tstring.fund || 'Fund', row.fund)
@@ -1633,36 +1643,6 @@ var archive = {
 
 		return step(parent_data)
 	},//end resolve_ancestors
-
-
-
-	/**
-	* DRAW_BACK_LINK
-	* A single "go back" step to the immediate parent. At the root (no
-	* ancestors) it goes to the browse landing instead
-	* @param object nav
-	* @param array ancestors . root-to-immediate-parent, see resolve_ancestors
-	*/
-	draw_back_link : function(nav, ancestors) {
-
-		const immediate_parent = ancestors[ancestors.length-1]
-
-		const href = immediate_parent
-			? page_globals.__WEB_ROOT_WEB__ + '/documentation/' + immediate_parent.term_id.split('_').pop()
-			: page_globals.__WEB_ROOT_WEB__ + '/documentation'
-
-		const label = immediate_parent
-			? immediate_parent.title
-			: (tstring.browse_archive || 'Browse archive')
-
-		common.create_dom_element({
-			element_type	: "a",
-			class_name		: "archive_back_link",
-			inner_html		: '<i class="fa fa-arrow-left"></i> ' + (tstring.back || 'Back') + ': ' + label,
-			href			: href,
-			parent			: nav
-		})
-	},//end draw_back_link
 
 
 
