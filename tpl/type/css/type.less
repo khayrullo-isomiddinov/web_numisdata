@@ -107,6 +107,7 @@
 		.info_line.ref_documentation_grid {
 			display: flex;
 			flex-wrap: wrap;
+			margin-top: 1.2em;
 		}
 
 		.ref_documentation {
@@ -150,6 +151,9 @@
 			.ref_documentation_title {
 				font-weight: 600;
 				margin-bottom: 0.25em;
+				// explicit, not inherited from the card link - otherwise the site's
+				// global a:hover rule is what was turning this gold only on hover
+				color: @color_gold_logo;
 			}
 
 			@media screen and (max-width: 590px){

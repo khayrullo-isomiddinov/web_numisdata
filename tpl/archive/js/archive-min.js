@@ -681,7 +681,11 @@ var archive = {
 				own_bibliography_data		: 'bibliographic_references',
 				related_bibliography_data	: 'bibliographic_references',
 				publications_data			: 'publications',
-				identifying_images_data	: 'images'
+				identifying_images_data	: 'images',
+				// a record's images can be split across two separate portal fields
+				// (identifying_images_data plus this one) - both get shown together
+				// in one gallery, see render_detail
+				images_data					: 'images'
 			}
 		}
 
@@ -970,12 +974,17 @@ var archive = {
 				parent			: row_wrapper
 			})
 
-		// images . all identifying images at full size, each captioned, each opening
-		// the zoom/pan lightbox (see open_lightbox) on click
+		// images . a record's images can be split across two separate fields
+		// (identifying_images_data plus images_data - confirmed live: a record
+		// with 1 "identifying" image plus 3 more only in images_data) - both
+		// combined into one gallery here, each opening the zoom/pan lightbox
+		// (see open_lightbox) on click
 			const self = this
 			const lightbox_images = []
 
-			if (row.identifying_images_data && row.identifying_images_data.length>0) {
+			const gallery_images_data = [].concat(row.identifying_images_data || [], row.images_data || [])
+
+			if (gallery_images_data.length>0) {
 
 				const gallery = common.create_dom_element({
 					element_type	: "div",
@@ -983,7 +992,7 @@ var archive = {
 					parent			: row_wrapper
 				})
 
-				row.identifying_images_data.forEach(function(image_row){
+				gallery_images_data.forEach(function(image_row){
 
 					const figure = common.create_dom_element({
 						element_type	: "figure",
@@ -1115,7 +1124,7 @@ var archive = {
 
 			ancestors_promise.then(function(ancestors){
 
-				self.draw_breadcrumb(nav, ancestors, row)
+				self.draw_breadcrumb(nav, ancestors)
 
 				const immediate_parent	= ancestors[ancestors.length-1]
 				const corrected_title	= self.resolve_title(row, immediate_parent && immediate_parent.title)
@@ -1648,13 +1657,14 @@ var archive = {
 
 	/**
 	* DRAW_BREADCRUMB
-	* Render the record's full ancestor chain, already resolved
-	* root-to-immediate-parent by resolve_ancestors
+	* Render the record's ancestor chain, already resolved root-to-immediate-
+	* parent by resolve_ancestors. Stops at the immediate parent - the current
+	* record's own title isn't repeated here, it's already the big heading
+	* right under the images
 	* @param object nav
 	* @param array ancestors
-	* @param object row . the current page's own record, for its own label
 	*/
-	draw_breadcrumb : function(nav, ancestors, row) {
+	draw_breadcrumb : function(nav, ancestors) {
 
 		if (!ancestors.length) {
 			return
@@ -1672,7 +1682,7 @@ var archive = {
 			parent			: breadcrumb
 		})
 
-		ancestors.forEach(function(ancestor){
+		ancestors.forEach(function(ancestor, index){
 
 			const ancestor_id = ancestor.term_id.split('_').pop()
 
@@ -1684,19 +1694,13 @@ var archive = {
 				parent			: breadcrumb
 			})
 
-			common.create_dom_element({
-				element_type	: "i",
-				class_name		: "fa fa-angle-right archive_breadcrumb_separator",
-				parent			: breadcrumb
-			})
-		})
-
-		const immediate_parent = ancestors[ancestors.length-1]
-		common.create_dom_element({
-			element_type	: "span",
-			class_name		: "archive_breadcrumb_current",
-			text_content	: this.resolve_title(row, immediate_parent && immediate_parent.title) || '',
-			parent			: breadcrumb
+			if (index<ancestors.length-1) {
+				common.create_dom_element({
+					element_type	: "i",
+					class_name		: "fa fa-angle-right archive_breadcrumb_separator",
+					parent			: breadcrumb
+				})
+			}
 		})
 	},//end draw_breadcrumb
 
@@ -1706,7 +1710,11 @@ var archive = {
 	* FETCH_CHILDREN
 	* Records whose parent_data points back at term_id - the only way to
 	* find a record's "children". limit:500 covers the largest group found
-	* in the live data so far (298)
+	* in the live data so far (298). Sorted by numeric id after fetching - the
+	* API doesn't guarantee row order matches term_id order (confirmed live:
+	* two siblings came back with the higher id before the lower one), and
+	* draw_sibling_nav/draw_contents both depend on this being a stable,
+	* logical sequence for position numbers and Previous/Next to make sense
 	* @param string term_id
 	* @return promise : array of rows
 	*/
@@ -1722,7 +1730,14 @@ var archive = {
 			}
 		})
 		.then(function(api_response){
-			return api_response.result || []
+
+			const rows = api_response.result || []
+
+			rows.sort(function(a, b){
+				return parseInt(a.term_id.split('_').pop(), 10) - parseInt(b.term_id.split('_').pop(), 10)
+			})
+
+			return rows
 		})
 	},//end fetch_children
 

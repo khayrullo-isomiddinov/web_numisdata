@@ -121,6 +121,7 @@
 .result .row_wrapper .info_line.ref_documentation_grid {
   display: flex;
   flex-wrap: wrap;
+  margin-top: 1.2em;
 }
 .result .row_wrapper .ref_documentation {
   display: flex;
@@ -155,6 +156,7 @@
 .result .row_wrapper .ref_documentation .ref_documentation_title {
   font-weight: 600;
   margin-bottom: 0.25em;
+  color: #997f5a;
 }
 @media screen and (max-width: 590px) {
   .result .row_wrapper .ref_documentation {

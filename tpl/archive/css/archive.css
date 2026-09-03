@@ -439,8 +439,7 @@ a.row_wrapper {
 .long_field {
 	grid-column: 1 / -1;
 	margin: var(--archive_space_sm) 0;
-	padding-top: var(--archive_space_sm);
-	border-top: 1px solid var(--archive_border);
+	padding-top: var(--archive_space_xs);
 }
 
 .long_field_label {
@@ -599,6 +598,7 @@ a.row_wrapper {
 	padding: 2em 0 3em;
 }
 
+
 .archive_detail_nav:empty {
 	margin: 0;
 }
@@ -633,12 +633,6 @@ a.row_wrapper {
 .archive_breadcrumb_separator {
 	color: #c9c9c9;
 	font-size: 0.75em;
-}
-
-.archive_breadcrumb_current {
-	color: var(--archive_ink);
-	font-weight: 600;
-	padding: 0.25em 0.75em;
 }
 
 /* first/previous/[jump]/next/last among siblings - a thin strip of its own,
@@ -961,8 +955,14 @@ a.row_wrapper {
 	}
 }
 
+/* cambria is already loaded site-wide and used the same way for editorial
+   headings on the biblio/catalog/mints pages - reused here rather than
+   adding a new font */
 .row_wrapper.detail > .archive_title {
-	font-size: 1.7em;
+	font-family: cambria, serif;
+	font-size: 1.25em;
+	line-height: 1.35;
+	text-align: center;
 	margin-top: 0.25em;
 	margin-bottom: 1.25em;
 	padding-bottom: 0.5em;
