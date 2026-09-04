@@ -685,10 +685,13 @@ export const type_row_fields = {
 
 	/**
 	* REF_DOCUMENTATION_FIELD
-	* Append one "label: value" line for the linked documentation record, same plain
+	* Append one value line for the linked documentation record, same plain
 	* text convention as the equivalents/related_types lines above - skips empty
 	* values and strips Dédalo's leading/trailing "|" join artifact on multi-value
-	* term fields (same fix archive.js's own add_field uses for this same table)
+	* term fields (same fix archive.js's own add_field uses for this same table).
+	* The label is still in the DOM (kept for screen readers/context) but hidden
+	* visually - see .ref_documentation_field_label in type.css - so the cards
+	* show just the values, not "Fund: ", "Typology: " etc labels
 	* @return void
 	*/
 	ref_documentation_field : function(container, label, value) {
@@ -701,11 +704,24 @@ export const type_row_fields = {
 			return
 		}
 
-		common.create_dom_element({
+		const field = common.create_dom_element({
 			element_type	: "div",
 			class_name		: "info_value ref_documentation_field",
-			inner_html		: label + ": " + value,
 			parent			: container
+		})
+
+		common.create_dom_element({
+			element_type	: "span",
+			class_name		: "ref_documentation_field_label",
+			text_content	: label + ": ",
+			parent			: field
+		})
+
+		common.create_dom_element({
+			element_type	: "span",
+			class_name		: "ref_documentation_field_value",
+			inner_html		: value,
+			parent			: field
 		})
 	},//end ref_documentation_field
 
