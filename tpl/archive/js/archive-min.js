@@ -976,15 +976,24 @@ var archive = {
 
 		// images . a record's images can be split across two separate fields
 		// (identifying_images_data plus images_data - confirmed live: a record
-		// with 1 "identifying" image plus 3 more only in images_data) - both
-		// combined into one gallery here, each opening the zoom/pan lightbox
-		// (see open_lightbox) on click
+		// with 1 "identifying" image plus 2 more only in images_data). Kept as
+		// two distinct groups instead of one merged gallery: identifying_images_data
+		// is the "hero" set (usually just 1, occasionally more - shown big,
+		// side by side rather than each stacked full-width so multiple hero
+		// shots don't force a long scroll before the actual field data),
+		// images_data is supporting material (shown as a compact thumbnail
+		// strip below). If a record only has images_data (no identifying
+		// image at all), that set is promoted to the hero slot instead so the
+		// page never opens with nothing but tiny thumbnails.
 			const self = this
 			const lightbox_images = []
 
-			const gallery_images_data = [].concat(row.identifying_images_data || [], row.images_data || [])
+			const identifying_data	= row.identifying_images_data || []
+			const secondary_data	= row.images_data || []
+			const hero_data			= identifying_data.length>0 ? identifying_data : secondary_data
+			const thumbnail_data	= identifying_data.length>0 ? secondary_data : []
 
-			if (gallery_images_data.length>0) {
+			if (hero_data.length>0) {
 
 				const gallery = common.create_dom_element({
 					element_type	: "div",
@@ -992,7 +1001,7 @@ var archive = {
 					parent			: row_wrapper
 				})
 
-				gallery_images_data.forEach(function(image_row){
+				hero_data.forEach(function(image_row){
 
 					const figure = common.create_dom_element({
 						element_type	: "figure",
@@ -1020,6 +1029,51 @@ var archive = {
 						self.open_lightbox(lightbox_images, lightbox_index)
 					})
 				})
+
+				if (thumbnail_data.length>0) {
+
+					const secondary = common.create_dom_element({
+						element_type	: "div",
+						class_name		: "gallery_secondary",
+						parent			: row_wrapper
+					})
+
+					common.create_dom_element({
+						element_type	: "span",
+						class_name		: "gallery_secondary_label",
+						text_content	: (tstring.more_images || 'More images') + ' (' + thumbnail_data.length + ')',
+						parent			: secondary
+					})
+
+					const secondary_grid = common.create_dom_element({
+						element_type	: "div",
+						class_name		: "gallery_secondary_grid",
+						parent			: secondary
+					})
+
+					thumbnail_data.forEach(function(image_row){
+
+						const caption_text = [image_row.title, image_row.photographer].filter(Boolean).join(' — ')
+
+						const thumb_el = common.create_dom_element({
+							element_type	: "img",
+							class_name		: "gallery_secondary_image",
+							src				: page_globals.__WEB_MEDIA_BASE_URL__ + image_row.image,
+							title			: image_row.title || row.title || '',
+							parent			: secondary_grid
+						})
+						thumb_el.alt = caption_text || row.title || ''
+						thumb_el.addEventListener('load', function(){
+							thumb_el.classList.add('is_loaded')
+						})
+
+						const lightbox_index = lightbox_images.length
+						lightbox_images.push({ src: thumb_el.src, caption: caption_text })
+						thumb_el.addEventListener('click', function(){
+							self.open_lightbox(lightbox_images, lightbox_index)
+						})
+					})
+				}
 
 			}else if (row.identifying_images && row.identifying_images.length>0) {
 
@@ -1054,11 +1108,15 @@ var archive = {
 					})
 			}
 
-		// title . corrected below once resolve_ancestors resolves the immediate parent
-			const title_el = common.create_dom_element({
+		// title . the record's own title field, verbatim - unlike draw_item's
+		// card titles (see resolve_title), this is a single standalone record
+		// the user specifically opened, so it should always show its real
+		// title rather than being swapped for 'name' just because it happens
+		// to match its parent's title too
+			common.create_dom_element({
 				element_type	: "div",
 				class_name		: "archive_title",
-				text_content	: this.resolve_title(row, null) || ('ID ' + id),
+				text_content	: (row.title || '').trim() || row.name || ('ID ' + id),
 				parent			: row_wrapper
 			})
 
@@ -1095,12 +1153,13 @@ var archive = {
 		this.draw_publications(info_container, row.publications_data)
 
 		this.draw_contents(row_wrapper, row)
+		this.draw_related_items(row_wrapper, row)
 		this.draw_related_coins(row_wrapper, row)
 		this.draw_sibling_nav(sibling_nav, row)
 
-		// back link + breadcrumb + title correction, once the ancestor chain
-		// resolves. Cached by immediate parent term_id (same key draw_sibling_nav's
-		// own sibling_list_cache uses) - every sibling in a group shares the exact
+		// back link + breadcrumb, once the ancestor chain resolves. Cached by
+		// immediate parent term_id (same key draw_sibling_nav's own
+		// sibling_list_cache uses) - every sibling in a group shares the exact
 		// same ancestor chain, so without this, an otherwise-instant Previous/Next
 		// step would still leave the breadcrumb empty for a moment on every single
 		// click, popping in afterwards and shifting the gallery/fields below it
@@ -1114,14 +1173,7 @@ var archive = {
 			const ancestors_promise = parent_term_id ? self.ancestors_cache[parent_term_id] : self.resolve_ancestors(row.parent_data)
 
 			ancestors_promise.then(function(ancestors){
-
 				self.draw_breadcrumb(nav, ancestors)
-
-				const immediate_parent	= ancestors[ancestors.length-1]
-				const corrected_title	= self.resolve_title(row, immediate_parent && immediate_parent.title)
-				if (corrected_title) {
-					title_el.textContent = corrected_title
-				}
 			})
 	},//end render_detail
 
@@ -1822,6 +1874,132 @@ var archive = {
 			}
 		})
 	},//end draw_contents
+
+
+
+	/**
+	* FETCH_RELATED_ITEMS
+	* Resolves a record's own 'items' field - a raw array of OTHER
+	* documentation records' section_ids (confirmed live: a "Ficha moneda"
+	* card and its accompanying "Fotografía" scans all cross-reference each
+	* other's section_ids this way, despite all being plain siblings under
+	* the same parent - parent_data/fetch_children has no idea they're
+	* related to each other specifically, only that they share a parent).
+	* Not a real portal field (resolve_portals_custom errors on it), so this
+	* fetches the actual rows itself, same approach as fetch_related_coins
+	* @param array items_ids : numeric section_ids
+	* @return promise : array of rows
+	*/
+	fetch_related_items : function(items_ids) {
+
+		// section_ids only, never raw user/API strings - this goes straight
+		// into a SQL IN(...) list below with no quoting
+			const safe_ids = (items_ids || [])
+				.map(function(id){ return parseInt(id, 10) })
+				.filter(function(id){ return Number.isFinite(id) })
+
+		if (!safe_ids.length) {
+			return Promise.resolve([])
+		}
+
+		return data_manager.request({
+			body : {
+				dedalo_get	: 'records',
+				table		: 'documentation',
+				ar_fields	: ['*'],
+				sql_filter	: 'section_id IN (' + safe_ids.join(',') + ')',
+				limit		: 500
+			}
+		})
+		.then(function(api_response){
+			return api_response.result || []
+		})
+	},//end fetch_related_items
+
+
+
+	/**
+	* DRAW_RELATED_ITEMS
+	* This record's cross-referenced siblings (see fetch_related_items) - kept
+	* deliberately quieter than draw_contents' own card grid (small inline
+	* thumbnail + label chips, muted heading) since this is a secondary,
+	* supporting relation rather than the record's actual contents
+	* @param object row_wrapper
+	* @param object row
+	*/
+	draw_related_items : function(row_wrapper, row) {
+
+		const self = this
+
+		let items_ids = []
+		try { items_ids = JSON.parse(row.items || '[]') } catch(e) { /* malformed, no items */ }
+
+		self.fetch_related_items(items_ids).then(function(items){
+
+			if (!items.length) {
+				return
+			}
+
+			const section = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_related_items_section",
+				parent			: row_wrapper
+			})
+
+			common.create_dom_element({
+				element_type	: "span",
+				class_name		: "archive_related_items_label",
+				text_content	: (tstring.related_items || 'Related items') + ' (' + items.length + ')',
+				parent			: section
+			})
+
+			const list = common.create_dom_element({
+				element_type	: "div",
+				class_name		: "archive_related_items_list",
+				parent			: section
+			})
+
+			items.forEach(function(item_row){
+
+				const item_id	= item_row.term_id.split('_').pop()
+				const display_title = self.resolve_title(item_row, row.title) || ('ID ' + item_id)
+
+				const chip		= common.create_dom_element({
+					element_type	: "a",
+					class_name		: "archive_related_item",
+					href			: page_globals.__WEB_ROOT_WEB__ + '/documentation/' + item_id,
+					title			: display_title,
+					parent			: list
+				})
+
+				if (item_row.identifying_images && item_row.identifying_images.length>0) {
+					const first_image	= item_row.identifying_images.split(' | ')[0]
+					const thumb_url		= (page_globals.__WEB_MEDIA_BASE_URL__ + first_image).replace('/1.5MB/', '/thumb/')
+					const thumb_img = common.create_dom_element({
+						element_type	: "img",
+						class_name		: "archive_related_item_thumb",
+						src				: thumb_url,
+						loading			: "lazy",
+						parent			: chip
+					})
+					thumb_img.alt = display_title
+				}else{
+					common.create_dom_element({
+						element_type	: "i",
+						class_name		: "fa fa-file-o archive_related_item_thumb archive_related_item_thumb_placeholder",
+						parent			: chip
+					})
+				}
+
+				common.create_dom_element({
+					element_type	: "span",
+					class_name		: "archive_related_item_title",
+					text_content	: display_title,
+					parent			: chip
+				})
+			})
+		})
+	},//end draw_related_items
 
 
 
